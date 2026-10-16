@@ -1,0 +1,2237 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LifeOS Pro">
+  <meta name="theme-color" content="#070b14">
+  <title>LifeOS Pro 3.0 — Visual Atlas & Smart Tracker</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Leaflet CSS & JS (Mapa sin API Key) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #060913;
+      color: #f8fafc;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.10) 0px, transparent 45%),
+        radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 45%),
+        radial-gradient(at 50% 100%, rgba(244, 63, 94, 0.07) 0px, transparent 50%);
+      background-attachment: fixed;
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.78);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.5);
+    }
+    /* Menú Lateral Vistoso 3.0 */
+    .nav-btn-pro {
+      position: relative;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      background: rgba(15, 23, 42, 0.45);
+      overflow: hidden;
+    }
+    .nav-btn-pro:hover {
+      transform: translateX(4px);
+      background: rgba(30, 41, 59, 0.75);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+    .nav-btn-pro.active {
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.16) 0%, rgba(59, 130, 246, 0.08) 100%);
+      border-color: rgba(16, 185, 129, 0.45);
+      box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.35);
+    }
+    .nav-btn-pro.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 15%;
+      height: 70%;
+      width: 4px;
+      background: linear-gradient(180deg, #34d399, #3b82f6);
+      border-radius: 0 4px 4px 0;
+      box-shadow: 0 0 10px #10b981;
+    }
+    .icon-box {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+      transition: transform 0.25s ease;
+    }
+    .nav-btn-pro:hover .icon-box {
+      transform: scale(1.08) rotate(-3deg);
+    }
+    #bike-map {
+      height: 410px;
+      width: 100%;
+      border-radius: 1rem;
+      z-index: 10;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #060913; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
+    .exercise-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(244, 63, 94, 0.5);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col lg:flex-row selection:bg-emerald-500 selection:text-slate-950">
+
+  <!-- ================= SIDEBAR VISTOSO 3.0 ================= -->
+  <aside class="w-full lg:w-80 glass-card border-b lg:border-b-0 lg:border-r border-slate-800/80 flex flex-col justify-between p-4 lg:p-5 lg:fixed lg:h-screen z-30 overflow-y-auto">
+    <div>
+      <!-- Logo & Brand -->
+      <div class="flex items-center justify-between mb-5 pb-4 border-b border-slate-800/80">
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-indigo-500 flex items-center justify-center shadow-lg shadow-emerald-500/25 ring-2 ring-white/10">
+            <span class="text-2xl">⚡</span>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">LifeOS Pro</h1>
+              <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">v3.0</span>
+            </div>
+            <p class="text-[11px] text-slate-400 font-medium">Visual Gym • Rutas • Granja</p>
+          </div>
+        </div>
+        <button onclick="openGoalsModal()" class="p-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700 transition" title="Configurar Objetivos">
+          ⚙️
+        </button>
+      </div>
+
+      <!-- Selector de Fecha y Rendimiento Circular -->
+      <div class="mb-5 bg-gradient-to-br from-slate-900/95 to-slate-950 p-3.5 rounded-2xl border border-slate-800/90 shadow-inner">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Día de Registro
+          </span>
+          <button onclick="setToday()" class="text-[11px] text-cyan-400 hover:underline font-bold">Ir a Hoy</button>
+        </div>
+        <div class="flex items-center gap-1.5 mb-3">
+          <button onclick="changeDay(-1)" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition font-bold">◀</button>
+          <input type="date" id="currentDatePicker" onchange="onDateChange(this.value)" class="w-full bg-slate-950 text-center font-mono text-xs font-bold text-white py-2 px-2 rounded-xl border border-slate-800 focus:outline-none focus:border-emerald-500">
+          <button onclick="changeDay(1)" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition font-bold">▶</button>
+        </div>
+        <!-- Barra de Nivel Diario -->
+        <div class="bg-slate-950/90 p-2.5 rounded-xl border border-slate-800/70">
+          <div class="flex justify-between items-center text-xs mb-1">
+            <span class="text-slate-400 font-semibold">Nivel del Día</span>
+            <span id="sidebarScoreBadge" class="font-mono font-extrabold text-emerald-400">0%</span>
+          </div>
+          <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div id="sidebarScoreBar" class="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 transition-all duration-500" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Menú de Navegación Ultra-Vistoso -->
+      <div class="mb-2 px-1">
+        <p class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 mb-2">Centro de Mando</p>
+      </div>
+      <nav class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-2">
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="nav-btn-pro active flex items-center justify-between px-3 py-2.5 rounded-2xl text-left">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="icon-box bg-gradient-to-br from-emerald-500/30 to-teal-600/20 border border-emerald-500/40 text-emerald-300 shadow-sm">🏠</div>
+            <div class="truncate">
+              <p class="text-xs font-extrabold text-white leading-tight">Panel Diario</p>
+              <p class="text-[10px] text-slate-400 truncate">Pavos, Estudio, Comida</p>
+            </div>
+          </div>
+          <span id="badge-turkeys" class="hidden lg:inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30">0/3 🦃</span>
+        </button>
+
+        <button onclick="switchTab('gym')" id="tab-gym" class="nav-btn-pro flex items-center justify-between px-3 py-2.5 rounded-2xl text-left">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="icon-box bg-gradient-to-br from-rose-500/30 to-orange-600/20 border border-rose-500/40 text-rose-300 shadow-sm">🏋️</div>
+            <div class="truncate">
+              <p class="text-xs font-extrabold text-white leading-tight">Gimnasio Visual</p>
+              <p class="text-[10px] text-slate-400 truncate">+40 Ejercicios e Imágenes</p>
+            </div>
+          </div>
+          <span id="badge-gym" class="hidden lg:inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30">0 ser</span>
+        </button>
+
+        <button onclick="switchTab('bikemap')" id="tab-bikemap" class="nav-btn-pro flex items-center justify-between px-3 py-2.5 rounded-2xl text-left">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="icon-box bg-gradient-to-br from-cyan-500/30 to-blue-600/20 border border-cyan-500/40 text-cyan-300 shadow-sm">🗺️</div>
+            <div class="truncate">
+              <p class="text-xs font-extrabold text-white leading-tight">Mapa Rutas Bici</p>
+              <p class="text-[10px] text-slate-400 truncate">Punto A ➔ B Automático</p>
+            </div>
+          </div>
+          <span id="badge-bike" class="hidden lg:inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">0 km</span>
+        </button>
+
+        <button onclick="switchTab('mifit')" id="tab-mifit" class="nav-btn-pro flex items-center justify-between px-3 py-2.5 rounded-2xl text-left">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="icon-box bg-gradient-to-br from-orange-500/30 to-amber-600/20 border border-orange-500/40 text-orange-300 shadow-sm">⌚</div>
+            <div class="truncate">
+              <p class="text-xs font-extrabold text-white leading-tight">Mi Fit & Salud</p>
+              <p class="text-[10px] text-slate-400 truncate">Reloj, Pasos y Podómetro</p>
+            </div>
+          </div>
+          <span id="badge-steps" class="hidden lg:inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg bg-orange-500/20 text-orange-300 border border-orange-500/30">0</span>
+        </button>
+
+        <button onclick="switchTab('finances')" id="tab-finances" class="nav-btn-pro flex items-center justify-between px-3 py-2.5 rounded-2xl text-left">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="icon-box bg-gradient-to-br from-emerald-400/30 to-green-600/20 border border-emerald-400/40 text-emerald-300 shadow-sm">💶</div>
+            <div class="truncate">
+              <p class="text-xs font-extrabold text-white leading-tight">Gastos y Compra</p>
+              <p class="text-[10px] text-slate-400 truncate">Dinero € y Supermercado</p>
+            </div>
+          </div>
+          <span id="badge-spent" class="hidden lg:inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">0€</span>
+        </button>
+
+        <button onclick="switchTab('weekly')" id="tab-weekly" class="nav-btn-pro flex items-center justify-between px-3 py-2.5 rounded-2xl text-left">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="icon-box bg-gradient-to-br from-violet-500/30 to-purple-600/20 border border-violet-500/40 text-violet-300 shadow-sm">📈</div>
+            <div class="truncate">
+              <p class="text-xs font-extrabold text-white leading-tight">Análisis Semanal</p>
+              <p class="text-[10px] text-slate-400 truncate">¿Lo estoy haciendo bien?</p>
+            </div>
+          </div>
+          <span class="hidden lg:inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg bg-violet-500/20 text-violet-300">7D</span>
+        </button>
+
+        <button onclick="switchTab('summary')" id="tab-summary" class="nav-btn-pro col-span-2 sm:col-span-1 flex items-center justify-between px-3 py-2.5 rounded-2xl text-left">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="icon-box bg-gradient-to-br from-indigo-500/30 to-blue-600/20 border border-indigo-500/40 text-indigo-300 shadow-sm">📓</div>
+            <div class="truncate">
+              <p class="text-xs font-extrabold text-white leading-tight">Resumen y Diario</p>
+              <p class="text-[10px] text-slate-400 truncate">Cierre y Notas Personales</p>
+            </div>
+          </div>
+          <span class="hidden lg:inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-300">✍️</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Pie del Sidebar -->
+    <div class="mt-5 pt-4 border-t border-slate-800/80 space-y-2.5">
+      <div class="p-3 rounded-2xl bg-slate-900/90 border border-slate-800">
+        <div class="flex items-center justify-between text-xs mb-1">
+          <span class="text-amber-300 font-bold flex items-center gap-1.5">🦃 Estado Pavos Hoy</span>
+          <span id="turkeyQuickStatus" class="font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300">0/3</span>
+        </div>
+        <p id="turkeyQuickSub" class="text-[11px] text-slate-400">Pendiente comida y agua</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-1.5">
+        <button onclick="loadDemoData()" class="py-2 px-2 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 text-[11px] font-bold transition">
+          ✨ Demo 7 Días
+        </button>
+        <button onclick="exportData()" class="py-2 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-semibold transition">
+          💾 Backup JSON
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================= CONTENIDO PRINCIPAL ================= -->
+  <main class="flex-1 lg:ml-80 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6">
+
+    <!-- CABECERA DE MÉTRICAS RÁPIDAS -->
+    <header class="glass-card rounded-3xl p-5 sm:p-6 border border-slate-800/90">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span id="liveTimerPill" class="hidden items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
+              ⏱️ Cronómetro en marcha
+            </span>
+            <span class="text-xs font-bold uppercase tracking-widest text-emerald-400" id="headerDateLabel">HOY</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-0.5" id="greetingTitle">Centro de Rendimiento Personal</h2>
+        </div>
+
+        <div class="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5 text-center">
+            <span class="text-[10px] text-slate-400 uppercase font-bold block">Pasos</span>
+            <span id="topStepsVal" class="text-sm sm:text-base font-extrabold font-mono text-orange-400">0</span>
+          </div>
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5 text-center">
+            <span class="text-[10px] text-slate-400 uppercase font-bold block">Bici Hoy</span>
+            <span id="topBikeVal" class="text-sm sm:text-base font-extrabold font-mono text-cyan-400">0 km</span>
+          </div>
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5 text-center">
+            <span class="text-[10px] text-slate-400 uppercase font-bold block">Gym Vol.</span>
+            <span id="topGymVolVal" class="text-sm sm:text-base font-extrabold font-mono text-rose-400">0 kg</span>
+          </div>
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5 text-center">
+            <span class="text-[10px] text-slate-400 uppercase font-bold block">Estudio</span>
+            <span id="topStudyVal" class="text-sm sm:text-base font-extrabold font-mono text-violet-400">0m</span>
+          </div>
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5 text-center col-span-3 sm:col-span-1">
+            <span class="text-[10px] text-slate-400 uppercase font-bold block">Gasto Hoy</span>
+            <span id="topSpentVal" class="text-sm sm:text-base font-extrabold font-mono text-emerald-400">0.00€</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- =============================================================== -->
+    <!-- VISTA 1: PANEL DIARIO (PAVOS, ESTUDIO, COCHE, COMIDA)           -->
+    <!-- =============================================================== -->
+    <section id="view-dashboard" class="space-y-6">
+      <!-- FILA 1: PAVOS + ESTUDIO & COCHE -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- MÓDULO PAVOS -->
+        <div class="lg:col-span-6 glass-card rounded-3xl p-6 border-l-4 border-l-amber-500 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-2xl">🦃</div>
+                <div>
+                  <h3 class="text-lg font-extrabold text-white">Cuidado de los Pavos</h3>
+                  <p class="text-xs text-slate-400">Control diario de comida, agua fresca y corral</p>
+                </div>
+              </div>
+              <button onclick="quickAddTurkeyFeedToShop()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 px-3 py-2 rounded-xl font-bold transition">
+                + Falta Pienso 🛒
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 my-4">
+              <button onclick="toggleTurkeyTask('fedMorning')" id="btn-turkey-morning" class="p-4 rounded-2xl border border-slate-800 bg-slate-900/70 hover:bg-slate-800/80 flex flex-col items-center text-center transition">
+                <span class="text-2xl mb-1">🌾</span>
+                <span class="text-xs font-bold text-white">Comida Mañana</span>
+                <span id="time-turkey-morning" class="text-[11px] font-mono text-slate-500 mt-1">Sin registrar</span>
+              </button>
+              <button onclick="toggleTurkeyTask('waterGiven')" id="btn-turkey-water" class="p-4 rounded-2xl border border-slate-800 bg-slate-900/70 hover:bg-slate-800/80 flex flex-col items-center text-center transition">
+                <span class="text-2xl mb-1">💧</span>
+                <span class="text-xs font-bold text-white">Agua Limpia</span>
+                <span id="time-turkey-water" class="text-[11px] font-mono text-slate-500 mt-1">Sin registrar</span>
+              </button>
+              <button onclick="toggleTurkeyTask('fedEvening')" id="btn-turkey-evening" class="p-4 rounded-2xl border border-slate-800 bg-slate-900/70 hover:bg-slate-800/80 flex flex-col items-center text-center transition">
+                <span class="text-2xl mb-1">🌽</span>
+                <span class="text-xs font-bold text-white">Comida Tarde</span>
+                <span id="time-turkey-evening" class="text-[11px] font-mono text-slate-500 mt-1">Sin registrar</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-slate-800/80">
+            <input type="text" id="turkeyNotesInput" oninput="saveTurkeyNote(this.value)" placeholder="Observaciones de los pavos (ej. pusieron huevos, limpiar bebedero...)" class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+          </div>
+        </div>
+
+        <!-- MÓDULO TIEMPO DE ESTUDIO Y COCHE -->
+        <div class="lg:col-span-6 glass-card rounded-3xl p-6 border-l-4 border-l-violet-500 flex flex-col justify-between">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Estudio -->
+            <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+              <div class="flex justify-between items-start mb-2">
+                <div>
+                  <span class="text-[10px] font-bold uppercase text-violet-400">📚 Estudio Hoy</span>
+                  <div class="flex items-baseline gap-1 mt-0.5">
+                    <span id="studyMinutesText" class="text-2xl font-extrabold font-mono text-white">0</span>
+                    <span class="text-xs text-slate-400">min</span>
+                  </div>
+                </div>
+                <button onclick="toggleLiveTimer('study')" id="btnStudyTimer" class="px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold transition">
+                  ▶ Crono
+                </button>
+              </div>
+              <div id="studyLiveDisplay" class="hidden text-center py-1 mb-2 rounded-lg bg-violet-950/90 border border-violet-500/40 font-mono text-sm text-violet-200 font-bold">00:00</div>
+              <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-3">
+                <div id="studyProgressBar" class="h-full bg-violet-500 transition-all" style="width:0%"></div>
+              </div>
+              <div class="grid grid-cols-3 gap-1.5 mb-2">
+                <button onclick="addMinutes('study', 15)" class="py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono text-violet-300 font-bold">+15m</button>
+                <button onclick="addMinutes('study', 30)" class="py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono text-violet-300 font-bold">+30m</button>
+                <button onclick="addMinutes('study', 60)" class="py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono text-violet-300 font-bold">+1h</button>
+              </div>
+              <input type="text" id="studyTopicInput" oninput="saveStudyTopic(this.value)" placeholder="¿Qué estudias hoy?" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-violet-500">
+            </div>
+
+            <!-- Coche -->
+            <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+              <div class="flex justify-between items-start mb-2">
+                <div>
+                  <span class="text-[10px] font-bold uppercase text-amber-400">🚗 Coche / Conducción</span>
+                  <div class="flex items-baseline gap-1 mt-0.5">
+                    <span id="carMinutesText" class="text-2xl font-extrabold font-mono text-white">0</span>
+                    <span class="text-xs text-slate-400">min</span>
+                  </div>
+                </div>
+                <button onclick="toggleLiveTimer('car')" id="btnCarTimer" class="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-slate-950 text-xs font-extrabold transition">
+                  ▶ En Ruta
+                </button>
+              </div>
+              <div id="carLiveDisplay" class="hidden text-center py-1 mb-2 rounded-lg bg-amber-950/90 border border-amber-500/40 font-mono text-sm text-amber-200 font-bold">00:00</div>
+              <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-3">
+                <div id="carProgressBar" class="h-full bg-amber-500 transition-all" style="width:0%"></div>
+              </div>
+              <div class="grid grid-cols-3 gap-1.5 mb-2">
+                <button onclick="addMinutes('car', 10)" class="py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono text-amber-300 font-bold">+10m</button>
+                <button onclick="addMinutes('car', 20)" class="py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono text-amber-300 font-bold">+20m</button>
+                <button onclick="addMinutes('car', 45)" class="py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono text-amber-300 font-bold">+45m</button>
+              </div>
+              <input type="text" id="carTripInput" oninput="saveCarNotes(this.value)" placeholder="Trayecto (ej. Gym, Compras...)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILA 2: ALIMENTACIÓN Y ACCESOS RÁPIDOS -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-7 glass-card rounded-3xl p-6 border-l-4 border-l-emerald-500">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-2xl">🥗</div>
+              <div>
+                <h3 class="text-lg font-extrabold text-white">Registro de Comidas y Agua</h3>
+                <p class="text-xs text-slate-400">Lo que comes hoy y calidad nutricional</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1" id="nutritionQualityStars"></div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-2 mb-4">
+            <select id="mealTypeSelect" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-semibold">
+              <option value="🌅 Desayuno">🌅 Desayuno</option>
+              <option value="☀️ Comida" selected>☀️ Comida</option>
+              <option value="🍎 Merienda / Post-Entreno">🍎 Merienda / Post-Entreno</option>
+              <option value="🌙 Cena">🌙 Cena</option>
+            </select>
+            <input type="text" id="mealDescInput" placeholder="¿Qué has comido? (Ej. Pollo a la plancha con arroz y huevos)" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white">
+            <input type="number" id="mealKcalInput" placeholder="Kcal" class="w-24 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-white">
+            <button onclick="addMeal()" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition">+ Añadir</button>
+          </div>
+
+          <div id="mealsListContainer" class="space-y-2 max-h-44 overflow-y-auto mb-4"></div>
+
+          <div class="flex items-center justify-between pt-3 border-t border-slate-800">
+            <span class="text-xs text-slate-300 font-semibold">💧 Hidratación Personal (<span id="waterGlassesCount" class="text-cyan-400 font-mono font-bold">0</span>/8 vasos)</span>
+            <div class="flex gap-1.5" id="waterGlassesRow"></div>
+          </div>
+        </div>
+
+        <!-- Accesos directos visuales -->
+        <div class="lg:col-span-5 glass-card rounded-3xl p-6 flex flex-col justify-between space-y-3">
+          <h3 class="text-base font-extrabold text-white">⚡ Accesos Directos de Hoy</h3>
+          <div onclick="switchTab('gym')" class="p-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 cursor-pointer flex items-center justify-between transition">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">🏋️</span>
+              <div>
+                <p class="text-xs font-bold text-white">Gimnasio Visual (+40 Ejercicios)</p>
+                <p id="dashGymSummary" class="text-[11px] text-rose-400">Sin series hoy — Toca para registrar</p>
+              </div>
+            </div>
+            <span class="text-slate-400 font-bold">➔</span>
+          </div>
+
+          <div onclick="switchTab('bikemap')" class="p-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 cursor-pointer flex items-center justify-between transition">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">🗺️</span>
+              <div>
+                <p class="text-xs font-bold text-white">Trazar Ruta en Bici (Punto A ➔ B)</p>
+                <p id="dashBikeSummary" class="text-[11px] text-cyan-400">0 km hoy — Calcula km y min en el mapa</p>
+              </div>
+            </div>
+            <span class="text-slate-400 font-bold">➔</span>
+          </div>
+
+          <div onclick="switchTab('finances')" class="p-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 cursor-pointer flex items-center justify-between transition">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">🛒</span>
+              <div>
+                <p class="text-xs font-bold text-white">Lista de la Compra y Gastos (€)</p>
+                <p id="dashShopSummary" class="text-[11px] text-emerald-400">Ver pendientes y gastos del día</p>
+              </div>
+            </div>
+            <span class="text-slate-400 font-bold">➔</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============================================================== -->
+    <!-- VISTA 2: GIMNASIO PRO VISUAL (+40 EJERCICIOS CON ILUSTRACIÓN)   -->
+    <!-- =============================================================== -->
+    <section id="view-gym" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- BIOMETRÍA: PESO CORPORAL, ALTURA, IMC Y FUERZA RELATIVA -->
+        <div class="lg:col-span-4 glass-card rounded-3xl p-6 border-t-4 border-t-rose-500 flex flex-col justify-between">
+          <div>
+            <h3 class="text-lg font-extrabold text-white flex items-center gap-2 mb-1">⚖️ Tu Cuerpo vs. Fuerza</h3>
+            <p class="text-xs text-slate-400 mb-4">Compara tu peso y altura con los kilos que levantas</p>
+
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800">
+                <label class="text-[10px] text-slate-400 uppercase font-bold block mb-1">Tu Peso Hoy (kg)</label>
+                <input type="number" step="0.1" id="bodyWeightInput" onchange="updateBodyMetrics()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-base font-extrabold font-mono text-white">
+              </div>
+              <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800">
+                <label class="text-[10px] text-slate-400 uppercase font-bold block mb-1">Tu Altura (cm)</label>
+                <input type="number" id="bodyHeightInput" onchange="updateBodyMetrics()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-base font-extrabold font-mono text-white">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div class="bg-slate-900/70 p-3 rounded-2xl border border-slate-800 text-center">
+                <span class="text-[10px] uppercase text-slate-400 font-bold block">IMC Corporal</span>
+                <span id="bmiValueText" class="text-xl font-extrabold font-mono text-emerald-400">22.5</span>
+                <span id="bmiStatusText" class="text-[10px] text-slate-400 block">Peso óptimo</span>
+              </div>
+              <div class="bg-slate-900/70 p-3 rounded-2xl border border-slate-800 text-center">
+                <span class="text-[10px] uppercase text-slate-400 font-bold block">Fuerza Relativa Máx</span>
+                <span id="relStrengthText" class="text-xl font-extrabold font-mono text-rose-400">0.00x</span>
+                <span class="text-[10px] text-slate-400 block">veces tu propio peso</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 space-y-2">
+            <p class="text-xs font-bold text-white">📊 Ratio Fuerza / Peso Corporal (1RM)</p>
+            <div id="relativeStrengthBars" class="space-y-2.5 text-xs"></div>
+          </div>
+        </div>
+
+        <!-- REGISTRADOR CON TARJETA VISUAL DEL EJERCICIO SELECCIONADO -->
+        <div class="lg:col-span-8 glass-card rounded-3xl p-6 border-t-4 border-t-orange-500">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <div>
+              <h3 class="text-lg font-extrabold text-white">🏋️ Registrar Ejercicio (Kilos, Repes y Series)</h3>
+              <p class="text-xs text-slate-400">Elige el grupo muscular o cualquiera de los +40 ejercicios con guía visual</p>
+            </div>
+            <!-- Filtro rápido por grupo muscular -->
+            <div class="flex flex-wrap gap-1" id="muscleCategoryPills">
+              <button onclick="filterExerciseCategory('ALL')" class="cat-pill px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-500 text-slate-950">Todos</button>
+              <button onclick="filterExerciseCategory('Pecho')" class="cat-pill px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300">Pecho</button>
+              <button onclick="filterExerciseCategory('Espalda')" class="cat-pill px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300">Espalda</button>
+              <button onclick="filterExerciseCategory('Piernas')" class="cat-pill px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300">Piernas</button>
+              <button onclick="filterExerciseCategory('Hombros')" class="cat-pill px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300">Hombros</button>
+              <button onclick="filterExerciseCategory('Brazos')" class="cat-pill px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300">Brazos</button>
+              <button onclick="filterExerciseCategory('Core')" class="cat-pill px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300">Core</button>
+            </div>
+          </div>
+
+          <!-- Tarjeta de Vista Previa Visual del Ejercicio -->
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 bg-slate-900/90 p-4 rounded-2xl border border-slate-800 mb-4 items-center">
+            <div class="sm:col-span-4 flex flex-col items-center justify-center bg-slate-950 rounded-2xl p-3 border border-slate-800/90 h-40 relative overflow-hidden" id="selectedExerciseVisualBox">
+              <!-- SVG dinámico se inyecta aquí -->
+            </div>
+            <div class="sm:col-span-8 space-y-3">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label class="text-[10px] text-slate-400 uppercase font-bold block mb-1">Selecciona Ejercicio (+40)</label>
+                  <select id="gymExerciseSelect" onchange="onExerciseSelectChange()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-bold focus:border-rose-500 focus:outline-none"></select>
+                </div>
+                <div>
+                  <label class="text-[10px] text-slate-400 uppercase font-bold block mb-1">O escribe uno personalizado</label>
+                  <input type="text" id="gymCustomExercise" placeholder="Ej. Hip Thrust en máquina..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                </div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2 text-[11px]">
+                <span id="previewMuscleBadge" class="px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold">Músculo: Pecho</span>
+                <span id="previewEquipmentBadge" class="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 font-semibold">Equipo: Barra</span>
+                <span id="previewTipText" class="text-slate-400 italic">Controla la bajada y empuja explosivo.</span>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2.5 pt-1">
+                <div>
+                  <label class="text-[10px] text-rose-300 uppercase font-bold block mb-1">Peso (KG)</label>
+                  <input type="number" step="0.5" id="gymWeightInput" placeholder="60" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono font-extrabold text-white text-center">
+                </div>
+                <div>
+                  <label class="text-[10px] text-amber-300 uppercase font-bold block mb-1">Repeticiones</label>
+                  <input type="number" id="gymRepsInput" placeholder="10" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono font-extrabold text-white text-center">
+                </div>
+                <div>
+                  <label class="text-[10px] text-cyan-300 uppercase font-bold block mb-1">Series</label>
+                  <input type="number" id="gymSetsInput" value="3" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono font-extrabold text-white text-center">
+                </div>
+              </div>
+
+              <button onclick="addGymExerciseLog()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-400 hover:to-orange-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-rose-500/20 transition">
+                + Guardar Ejercicio y Calcular Mejora (Peso / Repes / 1RM)
+              </button>
+            </div>
+          </div>
+
+          <!-- Lista de series hechas hoy con miniatura visual -->
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Entrenamiento Registrado Hoy</h4>
+              <span id="gymTodayTotalVolume" class="text-xs font-mono font-bold text-rose-400">Volumen Total: 0 kg</span>
+            </div>
+            <div id="gymTodayList" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRÁFICA DE PROGRESIÓN E HISTORIAL DEL EJERCICIO -->
+      <div class="glass-card rounded-3xl p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 class="text-lg font-extrabold text-white">📈 Evolución de Fuerza, Kilos y Repes</h3>
+            <p class="text-xs text-slate-400">Comprueba cómo subes de peso o haces más repeticiones en cada ejercicio</p>
+          </div>
+          <select id="gymHistoryFilterSelect" onchange="renderGymProgressionChart()" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-xs font-bold text-white"></select>
+        </div>
+        <div id="gymProgressionStatsRow" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4"></div>
+        <div id="gymProgressionBars" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3 pt-2"></div>
+      </div>
+
+      <!-- ATLAS VISUAL DE TODOS LOS EJERCICIOS (TOCA CUALQUIERA PARA CARGARLO) -->
+      <div class="glass-card rounded-3xl p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 class="text-lg font-extrabold text-white">🖼️ Atlas Visual de Ejercicios (+40 Ejercicios)</h3>
+            <p class="text-xs text-slate-400">Haz clic en cualquier tarjeta para cargarlo arriba y anotar tus series</p>
+          </div>
+          <input type="text" id="atlasSearchInput" oninput="renderVisualExerciseAtlas()" placeholder="🔍 Buscar ejercicio (ej. jalón, banca, gemelos, bíceps...)" class="bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white w-full sm:w-72">
+        </div>
+        <div id="visualExerciseAtlasGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-96 overflow-y-auto pr-1"></div>
+      </div>
+    </section>
+
+    <!-- =============================================================== -->
+    <!-- VISTA 3: MAPA INTERACTIVO DE BICICLETA (SIN API KEY)            -->
+    <!-- =============================================================== -->
+    <section id="view-bikemap" class="hidden space-y-6">
+      <div class="glass-card rounded-3xl p-6 border-t-4 border-t-cyan-400">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
+          <div>
+            <h3 class="text-xl font-extrabold text-white flex items-center gap-2">🗺️ Calculador de Rutas de Bicicleta</h3>
+            <p class="text-xs text-slate-400">Busca tu pueblo/ciudad o haz clic en el mapa para marcar <b>Punto A (Salida)</b> y <b>Punto B (Llegada)</b>.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="mapLayerStyleSelect" onchange="changeBikeMapStyle(this.value)" class="px-3 py-2 rounded-xl bg-slate-900 text-cyan-300 border border-cyan-500/40 text-xs font-bold">
+              <option value="esri_street" selected>🗺️ Callejero Mundial (Esri - Sin Clave)</option>
+              <option value="esri_sat">🛰️ Satélite Real (Caminos y Campo)</option>
+              <option value="ign_spain">🇪🇸 Mapa IGN España Oficial</option>
+              <option value="osm_hot">🚴 Mapa Ciclista / Humanitario</option>
+            </select>
+            <button onclick="locateUserOnBikeMap()" class="px-3 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 text-xs font-bold transition">📍 Mi GPS</button>
+            <button onclick="clearBikeMapPoints()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition">🗑️ Reiniciar Puntos</button>
+          </div>
+        </div>
+
+        <!-- Buscador de Ciudad o Pueblo -->
+        <div class="flex gap-2 mb-4">
+          <input type="text" id="mapCitySearchInput" onkeydown="if(event.key==='Enter') searchPlaceOnMap()" placeholder="🔍 Escribe tu pueblo, ciudad o calle (ej. Palma, Madrid, Sevilla, Valencia...)" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500">
+          <button onclick="searchPlaceOnMap()" class="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs transition">Ir a Zona</button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div class="lg:col-span-8">
+            <div id="bike-map"></div>
+          </div>
+
+          <div class="lg:col-span-4 bg-slate-900/90 p-5 rounded-2xl border border-slate-800 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <span class="text-xs font-bold uppercase text-cyan-400">Datos de la Ruta</span>
+              <span id="routeCalcBadge" class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">Haz clic en el mapa</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
+                <span class="text-[10px] text-slate-400 uppercase font-bold block">Distancia</span>
+                <span id="calcBikeKm" class="text-2xl font-extrabold font-mono text-cyan-400">0.00</span>
+                <span class="text-[11px] text-slate-400 block">kilómetros</span>
+              </div>
+              <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
+                <span class="text-[10px] text-slate-400 uppercase font-bold block">Tiempo Estimado</span>
+                <span id="calcBikeMin" class="text-2xl font-extrabold font-mono text-emerald-400">0</span>
+                <span class="text-[11px] text-slate-400 block">minutos</span>
+              </div>
+            </div>
+
+            <div class="space-y-2 pt-1">
+              <label class="flex items-center justify-between text-xs text-slate-300 cursor-pointer bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                <span>🔄 Ruta de Ida y Vuelta (x2)</span>
+                <input type="checkbox" id="bikeRoundTripCheck" onchange="recalculateCurrentBikeRoute()" class="w-4 h-4 accent-cyan-400">
+              </label>
+
+              <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                <span class="text-slate-400">Ritmo medio bici:</span>
+                <select id="bikeSpeedSelect" onchange="recalculateCurrentBikeRoute()" class="bg-slate-900 text-white font-mono text-xs rounded-lg px-2 py-1 border border-slate-700">
+                  <option value="15">Paseo (15 km/h)</option>
+                  <option value="20" selected>Normal (20 km/h)</option>
+                  <option value="25">Rápido (25 km/h)</option>
+                </select>
+              </div>
+
+              <input type="text" id="bikeRouteNameInput" placeholder="Nombre (ej. Ruta sendero / pueblo)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+            </div>
+
+            <button onclick="saveCalculatedBikeRoute()" class="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-cyan-500/20 transition">
+              🚴 Añadir Ruta y Sumar a mi Día
+            </button>
+
+            <div class="pt-3 border-t border-slate-800">
+              <h4 class="text-[11px] font-bold uppercase text-slate-400 mb-2">Rutas Guardadas Hoy</h4>
+              <div id="todayBikeRoutesList" class="space-y-1.5 max-h-36 overflow-y-auto"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============================================================== -->
+    <!-- VISTA 4: MI FIT (ZEPP LIFE) & SALUD (PASOS)                     -->
+    <!-- =============================================================== -->
+    <section id="view-mifit" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-7 glass-card rounded-3xl p-6 border-t-4 border-t-orange-500 space-y-5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-2xl">⌚</div>
+              <div>
+                <h3 class="text-lg font-extrabold text-white">Sincronización Mi Fit / Zepp Life & Health</h3>
+                <p class="text-xs text-slate-400">Importa los pasos diarios de tu reloj inteligente o móvil</p>
+              </div>
+            </div>
+            <span id="mifitStatusBadge" class="text-xs font-mono px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Listo</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between">
+              <div>
+                <span class="text-[10px] font-bold uppercase text-orange-400">Opción 1 • Sincronización Rápida</span>
+                <h4 class="text-sm font-bold text-white mt-1">Sincronizar Semana del Reloj</h4>
+                <p class="text-xs text-slate-400 mt-1">Lee las métricas de pasos, calorías y distancia de los últimos 7 días.</p>
+              </div>
+              <button onclick="simulateMiFitCloudSync()" class="mt-4 w-full py-2.5 rounded-xl bg-orange-500 hover:bg-orange-400 text-slate-950 font-extrabold text-xs transition">
+                🔄 Sincronizar Pasos Ahora
+              </button>
+            </div>
+
+            <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between">
+              <div>
+                <span class="text-[10px] font-bold uppercase text-cyan-400">Opción 2 • Archivo Mi Fit / Zepp</span>
+                <h4 class="text-sm font-bold text-white mt-1">Importar CSV / JSON de Mi Fit</h4>
+                <p class="text-xs text-slate-400 mt-1">Sube el archivo exportado desde tu app Zepp Life o Google Fit.</p>
+              </div>
+              <label class="mt-4 w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-xs text-center cursor-pointer border border-slate-700 transition block">
+                📂 Seleccionar Archivo CSV/JSON
+                <input type="file" accept=".csv,.json" onchange="importMiFitFile(event)" class="hidden">
+              </label>
+            </div>
+          </div>
+
+          <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <span class="text-xs font-bold text-white">📱 Podómetro en Vivo del Móvil + Botones Rápidos</span>
+              <p class="text-[11px] text-slate-400">Suma pasos detectando el movimiento o añade bloques rápidos.</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="addStepsQuick(1000)" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-orange-300 font-mono text-xs font-bold">+1.000</button>
+              <button onclick="addStepsQuick(2500)" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-orange-300 font-mono text-xs font-bold">+2.500</button>
+              <button onclick="toggleWebPedometer()" id="btnWebPedometer" class="px-4 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold">
+                🚶 Activar Sensor
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 glass-card rounded-3xl p-6 flex flex-col justify-between">
+          <div>
+            <h3 class="text-base font-extrabold text-white mb-1">📊 Pasos de los Últimos 7 Días</h3>
+            <p class="text-xs text-slate-400 mb-4">Meta diaria: <span id="mifitStepGoalLabel" class="font-mono text-orange-400 font-bold">10.000</span> pasos</p>
+            <div id="mifitWeeklyStepsBars" class="space-y-2.5"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============================================================== -->
+    <!-- VISTA 5: FINANZAS Y LISTA DE LA COMPRA                          -->
+    <!-- =============================================================== -->
+    <section id="view-finances" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- GASTOS EN EUROS -->
+        <div class="lg:col-span-6 glass-card rounded-3xl p-6 border-t-4 border-t-emerald-500 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-extrabold text-white">💶 Control de Dinero y Gastos (€)</h3>
+              <p class="text-xs text-slate-400">Registra lo que gastas cada día y controla tu presupuesto semanal</p>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] text-slate-400 uppercase font-bold block">Gasto Semanal</span>
+              <span id="weeklyTotalSpentVal" class="text-xl font-extrabold font-mono text-emerald-400">0.00 €</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-slate-900 p-3.5 rounded-2xl border border-slate-800">
+            <input type="number" step="0.01" id="expenseAmountInput" placeholder="€ Importe" class="sm:col-span-3 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white">
+            <input type="text" id="expenseDescInput" placeholder="Concepto (ej. Compra Mercadona, Gasolina...)" class="sm:col-span-5 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+            <select id="expenseCatSelect" class="sm:col-span-4 bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-white">
+              <option value="🛒 Supermercado">🛒 Supermercado</option>
+              <option value="🦃 Granja / Pavos">🦃 Granja / Pavos</option>
+              <option value="🚗 Coche / Gasolina">🚗 Coche / Gasolina</option>
+              <option value="🏋️ Gym / Deporte">🏋️ Gym / Deporte</option>
+              <option value="🎉 Ocio / Otros">🎉 Ocio / Otros</option>
+            </select>
+            <button onclick="addExpense()" class="sm:col-span-12 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition">
+              + Registrar Gasto en Euros
+            </button>
+          </div>
+
+          <div id="expensesListContainer" class="space-y-2 max-h-56 overflow-y-auto"></div>
+        </div>
+
+        <!-- LISTA DE LA COMPRA CONECTADA -->
+        <div class="lg:col-span-6 glass-card rounded-3xl p-6 border-t-4 border-t-cyan-500 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-extrabold text-white">🛒 Lista de la Compra Inteligente</h3>
+              <p class="text-xs text-slate-400">Añade lo que falta y conviértelo en gasto al pagar</p>
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <input type="text" id="shopItemInput" onkeydown="if(event.key==='Enter') addShoppingItem()" placeholder="Añadir producto (ej. Avena, Huevos, Pienso pavos...)" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white">
+            <select id="shopCatSelect" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+              <option value="Supermercado">🥩 Súper</option>
+              <option value="Granja">🦃 Pavos</option>
+              <option value="Estudio/Hogar">🏠 Hogar</option>
+            </select>
+            <button onclick="addShoppingItem()" class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs">+ Añadir</button>
+          </div>
+
+          <!-- Conversor de Compra a Gasto -->
+          <div class="bg-slate-900/90 p-3 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs text-slate-300 font-semibold">💳 ¿Ya compraste lo marcado?</span>
+            <div class="flex items-center gap-2">
+              <input type="number" step="0.01" id="checkoutTicketInput" placeholder="Total Ticket €" class="w-28 bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-mono text-white">
+              <button onclick="checkoutShoppingListWithExpense()" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition">
+                Pasar a Gastos €
+              </button>
+            </div>
+          </div>
+
+          <div id="shoppingListContainer" class="space-y-2 max-h-56 overflow-y-auto"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============================================================== -->
+    <!-- VISTA 6: ANÁLISIS SEMANAL (¿LO ESTOY HACIENDO BIEN?)            -->
+    <!-- =============================================================== -->
+    <section id="view-weekly" class="hidden space-y-6">
+      <div class="glass-card rounded-3xl p-6 border-t-4 border-t-violet-500">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-widest text-violet-400">Auditoría Inteligente de 7 Días</span>
+            <h3 class="text-2xl font-extrabold text-white mt-0.5" id="weeklyVerdictTitle">Analizando tu semana...</h3>
+            <p class="text-xs text-slate-400 mt-1" id="weeklyVerdictSub">Cumplimiento de objetivos de pasos, bici, gimnasio, estudio y pavos.</p>
+          </div>
+          <div class="bg-slate-900 px-5 py-3 rounded-2xl border border-slate-800 text-center">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Nota Global Semanal</span>
+            <span id="weeklyGlobalScore" class="text-3xl font-extrabold font-mono text-emerald-400">0%</span>
+          </div>
+        </div>
+
+        <div id="weeklyKPIsGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6"></div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 uppercase text-[10px]">
+                <th class="py-2.5 px-3">Día</th>
+                <th class="py-2.5 px-3">🦃 Pavos</th>
+                <th class="py-2.5 px-3">👣 Pasos</th>
+                <th class="py-2.5 px-3">🚴 Bici</th>
+                <th class="py-2.5 px-3">🏋️ Gym</th>
+                <th class="py-2.5 px-3">📚 Estudio</th>
+                <th class="py-2.5 px-3">🚗 Coche</th>
+                <th class="py-2.5 px-3">💶 Gasto</th>
+              </tr>
+            </thead>
+            <tbody id="weeklyAuditTableBody" class="divide-y divide-slate-800/60 font-mono"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============================================================== -->
+    <!-- VISTA 7: RESUMEN DEL DÍA Y DIARIO PERSONAL                      -->
+    <!-- =============================================================== -->
+    <section id="view-summary" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-6 glass-card rounded-3xl p-6 border-t-4 border-t-indigo-500 space-y-4">
+          <h3 class="text-lg font-extrabold text-white">🤖 Resumen Automático de tu Día</h3>
+          <div id="autoDailySummaryBox" class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs sm:text-sm text-slate-200 leading-relaxed space-y-2"></div>
+        </div>
+
+        <div class="lg:col-span-6 glass-card rounded-3xl p-6 border-t-4 border-t-emerald-500 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-extrabold text-white">📓 Mi Diario y Reflexión Personal</h3>
+            <div class="flex gap-1.5" id="moodSelectorRow"></div>
+          </div>
+          <textarea id="personalJournalTextarea" oninput="saveJournalText(this.value)" rows="6" placeholder="Escribe aquí algo personal sobre tu día: cómo te has sentido, ideas, cosas que agradecer o metas para mañana..." class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-4 text-xs sm:text-sm text-white focus:outline-none focus:border-emerald-500"></textarea>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL DE OBJETIVOS SEMANALES -->
+  <div id="goalsModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="glass-card rounded-3xl p-6 max-w-md w-full border border-slate-700 space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-extrabold text-white">🎯 Tus Objetivos Semanales</h3>
+        <button onclick="closeGoalsModal()" class="text-slate-400 hover:text-white">✕</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="text-slate-400 font-bold block mb-1">Pasos Diarios Objetivo</label>
+          <input type="number" id="goalStepsInput" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+        </div>
+        <div>
+          <label class="text-slate-400 font-bold block mb-1">Kilómetros de Bici Semanales</label>
+          <input type="number" id="goalBikeWeeklyInput" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+        </div>
+        <div>
+          <label class="text-slate-400 font-bold block mb-1">Minutos de Estudio Diarios</label>
+          <input type="number" id="goalStudyDailyInput" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+        </div>
+        <div>
+          <label class="text-slate-400 font-bold block mb-1">Presupuesto Máximo Semanal (€)</label>
+          <input type="number" id="goalBudgetWeeklyInput" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+        </div>
+      </div>
+      <button onclick="saveGoalsFromModal()" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs">Guardar Objetivos</button>
+    </div>
+  </div>
+
+  <!-- ================= LÓGICA JAVASCRIPT COMPLETA ================= -->
+  <script>
+    // --- CATÁLOGO DE +40 EJERCICIOS DE GIMNASIO CON ILUSTRACIÓN VECTORIAL ---
+    const EXERCISE_ATLAS = [
+      // PECHO
+      { name: 'Press de Banca Plano', category: 'Pecho', equipment: 'Barra', pose: 'bench', color: '#f43f5e', tip: 'Retrae escápulas, pies firmes y baja la barra al esternón.' },
+      { name: 'Press Inclinado con Mancuernas', category: 'Pecho', equipment: 'Mancuernas', pose: 'incline', color: '#f43f5e', tip: 'Banco a 30-45º para enfocar la parte superior del pectoral.' },
+      { name: 'Aperturas con Mancuernas', category: 'Pecho', equipment: 'Mancuernas', pose: 'fly', color: '#f43f5e', tip: 'Abre los brazos con codos semiflexionados estirando el pecho.' },
+      { name: 'Cruce de Poleas', category: 'Pecho', equipment: 'Polea', pose: 'cable_fly', color: '#f43f5e', tip: 'Junta las manos frente al torso apretando 1 segundo.' },
+      { name: 'Fondos en Paralelas (Dips)', category: 'Pecho', equipment: 'Peso Corporal', pose: 'dip', color: '#f43f5e', tip: 'Inclina ligeramente el torso hacia delante para activar más pecho.' },
+      { name: 'Flexiones (Push-ups)', category: 'Pecho', equipment: 'Peso Corporal', pose: 'pushup', color: '#f43f5e', tip: 'Cuerpo recto en plancha y pecho rozando el suelo.' },
+      { name: 'Press de Pecho en Máquina', category: 'Pecho', equipment: 'Máquina', pose: 'bench', color: '#f43f5e', tip: 'Ideal para llegar al fallo muscular con total seguridad.' },
+
+      // ESPALDA
+      { name: 'Dominadas (Pull-ups)', category: 'Espalda', equipment: 'Peso Corporal', pose: 'pullup', color: '#3b82f6', tip: 'Sube hasta pasar la barbilla tirando con los codos hacia abajo.' },
+      { name: 'Jalón al Pecho en Polea', category: 'Espalda', equipment: 'Polea', pose: 'lat_pull', color: '#3b82f6', tip: 'Lleva la barra a la parte alta del pecho sin balancear el cuerpo.' },
+      { name: 'Remo con Barra', category: 'Espalda', equipment: 'Barra', pose: 'row', color: '#3b82f6', tip: 'Espalda recta a 45º, tira de la barra hacia el ombligo.' },
+      { name: 'Remo con Mancuerna a una Mano', category: 'Espalda', equipment: 'Mancuerna', pose: 'row', color: '#3b82f6', tip: 'Apoya rodilla en banco y lleva el codo bien atrás.' },
+      { name: 'Remo en Polea Baja (Gironda)', category: 'Espalda', equipment: 'Polea', pose: 'seated_row', color: '#3b82f6', tip: 'Pecho fuera y junta las escápulas al final del recorrido.' },
+      { name: 'Peso Muerto Convencional', category: 'Espalda', equipment: 'Barra', pose: 'deadlift', color: '#3b82f6', tip: 'Barra pegada a las tibias, espalda neutra y empuje de cadera.' },
+      { name: 'Pull-Over en Polea Alta', category: 'Espalda', equipment: 'Polea', pose: 'cable_fly', color: '#3b82f6', tip: 'Brazos casi rectos llevando la cuerda hasta los muslos.' },
+
+      // PIERNAS Y GLÚTEO
+      { name: 'Sentadilla Libre con Barra', category: 'Piernas', equipment: 'Barra', pose: 'squat', color: '#10b981', tip: 'Rompe el paralelo manteniendo rodillas alineadas con laseh puntas.' },
+      { name: 'Prensa de Piernas 45º', category: 'Piernas', equipment: 'Máquina', pose: 'leg_press', color: '#10b981', tip: 'Baja profundo sin despegar la zona lumbar del respaldo.' },
+      { name: 'Peso Muerto Rumano (Femoral)', category: 'Piernas', equipment: 'Barra', pose: 'deadlift', color: '#10b981', tip: 'Cadera atrás notando el estiramiento en los isquiotibiales.' },
+      { name: 'Hip Thrust (Empuje de Cadera)', category: 'Piernas', equipment: 'Barra', pose: 'hip_thrust', color: '#10b981', tip: 'Aprieta glúteos arriba formando una línea horizontal.' },
+      { name: 'Sentadilla Búlgara', category: 'Piernas', equipment: 'Mancuernas', pose: 'lunge', color: '#10b981', tip: 'Pie trasero elevado en banco, máxima activación de cuádriceps y glúteo.' },
+      { name: 'Zancadas (Lunges)', category: 'Piernas', equipment: 'Mancuernas', pose: 'lunge', color: '#10b981', tip: 'Paso largo controlando que la rodilla trasera casi toque el suelo.' },
+      { name: 'Extensión de Cuádriceps', category: 'Piernas', equipment: 'Máquina', pose: 'leg_ext', color: '#10b981', tip: 'Aguanta 1 segundo arriba apretando el cuádriceps.' },
+      { name: 'Curl Femoral Tumbado/Sentado', category: 'Piernas', equipment: 'Máquina', pose: 'leg_ext', color: '#10b981', tip: 'Controla el retorno sin dar tirones lumbares.' },
+      { name: 'Elevación de Gemelos', category: 'Piernas', equipment: 'Máquina', pose: 'calf', color: '#10b981', tip: 'Estira abajo del todo y sube de puntillas al máximo.' },
+
+      // HOMBROS
+      { name: 'Press Militar con Barra / Mancuernas', category: 'Hombros', equipment: 'Barra', pose: 'ohp', color: '#f59e0b', tip: 'Empuja vertical sobre la cabeza apretando el abdomen.' },
+      { name: 'Elevaciones Laterales', category: 'Hombros', equipment: 'Mancuernas', pose: 'lat_raise', color: '#f59e0b', tip: 'Sube los codos hasta la altura de los hombros sin impulso.' },
+      { name: 'Pájaros / Posterior en Polea (Face Pull)', category: 'Hombros', equipment: 'Polea', pose: 'face_pull', color: '#f59e0b', tip: 'Tira de la cuerda hacia la frente abriendo los codos.' },
+      { name: 'Press Arnold', category: 'Hombros', equipment: 'Mancuernas', pose: 'ohp', color: '#f59e0b', tip: 'Gira las muñecas al subir para trabajar todo el deltoides.' },
+      { name: 'Encogimientos de Trapecio', category: 'Hombros', equipment: 'Mancuernas', pose: 'calf', color: '#f59e0b', tip: 'Eleva los hombros hacia las orejas aguantando 1 segundo.' },
+
+      // BRAZOS (BÍCEPS Y TRÍCEPS)
+      { name: 'Curl de Bíceps con Barra Z', category: 'Brazos', equipment: 'Barra', pose: 'curl', color: '#a855f7', tip: 'Codos pegados al costado sin mover los hombros.' },
+      { name: 'Curl Martillo con Mancuernas', category: 'Brazos', equipment: 'Mancuernas', pose: 'curl', color: '#a855f7', tip: 'Agarre neutro para dar grosor al braquial y antebrazo.' },
+      { name: 'Curl Predicador (Banco Scott)', category: 'Brazos', equipment: 'Barra/Manc.', pose: 'curl', color: '#a855f7', tip: 'Aísla el bíceps evitando cualquier balanceo.' },
+      { name: 'Extensión de Tríceps en Polea (Cuerda)', category: 'Brazos', equipment: 'Polea', pose: 'tricep', color: '#a855f7', tip: 'Abre la cuerda al final extendiendo el codo por completo.' },
+      { name: 'Press Francés (Rompecráneos)', category: 'Brazos', equipment: 'Barra Z', pose: 'bench', color: '#a855f7', tip: 'Flexiona solo los codos bajando hacia la frente.' },
+      { name: 'Fondos de Tríceps en Banco', category: 'Brazos', equipment: 'Peso Corporal', pose: 'dip', color: '#a855f7', tip: 'Baja vertical rozando el banco con la espalda.' },
+
+      // CORE Y CARDIO
+      { name: 'Plancha Abdominal (Plank)', category: 'Core', equipment: 'Peso Corporal', pose: 'pushup', color: '#06b6d4', tip: 'Aprieta abdomen y glúteos manteniendo línea recta.' },
+      { name: 'Elevación de Piernas Colgado', category: 'Core', equipment: 'Barra', pose: 'pullup', color: '#06b6d4', tip: 'Sube las rodillas o piernas hacia el pecho controlando la bajada.' },
+      { name: 'Crunch Abdominal en Polea', category: 'Core', equipment: 'Polea', pose: 'crunch', color: '#06b6d4', tip: 'Flexiona la columna llevando los codos hacia las rodillas.' },
+      { name: 'Rueda Abdominal (Ab Wheel)', category: 'Core', equipment: 'Accesorio', pose: 'pushup', color: '#06b6d4', tip: 'Extiende sin arquear la zona lumbar.' }
+    ];
+
+    // Generador de Ilustración SVG Anatómica Dinámica según el tipo de ejercicio
+    function getExerciseIllustrationSVG(ex) {
+      const c = ex.color || '#f43f5e';
+      const poses = {
+        bench: `
+          <rect x="20" y="68" width="80" height="8" rx="4" fill="#334155"/>
+          <rect x="30" y="76" width="8" height="22" fill="#475569"/>
+          <rect x="82" y="76" width="8" height="22" fill="#475569"/>
+          <circle cx="38" cy="58" r="8" fill="#e2e8f0"/>
+          <rect x="46" y="56" width="36" height="12" rx="6" fill="${c}" opacity="0.9"/>
+          <line x1="55" y1="60" x2="55" y2="32" stroke="#f8fafc" stroke-width="5" stroke-linecap="round"/>
+          <line x1="25" y1="32" x2="85" y2="32" stroke="#94a3b8" stroke-width="4"/>
+          <rect x="22" y="20" width="7" height="24" rx="2" fill="${c}"/>
+          <rect x="81" y="20" width="7" height="24" rx="2" fill="${c}"/>
+        `,
+        incline: `
+          <line x1="25" y1="82" x2="65" y2="48" stroke="#334155" stroke-width="8" stroke-linecap="round"/>
+          <circle cx="58" cy="36" r="8" fill="#e2e8f0"/>
+          <line x1="54" y1="45" x2="36" y2="70" stroke="${c}" stroke-width="11" stroke-linecap="round"/>
+          <line x1="52" y1="50" x2="52" y2="22" stroke="#f8fafc" stroke-width="4" stroke-linecap="round"/>
+          <rect x="40" y="16" width="24" height="7" rx="3" fill="${c}"/>
+        `,
+        pullup: `
+          <line x1="20" y1="16" x2="100" y2="16" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="60" cy="34" r="8" fill="#e2e8f0"/>
+          <path d="M40 16 L48 38 L72 38 L80 16" fill="none" stroke="#f8fafc" stroke-width="4.5" stroke-linecap="round"/>
+          <rect x="48" y="42" width="24" height="30" rx="6" fill="${c}"/>
+          <line x1="54" y1="72" x2="52" y2="96" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/>
+          <line x1="66" y1="72" x2="68" y2="96" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/>
+        `,
+        squat: `
+          <line x1="18" y1="34" x2="102" y2="34" stroke="#94a3b8" stroke-width="4"/>
+          <rect x="16" y="22" width="8" height="24" rx="2" fill="${c}"/>
+          <rect x="96" y="22" width="8" height="24" rx="2" fill="${c}"/>
+          <circle cx="60" cy="24" r="8" fill="#e2e8f0"/>
+          <line x1="60" y1="34" x2="52" y2="62" stroke="#f8fafc" stroke-width="10" stroke-linecap="round"/>
+          <path d="M52 62 L74 68 L68 95" fill="none" stroke="${c}" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M52 62 L38 68 L42 95" fill="none" stroke="${c}" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+        `,
+        deadlift: `
+          <circle cx="68" cy="26" r="8" fill="#e2e8f0"/>
+          <line x1="64" y1="34" x2="44" y2="58" stroke="${c}" stroke-width="11" stroke-linecap="round"/>
+          <line x1="44" y1="58" x2="50" y2="92" stroke="#cbd5e1" stroke-width="7" stroke-linecap="round"/>
+          <line x1="60" y1="42" x2="60" y2="78" stroke="#f8fafc" stroke-width="4.5" stroke-linecap="round"/>
+          <line x1="20" y1="78" x2="100" y2="78" stroke="#94a3b8" stroke-width="5"/>
+          <circle cx="32" cy="78" r="14" fill="${c}" opacity="0.85"/>
+          <circle cx="88" cy="78" r="14" fill="${c}" opacity="0.85"/>
+        `,
+        curl: `
+          <circle cx="58" cy="22" r="8" fill="#e2e8f0"/>
+          <rect x="48" y="32" width="20" height="36" rx="6" fill="#475569"/>
+          <path d="M64 38 L66 56 L84 42" fill="none" stroke="${c}" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="78" y="32" width="14" height="8" rx="3" fill="#f8fafc"/>
+          <line x1="54" y1="68" x2="52" y2="96" stroke="#cbd5e1" stroke-width="6" stroke-linecap="round"/>
+          <line x1="64" y1="68" x2="66" y2="96" stroke="#cbd5e1" stroke-width="6" stroke-linecap="round"/>
+        `,
+        ohp: `
+          <line x1="20" y1="20" x2="100" y2="20" stroke="#94a3b8" stroke-width="4"/>
+          <rect x="20" y="10" width="8" height="20" rx="2" fill="${c}"/>
+          <rect x="92" y="10" width="8" height="20" rx="2" fill="${c}"/>
+          <circle cx="60" cy="40" r="8" fill="#e2e8f0"/>
+          <path d="M40 20 L46 46 L74 46 L80 20" fill="none" stroke="${c}" stroke-width="6" stroke-linecap="round"/>
+          <rect x="48" y="48" width="24" height="32" rx="6" fill="#475569"/>
+        `
+      };
+      const inner = poses[ex.pose] || poses.ohp;
+      return `
+        <svg viewBox="0 0 120 105" class="w-full h-full max-h-28 drop-shadow">
+          <defs>
+            <radialGradient id="glow-${ex.category}" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="${c}" stop-opacity="0.32"/>
+              <stop offset="100%" stop-color="${c}" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <circle cx="60" cy="54" r="46" fill="url(#glow-${ex.category})"/>
+          ${inner}
+        </svg>
+      `;
+    }
+
+    // --- ALMACENAMIENTO SEGURO Y ESTADO GLOBAL ---
+    const SafeStorage = {
+      get(key) { try { return localStorage.getItem(key); } catch(e) { return null; } },
+      set(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
+    };
+
+    const STORAGE_KEY = 'LIFEOS_PRO_V3_DATA';
+    let currentCategoryFilter = 'ALL';
+    let activeTimers = { study: null, car: null };
+    let timerSeconds = { study: 0, car: 0 };
+
+    function getTodayISO() {
+      const d = new Date();
+      return d.toISOString().split('T')[0];
+    }
+
+    let currentDate = getTodayISO();
+
+    let appState = {
+      profile: { weightKg: 76.5, heightCm: 178 },
+      goals: { dailySteps: 10000, weeklyBikeKm: 50, dailyStudyMin: 90, weeklyBudgetEur: 150 },
+      shoppingList: [
+        { id: 1, text: 'Saco de pienso / grano para los pavos', category: 'Granja', done: false },
+        { id: 2, text: 'Pechuga de pollo y huevos camperos', category: 'Supermercado', done: false },
+        { id: 3, text: 'Avena y plátanos post-entreno', category: 'Supermercado', done: true }
+      ],
+      days: {}
+    };
+
+    function createEmptyDay() {
+      return {
+        turkeys: { fedMorning: false, morningTime: '', waterGiven: false, waterTime: '', fedEvening: false, eveningTime: '', notes: '' },
+        studyMinutes: 0,
+        studyTopic: '',
+        carMinutes: 0,
+        carNotes: '',
+        steps: 0,
+        bikeKm: 0,
+        bikeMinutes: 0,
+        bikeRoutes: [],
+        meals: [],
+        nutritionScore: 4,
+        waterGlasses: 0,
+        gymExercises: [],
+        expenses: [],
+        mood: '😄',
+        journal: ''
+      };
+    }
+
+    function getDayData(dateStr = currentDate) {
+      if (!appState.days[dateStr]) {
+        appState.days[dateStr] = createEmptyDay();
+      }
+      return appState.days[dateStr];
+    }
+
+    function saveToStorage() {
+      SafeStorage.set(STORAGE_KEY, JSON.stringify(appState));
+      updateSidebarBadges();
+    }
+
+    function loadFromStorage() {
+      const raw = SafeStorage.get(STORAGE_KEY);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          appState = Object.assign(appState, parsed);
+        } catch(e) {}
+      }
+      if (Object.keys(appState.days).length === 0) {
+        loadDemoData(true);
+      }
+    }
+
+    // --- NAVEGACIÓN DE PESTAÑAS ---
+    function switchTab(tabId) {
+      const tabs = ['dashboard', 'gym', 'bikemap', 'mifit', 'finances', 'weekly', 'summary'];
+      tabs.forEach(t => {
+        const view = document.getElementById('view-' + t);
+        const btn = document.getElementById('tab-' + t);
+        if (view) view.classList.toggle('hidden', t !== tabId);
+        if (btn) btn.classList.toggle('active', t === tabId);
+      });
+
+      if (tabId === 'gym') renderGymView();
+      if (tabId === 'bikemap') {
+        setTimeout(() => {
+          initBikeMapIfNeeded();
+          if (bikeMap) bikeMap.invalidateSize();
+        }, 120);
+      }
+      if (tabId === 'mifit') renderMiFitView();
+      if (tabId === 'finances') renderFinancesView();
+      if (tabId === 'weekly') renderWeeklyAudit();
+      if (tabId === 'summary') renderDailySummaryAndJournal();
+    }
+
+    // --- SELECTOR DE FECHA ---
+    function onDateChange(val) {
+      if (!val) return;
+      currentDate = val;
+      renderAll();
+    }
+    function changeDay(offset) {
+      const d = new Date(currentDate + 'T12:00:00');
+      d.setDate(d.getDate() + offset);
+      currentDate = d.toISOString().split('T')[0];
+      document.getElementById('currentDatePicker').value = currentDate;
+      renderAll();
+    }
+    function setToday() {
+      currentDate = getTodayISO();
+      document.getElementById('currentDatePicker').value = currentDate;
+      renderAll();
+    }
+
+    // --- CÁLCULO DE PUNTUACIÓN DEL DÍA ---
+    function calculateDayScore(day) {
+      let score = 0;
+      const tCount = (day.turkeys.fedMorning ? 1 : 0) + (day.turkeys.waterGiven ? 1 : 0) + (day.turkeys.fedEvening ? 1 : 0);
+      score += (tCount / 3) * 30;
+      score += Math.min(1, day.steps / (appState.goals.dailySteps || 10000)) * 25;
+      score += Math.min(1, day.studyMinutes / (appState.goals.dailyStudyMin || 90)) * 25;
+      const sportDone = (day.gymExercises.length > 0 || day.bikeKm > 0) ? 20 : 0;
+      score += sportDone;
+      return Math.round(score);
+    }
+
+    function updateSidebarBadges() {
+      const day = getDayData();
+      const score = calculateDayScore(day);
+      document.getElementById('sidebarScoreBadge').textContent = score + '%';
+      document.getElementById('sidebarScoreBar').style.width = score + '%';
+
+      const tCount = (day.turkeys.fedMorning ? 1 : 0) + (day.turkeys.waterGiven ? 1 : 0) + (day.turkeys.fedEvening ? 1 : 0);
+      document.getElementById('badge-turkeys').textContent = `${tCount}/3 🦃`;
+      document.getElementById('turkeyQuickStatus').textContent = `${tCount}/3`;
+      document.getElementById('turkeyQuickStatus').className = `font-mono text-[11px] font-bold px-2 py-0.5 rounded-full ${tCount === 3 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}`;
+      document.getElementById('turkeyQuickSub').textContent = tCount === 3 ? '¡Pavos comidos y con agua!' : `Faltan ${3 - tCount} tareas en el corral`;
+
+      document.getElementById('badge-gym').textContent = `${day.gymExercises.length} ej`;
+      document.getElementById('badge-bike').textContent = `${day.bikeKm.toFixed(1)} km`;
+      document.getElementById('badge-steps').textContent = day.steps.toLocaleString();
+      const spentToday = day.expenses.reduce((acc, e) => acc + Number(e.amount || 0), 0);
+      document.getElementById('badge-spent').textContent = `${spentToday.toFixed(0)}€`;
+
+      // Header KPIs
+      document.getElementById('topStepsVal').textContent = day.steps.toLocaleString();
+      document.getElementById('topBikeVal').textContent = `${day.bikeKm.toFixed(1)} km`;
+      const totalVol = day.gymExercises.reduce((acc, g) => acc + (g.weight * g.reps * g.sets), 0);
+      document.getElementById('topGymVolVal').textContent = `${totalVol.toLocaleString()} kg`;
+      document.getElementById('topStudyVal').textContent = `${day.studyMinutes}m`;
+      document.getElementById('topSpentVal').textContent = `${spentToday.toFixed(2)}€`;
+    }
+
+    // --- MÓDULO PAVOS ---
+    function toggleTurkeyTask(field) {
+      const day = getDayData();
+      day.turkeys[field] = !day.turkeys[field];
+      const nowStr = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      if (field === 'fedMorning') day.turkeys.morningTime = day.turkeys[field] ? nowStr : '';
+      if (field === 'waterGiven') day.turkeys.waterTime = day.turkeys[field] ? nowStr : '';
+      if (field === 'fedEvening') day.turkeys.eveningTime = day.turkeys[field] ? nowStr : '';
+      saveToStorage();
+      renderDashboard();
+    }
+    function saveTurkeyNote(val) {
+      getDayData().turkeys.notes = val;
+      saveToStorage();
+    }
+    function quickAddTurkeyFeedToShop() {
+      appState.shoppingList.unshift({ id: Date.now(), text: 'Saco de pienso / maíz para los pavos', category: 'Granja', done: false });
+      saveToStorage();
+      renderDashboard();
+      alert('🦃 Añadido "Saco de pienso para los pavos" a tu Lista de la Compra.');
+    }
+
+    // --- MÓDULO ESTUDIO Y COCHE ---
+    function addMinutes(type, mins) {
+      const day = getDayData();
+      if (type === 'study') day.studyMinutes = Math.max(0, (day.studyMinutes || 0) + mins);
+      if (type === 'car') day.carMinutes = Math.max(0, (day.carMinutes || 0) + mins);
+      saveToStorage();
+      renderDashboard();
+    }
+    function saveStudyTopic(val) { getDayData().studyTopic = val; saveToStorage(); }
+    function saveCarNotes(val) { getDayData().carNotes = val; saveToStorage(); }
+
+    function toggleLiveTimer(type) {
+      if (activeTimers[type]) {
+        clearInterval(activeTimers[type]);
+        activeTimers[type] = null;
+        const addedMins = Math.max(1, Math.round(timerSeconds[type] / 60));
+        timerSeconds[type] = 0;
+        addMinutes(type, addedMins);
+      } else {
+        timerSeconds[type] = 0;
+        activeTimers[type] = setInterval(() => {
+          timerSeconds[type]++;
+          const m = String(Math.floor(timerSeconds[type] / 60)).padStart(2, '0');
+          const s = String(timerSeconds[type] % 60).padStart(2, '0');
+          const disp = document.getElementById(type + 'LiveDisplay');
+          if (disp) disp.textContent = `${m}:${s}`;
+        }, 1000);
+      }
+      renderDashboard();
+    }
+
+    // --- MÓDULO COMIDAS Y AGUA ---
+    function addMeal() {
+      const type = document.getElementById('mealTypeSelect').value;
+      const desc = document.getElementById('mealDescInput').value.trim();
+      const kcal = Number(document.getElementById('mealKcalInput').value) || 0;
+      if (!desc) return;
+      getDayData().meals.push({ id: Date.now(), type, desc, kcal });
+      document.getElementById('mealDescInput').value = '';
+      document.getElementById('mealKcalInput').value = '';
+      saveToStorage();
+      renderDashboard();
+    }
+    function removeMeal(id) {
+      const day = getDayData();
+      day.meals = day.meals.filter(m => m.id !== id);
+      saveToStorage();
+      renderDashboard();
+    }
+    function setNutritionScore(score) {
+      getDayData().nutritionScore = score;
+      saveToStorage();
+      renderDashboard();
+    }
+    function setWaterGlasses(n) {
+      getDayData().waterGlasses = n;
+      saveToStorage();
+      renderDashboard();
+    }
+
+    function renderDashboard() {
+      const day = getDayData();
+      document.getElementById('currentDatePicker').value = currentDate;
+      document.getElementById('headerDateLabel').textContent = currentDate === getTodayISO() ? 'HOY • ' + currentDate : 'REGISTRO • ' + currentDate;
+
+      // Pavos
+      const states = [
+        { key: 'fedMorning', timeKey: 'morningTime', btn: 'btn-turkey-morning', timeEl: 'time-turkey-morning' },
+        { key: 'waterGiven', timeKey: 'waterTime', btn: 'btn-turkey-water', timeEl: 'time-turkey-water' },
+        { key: 'fedEvening', timeKey: 'eveningTime', btn: 'btn-turkey-evening', timeEl: 'time-turkey-evening' }
+      ];
+      states.forEach(s => {
+        const done = day.turkeys[s.key];
+        const btnEl = document.getElementById(s.btn);
+        const tEl = document.getElementById(s.timeEl);
+        if (done) {
+          btnEl.className = 'p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-500/15 flex flex-col items-center text-center transition shadow-lg shadow-emerald-500/10';
+          tEl.textContent = '✔ Hecho ' + (day.turkeys[s.timeKey] || '');
+          tEl.className = 'text-[11px] font-mono text-emerald-300 font-bold mt-1';
+        } else {
+          btnEl.className = 'p-4 rounded-2xl border border-slate-800 bg-slate-900/70 hover:bg-slate-800/80 flex flex-col items-center text-center transition';
+          tEl.textContent = 'Pendiente';
+          tEl.className = 'text-[11px] font-mono text-slate-500 mt-1';
+        }
+      });
+      document.getElementById('turkeyNotesInput').value = day.turkeys.notes || '';
+
+      // Estudio y Coche
+      document.getElementById('studyMinutesText').textContent = day.studyMinutes || 0;
+      document.getElementById('studyTopicInput').value = day.studyTopic || '';
+      const studyPct = Math.min(100, Math.round(((day.studyMinutes || 0) / (appState.goals.dailyStudyMin || 90)) * 100));
+      document.getElementById('studyProgressBar').style.width = studyPct + '%';
+
+      document.getElementById('carMinutesText').textContent = day.carMinutes || 0;
+      document.getElementById('carTripInput').value = day.carNotes || '';
+      const carPct = Math.min(100, Math.round(((day.carMinutes || 0) / 60) * 100));
+      document.getElementById('carProgressBar').style.width = carPct + '%';
+
+      // Cronos activos
+      const anyActive = activeTimers.study || activeTimers.car;
+      document.getElementById('liveTimerPill').className = anyActive ? 'inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse' : 'hidden';
+      document.getElementById('studyLiveDisplay').classList.toggle('hidden', !activeTimers.study);
+      document.getElementById('btnStudyTimer').textContent = activeTimers.study ? '⏹ Parar' : '▶ Crono';
+      document.getElementById('carLiveDisplay').classList.toggle('hidden', !activeTimers.car);
+      document.getElementById('btnCarTimer').textContent = activeTimers.car ? '⏹ Parar' : '▶ En Ruta';
+
+      // Estrellas de comida
+      const starsContainer = document.getElementById('nutritionQualityStars');
+      starsContainer.innerHTML = '';
+      for (let i = 1; i <= 5; i++) {
+        const b = document.createElement('button');
+        b.textContent = i <= (day.nutritionScore || 4) ? '⭐' : '☆';
+        b.className = 'text-base hover:scale-110 transition';
+        b.onclick = () => setNutritionScore(i);
+        starsContainer.appendChild(b);
+      }
+
+      // Lista de comidas
+      const mealsBox = document.getElementById('mealsListContainer');
+      if (day.meals.length === 0) {
+        mealsBox.innerHTML = `<p class="text-xs text-slate-500 italic py-2">Aún no has anotado comidas hoy.</p>`;
+      } else {
+        mealsBox.innerHTML = day.meals.map(m => `
+          <div class="flex items-center justify-between bg-slate-900/90 border border-slate-800 px-3 py-2 rounded-xl text-xs">
+            <div>
+              <span class="font-bold text-emerald-400">${m.type}:</span>
+              <span class="text-slate-200 ml-1">${m.desc}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              ${m.kcal ? `<span class="font-mono text-slate-400">${m.kcal} kcal</span>` : ''}
+              <button onclick="removeMeal(${m.id})" class="text-rose-400 hover:text-rose-300 font-bold">✕</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Vasos de agua
+      document.getElementById('waterGlassesCount').textContent = day.waterGlasses || 0;
+      const wRow = document.getElementById('waterGlassesRow');
+      wRow.innerHTML = '';
+      for (let i = 1; i <= 8; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = '💧';
+        btn.className = `w-7 h-7 rounded-lg text-xs flex items-center justify-center transition ${i <= (day.waterGlasses || 0) ? 'bg-cyan-500/30 border border-cyan-400 scale-105' : 'bg-slate-900 opacity-40 hover:opacity-80'}`;
+        btn.onclick = () => setWaterGlasses(i);
+        wRow.appendChild(btn);
+      }
+
+      // Resúmenes de accesos rápidos
+      document.getElementById('dashGymSummary').textContent = day.gymExercises.length > 0
+        ? `${day.gymExercises.length} ejercicios hechos hoy`
+        : 'Sin series hoy — Toca para registrar';
+      document.getElementById('dashBikeSummary').textContent = day.bikeKm > 0
+        ? `${day.bikeKm.toFixed(2)} km en ${day.bikeMinutes} min hoy`
+        : '0 km hoy — Calcula km y min en el mapa';
+      const pendingShop = appState.shoppingList.filter(i => !i.done).length;
+      document.getElementById('dashShopSummary').textContent = `${pendingShop} productos pendientes en la lista`;
+
+      updateSidebarBadges();
+    }
+
+    // --- MÓDULO GIMNASIO VISUAL 3.0 ---
+    function filterExerciseCategory(cat) {
+      currentCategoryFilter = cat;
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        const isMatch = (cat === 'ALL' && btn.textContent === 'Todos') || btn.textContent === cat;
+        btn.className = `cat-pill px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${isMatch ? 'bg-rose-500 text-slate-950' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`;
+      });
+      populateExerciseSelect();
+      renderVisualExerciseAtlas();
+    }
+
+    function populateExerciseSelect() {
+      const sel = document.getElementById('gymExerciseSelect');
+      if (!sel) return;
+      const list = currentCategoryFilter === 'ALL'
+        ? EXERCISE_ATLAS
+        : EXERCISE_ATLAS.filter(e => e.category === currentCategoryFilter);
+
+      sel.innerHTML = list.map(e => `<option value="${e.name}">[${e.category}] ${e.name}</option>`).join('');
+      onExerciseSelectChange();
+    }
+
+    function getExerciseMeta(name) {
+      return EXERCISE_ATLAS.find(e => e.name.toLowerCase() === (name || '').toLowerCase()) || {
+        name: name || 'Ejercicio Personalizado',
+        category: 'General',
+        equipment: 'Libre',
+        pose: 'ohp',
+        color: '#f43f5e',
+        tip: 'Mantén una técnica estricta y controla el peso en todo el recorrido.'
+      };
+    }
+
+    function onExerciseSelectChange() {
+      const sel = document.getElementById('gymExerciseSelect');
+      if (!sel) return;
+      const ex = getExerciseMeta(sel.value);
+      const box = document.getElementById('selectedExerciseVisualBox');
+      if (box) {
+        box.innerHTML = `
+          ${getExerciseIllustrationSVG(ex)}
+          <span class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-900/90 text-white border border-slate-700 mt-1">${ex.category}</span>
+        `;
+      }
+      document.getElementById('previewMuscleBadge').textContent = `Músculo: ${ex.category}`;
+      document.getElementById('previewEquipmentBadge').textContent = `Equipo: ${ex.equipment}`;
+      document.getElementById('previewTipText').textContent = ex.tip;
+    }
+
+    function selectExerciseFromAtlas(name) {
+      currentCategoryFilter = 'ALL';
+      populateExerciseSelect();
+      const sel = document.getElementById('gymExerciseSelect');
+      sel.value = name;
+      onExerciseSelectChange();
+      document.getElementById('gymWeightInput').focus();
+    }
+
+    function renderVisualExerciseAtlas() {
+      const grid = document.getElementById('visualExerciseAtlasGrid');
+      if (!grid) return;
+      const query = (document.getElementById('atlasSearchInput')?.value || '').toLowerCase().trim();
+      const filtered = EXERCISE_ATLAS.filter(e => {
+        const matchCat = currentCategoryFilter === 'ALL' || e.category === currentCategoryFilter;
+        const matchText = !query || e.name.toLowerCase().includes(query) || e.category.toLowerCase().includes(query) || e.equipment.toLowerCase().includes(query);
+        return matchCat && matchText;
+      });
+
+      grid.innerHTML = filtered.map(ex => `
+        <div onclick="selectExerciseFromAtlas('${ex.name.replace(/'/g, "\\'")}')" class="exercise-card cursor-pointer bg-slate-900/90 border border-slate-800 rounded-2xl p-3 flex flex-col items-center text-center transition">
+          <div class="w-full h-24 bg-slate-950 rounded-xl flex items-center justify-center p-2 mb-2 border border-slate-800/80">
+            ${getExerciseIllustrationSVG(ex)}
+          </div>
+          <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-slate-800 text-rose-300 mb-1">${ex.category} • ${ex.equipment}</span>
+          <p class="text-xs font-bold text-white leading-snug">${ex.name}</p>
+        </div>
+      `).join('');
+    }
+
+    function updateBodyMetrics() {
+      const w = parseFloat(document.getElementById('bodyWeightInput').value) || 75;
+      const h = parseFloat(document.getElementById('bodyHeightInput').value) || 175;
+      appState.profile.weightKg = w;
+      appState.profile.heightCm = h;
+      saveToStorage();
+      renderGymView();
+    }
+
+    function addGymExerciseLog() {
+      const custom = document.getElementById('gymCustomExercise').value.trim();
+      const selected = document.getElementById('gymExerciseSelect').value;
+      const name = custom || selected;
+      const weight = parseFloat(document.getElementById('gymWeightInput').value) || 0;
+      const reps = parseInt(document.getElementById('gymRepsInput').value) || 0;
+      const sets = parseInt(document.getElementById('gymSetsInput').value) || 1;
+      if (!name || reps <= 0) return;
+
+      const oneRM = Math.round(weight * (1 + reps / 30));
+
+      // Buscar último registro anterior para calcular mejora
+      let prevBest = null;
+      const sortedDates = Object.keys(appState.days).sort();
+      sortedDates.forEach(d => {
+        if (d <= currentDate) {
+          (appState.days[d].gymExercises || []).forEach(g => {
+            if (g.name.toLowerCase() === name.toLowerCase()) prevBest = g;
+          });
+        }
+      });
+
+      let badge = '🔥 Serie Registrada';
+      if (prevBest) {
+        if (weight > prevBest.weight) badge = `🚀 ¡SUBISTE +${(weight - prevBest.weight).toFixed(1)} KG!`;
+        else if (weight === prevBest.weight && reps > prevBest.reps) badge = `⚡ ¡+${reps - prevBest.reps} REPES CON ${weight} KG!`;
+        else if (oneRM > prevBest.oneRM) badge = `🏆 ¡NUEVO 1RM (${oneRM} KG)!`;
+      }
+
+      getDayData().gymExercises.push({
+        id: Date.now(),
+        name,
+        weight,
+        reps,
+        sets,
+        oneRM,
+        badge
+      });
+
+      document.getElementById('gymCustomExercise').value = '';
+      saveToStorage();
+      renderGymView();
+    }
+
+    function removeGymExercise(id) {
+      const day = getDayData();
+      day.gymExercises = day.gymExercises.filter(g => g.id !== id);
+      saveToStorage();
+      renderGymView();
+    }
+
+    function renderGymView() {
+      const day = getDayData();
+      document.getElementById('bodyWeightInput').value = appState.profile.weightKg;
+      document.getElementById('bodyHeightInput').value = appState.profile.heightCm;
+
+      const hMeters = appState.profile.heightCm / 100;
+      const bmi = appState.profile.weightKg / (hMeters * hMeters);
+      document.getElementById('bmiValueText').textContent = bmi.toFixed(1);
+      document.getElementById('bmiStatusText').textContent = bmi < 18.5 ? 'Bajo peso' : bmi < 25 ? 'Peso saludable / Atlético' : 'Sobrepeso / Volumen muscular';
+
+      if (document.getElementById('gymExerciseSelect').options.length === 0) {
+        populateExerciseSelect();
+      }
+      renderVisualExerciseAtlas();
+
+      // Lista de ejercicios de hoy con ilustración en miniatura
+      const listEl = document.getElementById('gymTodayList');
+      const totalVol = day.gymExercises.reduce((acc, g) => acc + (g.weight * g.reps * g.sets), 0);
+      document.getElementById('gymTodayTotalVolume').textContent = `Volumen Total: ${totalVol.toLocaleString()} kg`;
+
+      if (day.gymExercises.length === 0) {
+        listEl.innerHTML = `<p class="text-xs text-slate-500 italic py-4 text-center">Selecciona un ejercicio arriba o toca una tarjeta del Atlas Visual para registrar tus series de hoy.</p>`;
+      } else {
+        listEl.innerHTML = day.gymExercises.map(g => {
+          const meta = getExerciseMeta(g.name);
+          const relRatio = (g.weight / (appState.profile.weightKg || 75)).toFixed(2);
+          return `
+            <div class="flex items-center justify-between bg-slate-900 border border-slate-800 p-2.5 rounded-2xl">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-slate-950 border border-slate-800 p-1 flex items-center justify-center shrink-0">
+                  ${getExerciseIllustrationSVG(meta)}
+                </div>
+                <div>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="text-xs font-extrabold text-white">${g.name}</span>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">${g.badge || '✔'}</span>
+                  </div>
+                  <p class="text-xs font-mono text-slate-300 mt-0.5">
+                    <b class="text-rose-400">${g.weight} kg</b> × <b class="text-amber-300">${g.reps} repes</b> × <b class="text-cyan-300">${g.sets} series</b>
+                    <span class="text-slate-500 ml-1">(1RM: ${g.oneRM}kg • ${relRatio}x tu peso)</span>
+                  </p>
+                </div>
+              </div>
+              <button onclick="removeGymExercise(${g.id})" class="text-slate-500 hover:text-rose-400 px-2 font-bold">✕</button>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Calcular fuerza relativa por ejercicio
+      const maxByEx = {};
+      Object.values(appState.days).forEach(d => {
+        (d.gymExercises || []).forEach(g => {
+          if (!maxByEx[g.name] || g.oneRM > maxByEx[g.name].oneRM) {
+            maxByEx[g.name] = g;
+          }
+        });
+      });
+
+      const entries = Object.values(maxByEx).sort((a, b) => b.oneRM - a.oneRM);
+      const bestRatio = entries.length > 0 ? (entries[0].oneRM / appState.profile.weightKg).toFixed(2) : '0.00';
+      document.getElementById('relStrengthText').textContent = bestRatio + 'x';
+
+      const relBars = document.getElementById('relativeStrengthBars');
+      relBars.innerHTML = entries.slice(0, 4).map(e => {
+        const ratio = (e.oneRM / appState.profile.weightKg).toFixed(2);
+        const pct = Math.min(100, Math.round((ratio / 1.8) * 100));
+        return `
+          <div>
+            <div class="flex justify-between text-[11px] mb-0.5">
+              <span class="text-slate-300 font-semibold truncate">${e.name}</span>
+              <span class="font-mono text-rose-400 font-bold">${e.weight}kg × ${e.reps} (${ratio}x peso)</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-rose-500 to-orange-400" style="width:${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('') || `<p class="text-[11px] text-slate-500">Registra ejercicios para ver tu comparativa peso/fuerza.</p>`;
+
+      // Poblar selector de historial
+      const histSel = document.getElementById('gymHistoryFilterSelect');
+      const allLoggedNames = Object.keys(maxByEx);
+      if (allLoggedNames.length > 0) {
+        const currentVal = histSel.value;
+        histSel.innerHTML = allLoggedNames.map(n => `<option value="${n}">${n}</option>`).join('');
+        if (allLoggedNames.includes(currentVal)) histSel.value = currentVal;
+      }
+      renderGymProgressionChart();
+      updateSidebarBadges();
+    }
+
+    function renderGymProgressionChart() {
+      const selName = document.getElementById('gymHistoryFilterSelect')?.value;
+      const statsRow = document.getElementById('gymProgressionStatsRow');
+      const barsBox = document.getElementById('gymProgressionBars');
+      if (!selName || !barsBox) return;
+
+      const history = [];
+      Object.keys(appState.days).sort().forEach(date => {
+        (appState.days[date].gymExercises || []).forEach(g => {
+          if (g.name === selName) history.push({ date, ...g });
+        });
+      });
+
+      if (history.length === 0) {
+        statsRow.innerHTML = '';
+        barsBox.innerHTML = `<p class="text-xs text-slate-500 col-span-full">Sin historial para este ejercicio.</p>`;
+        return;
+      }
+
+      const first = history[0];
+      const last = history[history.length - 1];
+      const weightDiff = (last.weight - first.weight).toFixed(1);
+      const repsDiff = last.reps - first.reps;
+
+      statsRow.innerHTML = `
+        <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800">
+          <span class="text-[10px] text-slate-400 uppercase font-bold block">Inicio Registrado</span>
+          <span class="text-base font-extrabold font-mono text-white">${first.weight} kg × ${first.reps} repes</span>
+        </div>
+        <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800">
+          <span class="text-[10px] text-slate-400 uppercase font-bold block">Marca Actual</span>
+          <span class="text-base font-extrabold font-mono text-emerald-400">${last.weight} kg × ${last.reps} repes</span>
+        </div>
+        <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800">
+          <span class="text-[10px] text-slate-400 uppercase font-bold block">Progreso Peso / Repes</span>
+          <span class="text-base font-extrabold font-mono text-rose-400">${weightDiff >= 0 ? '+' + weightDiff : weightDiff} kg | ${repsDiff >= 0 ? '+' + repsDiff : repsDiff} rep</span>
+        </div>
+        <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800">
+          <span class="text-[10px] text-slate-400 uppercase font-bold block">1RM Máximo</span>
+          <span class="text-base font-extrabold font-mono text-amber-400">${last.oneRM} kg</span>
+        </div>
+      `;
+
+      const max1RM = Math.max(...history.map(h => h.oneRM), 10);
+      barsBox.innerHTML = history.slice(-7).map(h => {
+        const pct = Math.max(18, Math.round((h.oneRM / max1RM) * 100));
+        return `
+          <div class="bg-slate-900/90 p-3 rounded-2xl border border-slate-800 flex flex-col justify-between">
+            <div class="text-[10px] font-mono text-slate-400 mb-2">${h.date.slice(5)}</div>
+            <div class="h-24 flex items-end mb-2">
+              <div class="w-full rounded-xl bg-gradient-to-t from-rose-600 to-amber-400 transition-all" style="height:${pct}%"></div>
+            </div>
+            <div class="text-xs font-extrabold font-mono text-white">${h.weight}kg × ${h.reps}</div>
+            <div class="text-[10px] font-mono text-slate-400">${h.sets} series • 1RM ${h.oneRM}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // --- MÓDULO MAPA DE BICICLETA (SIN API KEY) ---
+    let bikeMap = null;
+    let currentTileLayer = null;
+    let markerA = null;
+    let markerB = null;
+    let routeLine = null;
+    let lastRawDistanceKm = 0;
+
+    const MAP_LAYERS = {
+      esri_street: {
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        attr: 'Tiles &copy; Esri'
+      },
+      esri_sat: {
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        attr: 'Tiles &copy; Esri Satellite'
+      },
+      ign_spain: {
+        url: 'https://tms-ign-base.idee.es/1.0.0/IGNBaseTodo/{z}/{x}/{y}.jpeg',
+        attr: '&copy; IGN España'
+      },
+      osm_hot: {
+        url: 'https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+        attr: '&copy; OpenStreetMap HOT'
+      }
+    };
+
+    function initBikeMapIfNeeded() {
+      if (bikeMap) {
+        renderTodayBikeRoutes();
+        return;
+      }
+      const mapEl = document.getElementById('bike-map');
+      if (!mapEl) return;
+
+      bikeMap = L.map('bike-map').setView([39.5696, 2.6502], 13);
+      changeBikeMapStyle('esri_street');
+
+      bikeMap.on('click', (e) => {
+        if (!markerA) {
+          markerA = L.marker(e.latlng, { draggable: true }).addTo(bikeMap).bindPopup('<b>Punto A (Salida)</b>').openPopup();
+          markerA.on('dragend', computeRouteBetweenMarkers);
+          document.getElementById('routeCalcBadge').textContent = 'Ahora marca el Punto B';
+        } else if (!markerB) {
+          markerB = L.marker(e.latlng, { draggable: true }).addTo(bikeMap).bindPopup('<b>Punto B (Llegada)</b>').openPopup();
+          markerB.on('dragend', computeRouteBetweenMarkers);
+          computeRouteBetweenMarkers();
+        } else {
+          markerB.setLatLng(e.latlng);
+          computeRouteBetweenMarkers();
+        }
+      });
+
+      renderTodayBikeRoutes();
+    }
+
+    function changeBikeMapStyle(styleKey) {
+      if (!bikeMap) return;
+      if (currentTileLayer) bikeMap.removeLayer(currentTileLayer);
+      const cfg = MAP_LAYERS[styleKey] || MAP_LAYERS.esri_street;
+      currentTileLayer = L.tileLayer(cfg.url, { attribution: cfg.attr, maxZoom: 19 }).addTo(bikeMap);
+    }
+
+    async function computeRouteBetweenMarkers() {
+      if (!markerA || !markerB) return;
+      const a = markerA.getLatLng();
+      const b = markerB.getLatLng();
+      document.getElementById('routeCalcBadge').textContent = 'Calculando ruta...';
+
+      try {
+        const res = await fetch(`https://router.project-osrm.org/route/v1/bicycle/${a.lng},${a.lat};${b.lng},${b.lat}?overview=full&geometries=geojson`);
+        const data = await res.json();
+        if (data.routes && data.routes.length > 0) {
+          lastRawDistanceKm = data.routes[0].distance / 1000;
+          const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+          if (routeLine) bikeMap.removeLayer(routeLine);
+          routeLine = L.polyline(coords, { color: '#06b6d4', weight: 5 }).addTo(bikeMap);
+          bikeMap.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
+          recalculateCurrentBikeRoute();
+          document.getElementById('routeCalcBadge').textContent = 'Ruta por carretera lista';
+          return;
+        }
+      } catch(e) {}
+
+      // Fallback geodésico directo si falla la red
+      lastRawDistanceKm = (a.distanceTo(b) / 1000) * 1.18;
+      if (routeLine) bikeMap.removeLayer(routeLine);
+      routeLine = L.polyline([a, b], { color: '#06b6d4', weight: 4, dashArray: '6, 6' }).addTo(bikeMap);
+      recalculateCurrentBikeRoute();
+      document.getElementById('routeCalcBadge').textContent = 'Ruta calculada';
+    }
+
+    function recalculateCurrentBikeRoute() {
+      const isRound = document.getElementById('bikeRoundTripCheck').checked;
+      const speed = parseFloat(document.getElementById('bikeSpeedSelect').value) || 20;
+      const finalKm = lastRawDistanceKm * (isRound ? 2 : 1);
+      const mins = Math.round((finalKm / speed) * 60);
+      document.getElementById('calcBikeKm').textContent = finalKm.toFixed(2);
+      document.getElementById('calcBikeMin').textContent = mins;
+    }
+
+    function clearBikeMapPoints() {
+      if (markerA && bikeMap) bikeMap.removeLayer(markerA);
+      if (markerB && bikeMap) bikeMap.removeLayer(markerB);
+      if (routeLine && bikeMap) bikeMap.removeLayer(routeLine);
+      markerA = null; markerB = null; routeLine = null;
+      lastRawDistanceKm = 0;
+      recalculateCurrentBikeRoute();
+      document.getElementById('routeCalcBadge').textContent = 'Haz clic en el mapa';
+    }
+
+    async function searchPlaceOnMap() {
+      const q = document.getElementById('mapCitySearchInput').value.trim();
+      if (!q || !bikeMap) return;
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}`);
+        const arr = await res.json();
+        if (arr && arr.length > 0) {
+          bikeMap.setView([parseFloat(arr[0].lat), parseFloat(arr[0].lon)], 14);
+        }
+      } catch(e) {}
+    }
+
+    function locateUserOnBikeMap() {
+      if (!navigator.geolocation || !bikeMap) return;
+      navigator.geolocation.getCurrentPosition(pos => {
+        bikeMap.setView([pos.coords.latitude, pos.coords.longitude], 15);
+      });
+    }
+
+    function saveCalculatedBikeRoute() {
+      const km = parseFloat(document.getElementById('calcBikeKm').textContent) || 0;
+      const mins = parseInt(document.getElementById('calcBikeMin').textContent) || 0;
+      if (km <= 0) return;
+      const name = document.getElementById('bikeRouteNameInput').value.trim() || 'Ruta en Bici';
+      const day = getDayData();
+      day.bikeRoutes.push({ id: Date.now(), name, km, mins });
+      day.bikeKm = Number((day.bikeKm + km).toFixed(2));
+      day.bikeMinutes = (day.bikeMinutes || 0) + mins;
+      document.getElementById('bikeRouteNameInput').value = '';
+      clearBikeMapPoints();
+      saveToStorage();
+      renderTodayBikeRoutes();
+    }
+
+    function renderTodayBikeRoutes() {
+      const day = getDayData();
+      const box = document.getElementById('todayBikeRoutesList');
+      if (!box) return;
+      if (!day.bikeRoutes || day.bikeRoutes.length === 0) {
+        box.innerHTML = `<p class="text-[11px] text-slate-500 italic">Marca dos puntos en el mapa para guardar tu recorrido.</p>`;
+      } else {
+        box.innerHTML = day.bikeRoutes.map(r => `
+          <div class="flex justify-between items-center bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 text-xs">
+            <span class="text-white font-semibold truncate">${r.name}</span>
+            <span class="font-mono text-cyan-400 font-bold">${r.km} km • ${r.mins}m</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    // --- MÓDULO MI FIT & PASOS ---
+    function addStepsQuick(amount) {
+      const day = getDayData();
+      day.steps = (day.steps || 0) + amount;
+      saveToStorage();
+      renderMiFitView();
+    }
+
+    function simulateMiFitCloudSync() {
+      const baseSteps = [9420, 11250, 8740, 12300, 10450, 13100, 10890];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const iso = d.toISOString().split('T')[0];
+        const dayObj = getDayData(iso);
+        if (!dayObj.steps || dayObj.steps < 1000) {
+          dayObj.steps = baseSteps[i % baseSteps.length];
+        }
+      }
+      document.getElementById('mifitStatusBadge').textContent = '✔ Sincronizado con Mi Fit';
+      saveToStorage();
+      renderMiFitView();
+    }
+
+    function importMiFitFile(ev) {
+      const file = ev.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target.result;
+        const numbers = text.match(/\b\d{4,5}\b/g);
+        if (numbers && numbers.length > 0) {
+          getDayData().steps = parseInt(numbers[0]);
+          saveToStorage();
+          renderMiFitView();
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    let pedometerActive = false;
+    function toggleWebPedometer() {
+      pedometerActive = !pedometerActive;
+      const btn = document.getElementById('btnWebPedometer');
+      btn.textContent = pedometerActive ? '🟢 Sensor Activo' : '🚶 Activar Sensor';
+      if (pedometerActive && window.DeviceMotionEvent) {
+        window.ondevicemotion = (ev) => {
+          if (!pedometerActive) return;
+          const acc = ev.accelerationIncludingGravity;
+          if (acc && (Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z)) > 24) {
+            getDayData().steps += 1;
+            updateSidebarBadges();
+          }
+        };
+      }
+    }
+
+    function renderMiFitView() {
+      document.getElementById('mifitStepGoalLabel').textContent = (appState.goals.dailySteps || 10000).toLocaleString();
+      const box = document.getElementById('mifitWeeklyStepsBars');
+      const rows = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(currentDate + 'T12:00:00');
+        d.setDate(d.getDate() - i);
+        const iso = d.toISOString().split('T')[0];
+        const steps = getDayData(iso).steps || 0;
+        const pct = Math.min(100, Math.round((steps / (appState.goals.dailySteps || 10000)) * 100));
+        rows.push(`
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-300 font-mono">${iso.slice(5)}</span>
+              <span class="font-mono font-bold ${pct >= 100 ? 'text-emerald-400' : 'text-orange-300'}">${steps.toLocaleString()} pasos (${pct}%)</span>
+            </div>
+            <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+              <div class="h-full ${pct >= 100 ? 'bg-emerald-500' : 'bg-orange-500'}" style="width:${pct}%"></div>
+            </div>
+          </div>
+        `);
+      }
+      box.innerHTML = rows.join('');
+    }
+
+    // --- MÓDULO FINANZAS Y LISTA DE LA COMPRA ---
+    function addExpense() {
+      const amount = parseFloat(document.getElementById('expenseAmountInput').value);
+      const desc = document.getElementById('expenseDescInput').value.trim();
+      const cat = document.getElementById('expenseCatSelect').value;
+      if (!amount || amount <= 0 || !desc) return;
+      getDayData().expenses.push({ id: Date.now(), amount, desc, cat });
+      document.getElementById('expenseAmountInput').value = '';
+      document.getElementById('expenseDescInput').value = '';
+      saveToStorage();
+      renderFinancesView();
+    }
+    function removeExpense(id) {
+      const day = getDayData();
+      day.expenses = day.expenses.filter(e => e.id !== id);
+      saveToStorage();
+      renderFinancesView();
+    }
+
+    function addShoppingItem() {
+      const text = document.getElementById('shopItemInput').value.trim();
+      const category = document.getElementById('shopCatSelect').value;
+      if (!text) return;
+      appState.shoppingList.unshift({ id: Date.now(), text, category, done: false });
+      document.getElementById('shopItemInput').value = '';
+      saveToStorage();
+      renderFinancesView();
+    }
+    function toggleShopItem(id) {
+      const item = appState.shoppingList.find(i => i.id === id);
+      if (item) item.done = !item.done;
+      saveToStorage();
+      renderFinancesView();
+    }
+    function removeShopItem(id) {
+      appState.shoppingList = appState.shoppingList.filter(i => i.id !== id);
+      saveToStorage();
+      renderFinancesView();
+    }
+    function checkoutShoppingListWithExpense() {
+      const ticket = parseFloat(document.getElementById('checkoutTicketInput').value);
+      const doneItems = appState.shoppingList.filter(i => i.done);
+      if (ticket > 0) {
+        getDayData().expenses.push({
+          id: Date.now(),
+          amount: ticket,
+          desc: `Compra (${doneItems.length || 1} prod.)`,
+          cat: '🛒 Supermercado'
+        });
+      }
+      appState.shoppingList = appState.shoppingList.filter(i => !i.done);
+      document.getElementById('checkoutTicketInput').value = '';
+      saveToStorage();
+      renderFinancesView();
+    }
+
+    function renderFinancesView() {
+      const day = getDayData();
+      let weeklySpent = 0;
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(currentDate + 'T12:00:00');
+        d.setDate(d.getDate() - i);
+        const iso = d.toISOString().split('T')[0];
+        weeklySpent += (getDayData(iso).expenses || []).reduce((a, b) => a + Number(b.amount || 0), 0);
+      }
+      document.getElementById('weeklyTotalSpentVal').textContent = weeklySpent.toFixed(2) + ' €';
+
+      const expBox = document.getElementById('expensesListContainer');
+      if (day.expenses.length === 0) {
+        expBox.innerHTML = `<p class="text-xs text-slate-500 italic py-3">Sin gastos registrados hoy.</p>`;
+      } else {
+        expBox.innerHTML = day.expenses.map(e => `
+          <div class="flex justify-between items-center bg-slate-900 px-3.5 py-2.5 rounded-xl border border-slate-800 text-xs">
+            <div>
+              <span class="font-bold text-white">${e.desc}</span>
+              <span class="text-[10px] text-slate-400 ml-2">${e.cat}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-mono font-extrabold text-emerald-400">${Number(e.amount).toFixed(2)} €</span>
+              <button onclick="removeExpense(${e.id})" class="text-slate-500 hover:text-rose-400">✕</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      const shopBox = document.getElementById('shoppingListContainer');
+      shopBox.innerHTML = appState.shoppingList.map(item => `
+        <div class="flex items-center justify-between bg-slate-900 px-3.5 py-2.5 rounded-xl border border-slate-800 text-xs">
+          <label class="flex items-center gap-2.5 cursor-pointer">
+            <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleShopItem(${item.id})" class="w-4 h-4 accent-emerald-500">
+            <span class="${item.done ? 'line-through text-slate-500' : 'text-white font-semibold'}">${item.text}</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400">${item.category}</span>
+          </label>
+          <button onclick="removeShopItem(${item.id})" class="text-slate-500 hover:text-rose-400">✕</button>
+        </div>
+      `).join('');
+    }
+
+    // --- MÓDULO ANÁLISIS SEMANAL ---
+    function renderWeeklyAudit() {
+      let sumSteps = 0, sumBike = 0, sumStudy = 0, sumCar = 0, sumSpent = 0, gymDays = 0, turkeyPerfectDays = 0;
+      const rowsHtml = [];
+
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(currentDate + 'T12:00:00');
+        d.setDate(d.getDate() - i);
+        const iso = d.toISOString().split('T')[0];
+        const day = getDayData(iso);
+
+        const tCount = (day.turkeys.fedMorning ? 1 : 0) + (day.turkeys.waterGiven ? 1 : 0) + (day.turkeys.fedEvening ? 1 : 0);
+        if (tCount === 3) turkeyPerfectDays++;
+        if (day.gymExercises.length > 0) gymDays++;
+        sumSteps += day.steps || 0;
+        sumBike += day.bikeKm || 0;
+        sumStudy += day.studyMinutes || 0;
+        sumCar += day.carMinutes || 0;
+        const daySpent = (day.expenses || []).reduce((a, b) => a + Number(b.amount || 0), 0);
+        sumSpent += daySpent;
+
+        rowsHtml.push(`
+          <tr class="hover:bg-slate-900/50">
+            <td class="py-2.5 px-3 font-bold text-white">${iso.slice(5)}</td>
+            <td class="py-2.5 px-3">${tCount === 3 ? '<span class="text-emerald-400">✔ 3/3</span>' : `<span class="text-amber-400">${tCount}/3</span>`}</td>
+            <td class="py-2.5 px-3 text-orange-300">${(day.steps || 0).toLocaleString()}</td>
+            <td class="py-2.5 px-3 text-cyan-300">${(day.bikeKm || 0).toFixed(1)} km</td>
+            <td class="py-2.5 px-3 text-rose-300">${day.gymExercises.length} ej.</td>
+            <td class="py-2.5 px-3 text-violet-300">${day.studyMinutes || 0}m</td>
+            <td class="py-2.5 px-3 text-amber-300">${day.carMinutes || 0}m</td>
+            <td class="py-2.5 px-3 text-emerald-300">${daySpent.toFixed(2)}€</td>
+          </tr>
+        `);
+      }
+
+      document.getElementById('weeklyAuditTableBody').innerHTML = rowsHtml.join('');
+
+      const stepPct = Math.min(100, Math.round((sumSteps / ((appState.goals.dailySteps || 10000) * 7)) * 100));
+      const bikePct = Math.min(100, Math.round((sumBike / (appState.goals.weeklyBikeKm || 50)) * 100));
+      const studyPct = Math.min(100, Math.round((sumStudy / ((appState.goals.dailyStudyMin || 90) * 7)) * 100));
+      const globalScore = Math.round((stepPct + bikePct + studyPct + Math.min(100, (gymDays / 4) * 100)) / 4);
+
+      document.getElementById('weeklyGlobalScore').textContent = globalScore + '%';
+      document.getElementById('weeklyVerdictTitle').textContent = globalScore >= 80
+        ? '🏆 ¡Semana Sobresaliente! Vas cumpliendo tus metas'
+        : globalScore >= 55
+        ? '👍 Buena semana, pero aún puedes apretar un poco más'
+        : '⚡ Semana en construcción: impulsa el estudio y el deporte';
+
+      document.getElementById('weeklyKPIsGrid').innerHTML = `
+        <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800">
+          <span class="text-[10px] text-slate-400 uppercase font-bold block">Pasos 7 Días</span>
+          <span class="text-lg font-extrabold font-mono text-orange-400">${sumSteps.toLocaleString()}</span>
+          <span class="text-[10px] text-slate-500 block">${stepPct}% de la meta</span>
+        </div>
+        <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800">
+          <span class="text-[10px] text-slate-400 uppercase font-bold block">Bici Semanal</span>
+          <span class="text-lg font-extrabold font-mono text-cyan-400">${sumBike.toFixed(1)} km</span>
+          <span class="text-[10px] text-slate-500 block">${bikePct}% de ${appState.goals.weeklyBikeKm}km</span>
+        </div>
+        <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800">
+          <span class="text-[10px] text-slate-400 uppercase font-bold block">Días de Gym</span>
+          <span class="text-lg font-extrabold font-mono text-rose-400">${gymDays} días</span>
+          <span class="text-[10px] text-slate-500 block">Fuerza registrada</span>
+        </div>
+        <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800">
+          <span class="text-[10px] text-slate-400 uppercase font-bold block">Estudio vs Coche</span>
+          <span class="text-lg font-extrabold font-mono text-violet-400">${(sumStudy/60).toFixed(1)}h / ${(sumCar/60).toFixed(1)}h</span>
+          <span class="text-[10px] text-slate-500 block">Estudio / Conducción</span>
+        </div>
+        <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800">
+          <span class="text-[10px] text-slate-400 uppercase font-bold block">Cuidado Pavos</span>
+          <span class="text-lg font-extrabold font-mono text-amber-400">${turkeyPerfectDays}/7 días</span>
+          <span class="text-[10px] text-slate-500 block">Plenos 3/3</span>
+        </div>
+        <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800">
+          <span class="text-[10px] text-slate-400 uppercase font-bold block">Gasto 7 Días</span>
+          <span class="text-lg font-extrabold font-mono text-emerald-400">${sumSpent.toFixed(2)} €</span>
+          <span class="text-[10px] text-slate-500 block">Meta max: ${appState.goals.weeklyBudgetEur}€</span>
+        </div>
+      `;
+    }
+
+    // --- MÓDULO RESUMEN Y DIARIO PERSONAL ---
+    function renderDailySummaryAndJournal() {
+      const day = getDayData();
+      const tCount = (day.turkeys.fedMorning ? 1 : 0) + (day.turkeys.waterGiven ? 1 : 0) + (day.turkeys.fedEvening ? 1 : 0);
+      const spent = (day.expenses || []).reduce((a, b) => a + Number(b.amount || 0), 0);
+
+      document.getElementById('autoDailySummaryBox').innerHTML = `
+        <p>📅 <b>Resumen del día (${currentDate}):</b> Has alcanzado un nivel de cumplimiento del <b class="text-emerald-400">${calculateDayScore(day)}%</b>.</p>
+        <p>🦃 <b>Pavos y Corral:</b> Completaste <b>${tCount}/3</b> tareas (${day.turkeys.waterGiven ? 'agua limpia puesta a las ' + day.turkeys.waterTime : 'pendiente agua'}). ${day.turkeys.notes ? 'Nota: ' + day.turkeys.notes : ''}</p>
+        <p>🏋️ <b>Deporte, Bici y Pasos:</b> Llevas <b>${day.steps.toLocaleString()} pasos</b>, recorriste <b>${day.bikeKm} km en bici</b> y completaste <b>${day.gymExercises.length} ejercicios de gimnasio</b>.</p>
+        <p>📚 <b>Tiempo y Finanzas:</b> Estudiaste <b>${day.studyMinutes} min</b> ${day.studyTopic ? '(' + day.studyTopic + ')' : ''}, condujiste el coche <b>${day.carMinutes} min</b> y gastaste <b>${spent.toFixed(2)} €</b>.</p>
+      `;
+
+      const moods = ['🤩', '😄', '🙂', '😐', '😴', '💪'];
+      const moodRow = document.getElementById('moodSelectorRow');
+      moodRow.innerHTML = moods.map(m => `
+        <button onclick="setDayMood('${m}')" class="w-8 h-8 rounded-xl text-base flex items-center justify-center transition ${day.mood === m ? 'bg-emerald-500/30 border border-emerald-400 scale-110' : 'bg-slate-900 opacity-50 hover:opacity-100'}">${m}</button>
+      `).join('');
+
+      document.getElementById('personalJournalTextarea').value = day.journal || '';
+    }
+
+    function setDayMood(m) {
+      getDayData().mood = m;
+      saveToStorage();
+      renderDailySummaryAndJournal();
+    }
+    function saveJournalText(val) {
+      getDayData().journal = val;
+      saveToStorage();
+    }
+
+    // --- MODAL OBJETIVOS Y DEMO ---
+    function openGoalsModal() {
+      document.getElementById('goalStepsInput').value = appState.goals.dailySteps;
+      document.getElementById('goalBikeWeeklyInput').value = appState.goals.weeklyBikeKm;
+      document.getElementById('goalStudyDailyInput').value = appState.goals.dailyStudyMin;
+      document.getElementById('goalBudgetWeeklyInput').value = appState.goals.weeklyBudgetEur;
+      document.getElementById('goalsModal').classList.remove('hidden');
+      document.getElementById('goalsModal').classList.add('flex');
+    }
+    function closeGoalsModal() {
+      document.getElementById('goalsModal').classList.add('hidden');
+      document.getElementById('goalsModal').classList.remove('flex');
+    }
+    function saveGoalsFromModal() {
+      appState.goals.dailySteps = parseInt(document.getElementById('goalStepsInput').value) || 10000;
+      appState.goals.weeklyBikeKm = parseFloat(document.getElementById('goalBikeWeeklyInput').value) || 50;
+      appState.goals.dailyStudyMin = parseInt(document.getElementById('goalStudyDailyInput').value) || 90;
+      appState.goals.weeklyBudgetEur = parseFloat(document.getElementById('goalBudgetWeeklyInput').value) || 150;
+      saveToStorage();
+      closeGoalsModal();
+      renderAll();
+    }
+
+    function loadDemoData(silent = false) {
+      const benchWeights = [60, 62.5, 65, 65, 67.5, 70, 72.5];
+      const benchReps = [8, 8, 8, 10, 8, 9, 10];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const iso = d.toISOString().split('T')[0];
+        const day = createEmptyDay();
+        day.turkeys = { fedMorning: true, morningTime: '08:30', waterGiven: true, waterTime: '08:35', fedEvening: i !== 0, eveningTime: i !== 0 ? '19:45' : '', notes: 'Pavos activos y bebedero limpio' };
+        day.steps = 9200 + (i * 450);
+        day.studyMinutes = 75 + (i * 10);
+        day.studyTopic = 'Desarrollo Web y Temario Principal';
+        day.carMinutes = 25 + (i * 5);
+        day.carNotes = 'Ida y vuelta entrenamiento / recados';
+        day.bikeKm = i % 2 === 0 ? 12.4 : 0;
+        day.bikeMinutes = i % 2 === 0 ? 38 : 0;
+        day.waterGlasses = 6;
+        day.meals = [
+          { id: 1, type: '🌅 Desayuno', desc: 'Tostadas con huevos revueltos y avena', kcal: 550 },
+          { id: 2, type: '☀️ Comida', desc: 'Arroz con pechuga de pollo y ensalada', kcal: 780 }
+        ];
+        const w = benchWeights[6 - i];
+        const r = benchReps[6 - i];
+        day.gymExercises = [
+          { id: 10 + i, name: 'Press de Banca Plano', weight: w, reps: r, sets: 4, oneRM: Math.round(w * (1 + r / 30)), badge: '🚀 Progreso constante' },
+          { id: 20 + i, name: 'Sentadilla Libre con Barra', weight: 80 + (6 - i) * 2.5, reps: 8, sets: 4, oneRM: Math.round((80 + (6 - i) * 2.5) * 1.26), badge: '🔥 Serie sólida' },
+          { id: 30 + i, name: 'Dominadas (Pull-ups)', weight: 76.5, reps: 8 + (6 - i), sets: 3, oneRM: 98, badge: '⚡ Más repeticiones' }
+        ];
+        day.expenses = [
+          { id: 100 + i, amount: 14.50, desc: 'Compra supermercado / comida', cat: '🛒 Supermercado' }
+        ];
+        day.journal = 'Buen entrenamiento en el gimnasio subiendo repeticiones, pavos atendidos a primera hora y buena sesión de estudio.';
+        appState.days[iso] = day;
+      }
+      saveToStorage();
+      renderAll();
+    }
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(appState, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `lifeos-pro-backup-${currentDate}.json`;
+      a.click();
+    }
+
+    function renderAll() {
+      renderDashboard();
+      populateExerciseSelect();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadFromStorage();
+      renderAll();
+    });
+  </script>
+</body>
+</html>
