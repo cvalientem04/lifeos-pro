@@ -7,12 +7,12 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="LifeOS Pro">
   <meta name="theme-color" content="#070b14">
-  <title>LifeOS Pro 3.0 — Visual Atlas & Smart Tracker</title>
+  <title>LifeOS Pro 3.5 — Live GPS Bike Computer & Visual Gym</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
   <!-- Leaflet CSS & JS (Mapa sin API Key) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -47,7 +47,6 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.5);
     }
-    /* Menú Lateral Vistoso 3.0 */
     .nav-btn-pro {
       position: relative;
       transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -91,9 +90,9 @@
       transform: scale(1.08) rotate(-3deg);
     }
     #bike-map {
-      height: 410px;
+      height: 450px;
       width: 100%;
-      border-radius: 1rem;
+      border-radius: 1.25rem;
       z-index: 10;
       border: 1px solid rgba(255, 255, 255, 0.15);
     }
@@ -105,11 +104,32 @@
       transform: translateY(-2px);
       border-color: rgba(244, 63, 94, 0.5);
     }
+    @keyframes pulseRing {
+      0% { transform: scale(0.8); opacity: 0.9; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+    .gps-rider-dot {
+      width: 18px;
+      height: 18px;
+      background: #10b981;
+      border: 3px solid #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 0 12px #10b981;
+      position: relative;
+    }
+    .gps-rider-dot::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 2px solid #10b981;
+      animation: pulseRing 1.5s infinite;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col lg:flex-row selection:bg-emerald-500 selection:text-slate-950">
 
-  <!-- ================= SIDEBAR VISTOSO 3.0 ================= -->
+  <!-- ================= SIDEBAR VISTOSO 3.5 ================= -->
   <aside class="w-full lg:w-80 glass-card border-b lg:border-b-0 lg:border-r border-slate-800/80 flex flex-col justify-between p-4 lg:p-5 lg:fixed lg:h-screen z-30 overflow-y-auto">
     <div>
       <!-- Logo & Brand -->
@@ -121,9 +141,9 @@
           <div>
             <div class="flex items-center gap-2">
               <h1 class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">LifeOS Pro</h1>
-              <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">v3.0</span>
+              <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">v3.5</span>
             </div>
-            <p class="text-[11px] text-slate-400 font-medium">Visual Gym • Rutas • Granja</p>
+            <p class="text-[11px] text-slate-400 font-medium">GPS Live • Gym Visual • Granja</p>
           </div>
         </div>
         <button onclick="openGoalsModal()" class="p-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700 transition" title="Configurar Objetivos">
@@ -131,7 +151,7 @@
         </button>
       </div>
 
-      <!-- Selector de Fecha y Rendimiento Circular -->
+      <!-- Selector de Fecha y Nivel Diario -->
       <div class="mb-5 bg-gradient-to-br from-slate-900/95 to-slate-950 p-3.5 rounded-2xl border border-slate-800/90 shadow-inner">
         <div class="flex items-center justify-between mb-2">
           <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
@@ -144,7 +164,6 @@
           <input type="date" id="currentDatePicker" onchange="onDateChange(this.value)" class="w-full bg-slate-950 text-center font-mono text-xs font-bold text-white py-2 px-2 rounded-xl border border-slate-800 focus:outline-none focus:border-emerald-500">
           <button onclick="changeDay(1)" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition font-bold">▶</button>
         </div>
-        <!-- Barra de Nivel Diario -->
         <div class="bg-slate-950/90 p-2.5 rounded-xl border border-slate-800/70">
           <div class="flex justify-between items-center text-xs mb-1">
             <span class="text-slate-400 font-semibold">Nivel del Día</span>
@@ -180,15 +199,15 @@
               <p class="text-[10px] text-slate-400 truncate">+40 Ejercicios e Imágenes</p>
             </div>
           </div>
-          <span id="badge-gym" class="hidden lg:inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30">0 ser</span>
+          <span id="badge-gym" class="hidden lg:inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30">0 ej</span>
         </button>
 
         <button onclick="switchTab('bikemap')" id="tab-bikemap" class="nav-btn-pro flex items-center justify-between px-3 py-2.5 rounded-2xl text-left">
           <div class="flex items-center gap-3 min-w-0">
-            <div class="icon-box bg-gradient-to-br from-cyan-500/30 to-blue-600/20 border border-cyan-500/40 text-cyan-300 shadow-sm">🗺️</div>
+            <div class="icon-box bg-gradient-to-br from-cyan-500/30 to-blue-600/20 border border-cyan-500/40 text-cyan-300 shadow-sm">🚴</div>
             <div class="truncate">
-              <p class="text-xs font-extrabold text-white leading-tight">Mapa Rutas Bici</p>
-              <p class="text-[10px] text-slate-400 truncate">Punto A ➔ B Automático</p>
+              <p class="text-xs font-extrabold text-white leading-tight">Bici GPS en Vivo</p>
+              <p class="text-[10px] text-slate-400 truncate">Velocidad por Colores y Min</p>
             </div>
           </div>
           <span id="badge-bike" class="hidden lg:inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">0 km</span>
@@ -274,7 +293,7 @@
             </span>
             <span class="text-xs font-bold uppercase tracking-widest text-emerald-400" id="headerDateLabel">HOY</span>
           </div>
-          <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-0.5" id="greetingTitle">Centro de Rendimiento Personal</h2>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-0.5">Centro de Rendimiento Personal</h2>
         </div>
 
         <div class="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
@@ -306,7 +325,6 @@
     <!-- VISTA 1: PANEL DIARIO (PAVOS, ESTUDIO, COCHE, COMIDA)           -->
     <!-- =============================================================== -->
     <section id="view-dashboard" class="space-y-6">
-      <!-- FILA 1: PAVOS + ESTUDIO & COCHE -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         <!-- MÓDULO PAVOS -->
@@ -457,10 +475,10 @@
 
           <div onclick="switchTab('bikemap')" class="p-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 cursor-pointer flex items-center justify-between transition">
             <div class="flex items-center gap-3">
-              <span class="text-2xl">🗺️</span>
+              <span class="text-2xl">🚴</span>
               <div>
-                <p class="text-xs font-bold text-white">Trazar Ruta en Bici (Punto A ➔ B)</p>
-                <p id="dashBikeSummary" class="text-[11px] text-cyan-400">0 km hoy — Calcula km y min en el mapa</p>
+                <p class="text-xs font-bold text-white">Ciclocomputador GPS en Vivo</p>
+                <p id="dashBikeSummary" class="text-[11px] text-cyan-400">Pinta tu velocidad en vivo por el mapa</p>
               </div>
             </div>
             <span class="text-slate-400 font-bold">➔</span>
@@ -486,7 +504,6 @@
     <section id="view-gym" class="hidden space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- BIOMETRÍA: PESO CORPORAL, ALTURA, IMC Y FUERZA RELATIVA -->
         <div class="lg:col-span-4 glass-card rounded-3xl p-6 border-t-4 border-t-rose-500 flex flex-col justify-between">
           <div>
             <h3 class="text-lg font-extrabold text-white flex items-center gap-2 mb-1">⚖️ Tu Cuerpo vs. Fuerza</h3>
@@ -523,14 +540,12 @@
           </div>
         </div>
 
-        <!-- REGISTRADOR CON TARJETA VISUAL DEL EJERCICIO SELECCIONADO -->
         <div class="lg:col-span-8 glass-card rounded-3xl p-6 border-t-4 border-t-orange-500">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
             <div>
               <h3 class="text-lg font-extrabold text-white">🏋️ Registrar Ejercicio (Kilos, Repes y Series)</h3>
               <p class="text-xs text-slate-400">Elige el grupo muscular o cualquiera de los +40 ejercicios con guía visual</p>
             </div>
-            <!-- Filtro rápido por grupo muscular -->
             <div class="flex flex-wrap gap-1" id="muscleCategoryPills">
               <button onclick="filterExerciseCategory('ALL')" class="cat-pill px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-500 text-slate-950">Todos</button>
               <button onclick="filterExerciseCategory('Pecho')" class="cat-pill px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300">Pecho</button>
@@ -542,11 +557,8 @@
             </div>
           </div>
 
-          <!-- Tarjeta de Vista Previa Visual del Ejercicio -->
           <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 bg-slate-900/90 p-4 rounded-2xl border border-slate-800 mb-4 items-center">
-            <div class="sm:col-span-4 flex flex-col items-center justify-center bg-slate-950 rounded-2xl p-3 border border-slate-800/90 h-40 relative overflow-hidden" id="selectedExerciseVisualBox">
-              <!-- SVG dinámico se inyecta aquí -->
-            </div>
+            <div class="sm:col-span-4 flex flex-col items-center justify-center bg-slate-950 rounded-2xl p-3 border border-slate-800/90 h-40 relative overflow-hidden" id="selectedExerciseVisualBox"></div>
             <div class="sm:col-span-8 space-y-3">
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
@@ -586,7 +598,6 @@
             </div>
           </div>
 
-          <!-- Lista de series hechas hoy con miniatura visual -->
           <div>
             <div class="flex justify-between items-center mb-2">
               <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Entrenamiento Registrado Hoy</h4>
@@ -597,7 +608,6 @@
         </div>
       </div>
 
-      <!-- GRÁFICA DE PROGRESIÓN E HISTORIAL DEL EJERCICIO -->
       <div class="glass-card rounded-3xl p-6">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
@@ -610,7 +620,6 @@
         <div id="gymProgressionBars" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3 pt-2"></div>
       </div>
 
-      <!-- ATLAS VISUAL DE TODOS LOS EJERCICIOS (TOCA CUALQUIERA PARA CARGARLO) -->
       <div class="glass-card rounded-3xl p-6">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
@@ -624,82 +633,168 @@
     </section>
 
     <!-- =============================================================== -->
-    <!-- VISTA 3: MAPA INTERACTIVO DE BICICLETA (SIN API KEY)            -->
+    <!-- VISTA 3: CICLOCOMPUTADOR GPS EN VIVO (VELOCIDAD POR COLORES)    -->
     <!-- =============================================================== -->
     <section id="view-bikemap" class="hidden space-y-6">
       <div class="glass-card rounded-3xl p-6 border-t-4 border-t-cyan-400">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
+        
+        <!-- Cabecera y Selector de Modo (GPS en Vivo vs Planificador A->B) -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
           <div>
-            <h3 class="text-xl font-extrabold text-white flex items-center gap-2">🗺️ Calculador de Rutas de Bicicleta</h3>
-            <p class="text-xs text-slate-400">Busca tu pueblo/ciudad o haz clic en el mapa para marcar <b>Punto A (Salida)</b> y <b>Punto B (Llegada)</b>.</p>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">Telemetry Pro</span>
+              <span id="gpsAccuracyBadge" class="text-[11px] font-mono text-slate-400">GPS en espera</span>
+            </div>
+            <h3 class="text-xl font-extrabold text-white mt-1">🚴 Ciclocomputador GPS en Vivo y Mapa de Velocidad</h3>
+            <p class="text-xs text-slate-400">Sigue tu ubicación en directo, pinta cada tramo según la velocidad (`km/h`) a la que vas y cronometra los minutos.</p>
           </div>
+
           <div class="flex flex-wrap items-center gap-2">
             <select id="mapLayerStyleSelect" onchange="changeBikeMapStyle(this.value)" class="px-3 py-2 rounded-xl bg-slate-900 text-cyan-300 border border-cyan-500/40 text-xs font-bold">
-              <option value="esri_street" selected>🗺️ Callejero Mundial (Esri - Sin Clave)</option>
+              <option value="esri_street" selected>🗺️ Callejero Mundial (Esri)</option>
               <option value="esri_sat">🛰️ Satélite Real (Caminos y Campo)</option>
               <option value="ign_spain">🇪🇸 Mapa IGN España Oficial</option>
-              <option value="osm_hot">🚴 Mapa Ciclista / Humanitario</option>
+              <option value="osm_hot">🚴 Mapa Ciclista</option>
             </select>
-            <button onclick="locateUserOnBikeMap()" class="px-3 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 text-xs font-bold transition">📍 Mi GPS</button>
-            <button onclick="clearBikeMapPoints()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition">🗑️ Reiniciar Puntos</button>
+            <button onclick="centerMapOnMe()" class="px-3 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 text-xs font-bold transition">
+              📍 Centrar mi Ubicación
+            </button>
           </div>
         </div>
 
-        <!-- Buscador de Ciudad o Pueblo -->
-        <div class="flex gap-2 mb-4">
-          <input type="text" id="mapCitySearchInput" onkeydown="if(event.key==='Enter') searchPlaceOnMap()" placeholder="🔍 Escribe tu pueblo, ciudad o calle (ej. Palma, Madrid, Sevilla, Valencia...)" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500">
-          <button onclick="searchPlaceOnMap()" class="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs transition">Ir a Zona</button>
+        <!-- CUADRO DE MANDOS DE TELEMETRÍA EN VIVO (VELOCÍMETRO, MEDIA, MÁXIMA, KM, MINUTOS) -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
+          <div class="bg-slate-950/90 p-3.5 rounded-2xl border-2 border-cyan-500/40 text-center shadow-lg shadow-cyan-500/10">
+            <span class="text-[10px] uppercase font-extrabold tracking-wider text-cyan-400 block">Velocidad Actual</span>
+            <div class="flex items-baseline justify-center gap-1 mt-1">
+              <span id="liveSpeedVal" class="text-3xl font-extrabold font-mono text-white">0.0</span>
+              <span class="text-xs font-bold text-slate-400">km/h</span>
+            </div>
+            <span id="liveSpeedZoneLabel" class="text-[10px] font-bold text-slate-400 block mt-0.5">Parado</span>
+          </div>
+
+          <div class="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 text-center">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Velocidad Media</span>
+            <div class="flex items-baseline justify-center gap-1 mt-1">
+              <span id="liveAvgSpeedVal" class="text-2xl font-extrabold font-mono text-emerald-400">0.0</span>
+              <span class="text-xs text-slate-400">km/h</span>
+            </div>
+            <span class="text-[10px] text-slate-500 block mt-0.5">Ritmo promedio</span>
+          </div>
+
+          <div class="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 text-center">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Velocidad Máxima</span>
+            <div class="flex items-baseline justify-center gap-1 mt-1">
+              <span id="liveMaxSpeedVal" class="text-2xl font-extrabold font-mono text-rose-400">0.0</span>
+              <span class="text-xs text-slate-400">km/h</span>
+            </div>
+            <span class="text-[10px] text-slate-500 block mt-0.5">Pico de ruta</span>
+          </div>
+
+          <div class="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 text-center">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Distancia Ruta</span>
+            <div class="flex items-baseline justify-center gap-1 mt-1">
+              <span id="liveDistKmVal" class="text-2xl font-extrabold font-mono text-cyan-300">0.00</span>
+              <span class="text-xs text-slate-400">km</span>
+            </div>
+            <span class="text-[10px] text-slate-500 block mt-0.5">GPS acumulado</span>
+          </div>
+
+          <div class="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 text-center">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Tiempo en Ruta</span>
+            <div class="flex items-baseline justify-center gap-1 mt-1">
+              <span id="liveDurationClock" class="text-2xl font-extrabold font-mono text-amber-400">00:00</span>
+            </div>
+            <span id="liveMinutesSub" class="text-[10px] text-slate-500 block mt-0.5">0 minutos</span>
+          </div>
+
+          <div class="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 text-center col-span-2 sm:col-span-1">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Calorías Bici</span>
+            <div class="flex items-baseline justify-center gap-1 mt-1">
+              <span id="liveCaloriesVal" class="text-2xl font-extrabold font-mono text-orange-400">0</span>
+              <span class="text-xs text-slate-400">kcal</span>
+            </div>
+            <span class="text-[10px] text-slate-500 block mt-0.5">Estimación activa</span>
+          </div>
         </div>
 
+        <!-- BOTONES PRINCIPALES DEL GPS EN VIVO -->
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-900/95 p-4 rounded-2xl border border-slate-800 mb-4">
+          <div class="flex flex-wrap items-center gap-2.5">
+            <button onclick="startRealGPSTracking()" id="btnStartLiveGPS" class="px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-extrabold text-xs shadow-lg shadow-emerald-500/20 flex items-center gap-2 transition">
+              ▶ Iniciar Ruta con mi GPS Real
+            </button>
+            <button onclick="startSimulatedGPSTracking()" id="btnSimLiveGPS" class="px-4 py-3 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 font-bold text-xs transition" title="Prueba cómo pinta los colores de velocidad sin salir de casa">
+              🧪 Simular Ruta GPS en Vivo
+            </button>
+            <button onclick="finishAndSaveLiveRide()" id="btnStopSaveGPS" class="hidden px-5 py-3 rounded-xl bg-rose-500 hover:bg-rose-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-rose-500/25 transition">
+              ⏹ Finalizar y Guardar en mi Día
+            </button>
+            <button onclick="resetLiveRide()" class="px-3.5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition">
+              🗑️ Limpiar Mapa
+            </button>
+          </div>
+
+          <!-- Leyenda de Colores de Velocidad -->
+          <div class="flex flex-wrap items-center gap-3 text-[11px] font-bold bg-slate-950 px-3.5 py-2 rounded-xl border border-slate-800">
+            <span class="text-slate-400 uppercase text-[10px]">Color según Velocidad:</span>
+            <span class="flex items-center gap-1 text-blue-400"><span class="w-3 h-1.5 rounded bg-blue-500 inline-block"></span> &lt;12 km/h (Subida/Lento)</span>
+            <span class="flex items-center gap-1 text-emerald-400"><span class="w-3 h-1.5 rounded bg-emerald-500 inline-block"></span> 12-22 km/h (Crucero)</span>
+            <span class="flex items-center gap-1 text-amber-400"><span class="w-3 h-1.5 rounded bg-amber-500 inline-block"></span> 22-30 km/h (Rápido)</span>
+            <span class="flex items-center gap-1 text-rose-400"><span class="w-3 h-1.5 rounded bg-rose-500 inline-block"></span> &gt;30 km/h (Sprint/Bajada)</span>
+          </div>
+        </div>
+
+        <!-- MAPA Y PANEL LATERAL DE HISTORIAL DE TRAMOS Y PLANIFICADOR A->B -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <div class="lg:col-span-8">
+          <div class="lg:col-span-8 space-y-3">
+            <!-- Buscador rápido de zona -->
+            <div class="flex gap-2">
+              <input type="text" id="mapCitySearchInput" onkeydown="if(event.key==='Enter') searchPlaceOnMap()" placeholder="🔍 Buscar pueblo, ciudad o camino (o toca el mapa para medir Punto A ➔ Punto B)..." class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+              <button onclick="searchPlaceOnMap()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-xs transition">Buscar</button>
+            </div>
+
             <div id="bike-map"></div>
           </div>
 
+          <!-- Panel derecho: Resumen de la ruta, tramos de velocidad y rutas guardadas -->
           <div class="lg:col-span-4 bg-slate-900/90 p-5 rounded-2xl border border-slate-800 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-              <span class="text-xs font-bold uppercase text-cyan-400">Datos de la Ruta</span>
-              <span id="routeCalcBadge" class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">Haz clic en el mapa</span>
+            <div>
+              <span class="text-[10px] font-extrabold uppercase tracking-wider text-cyan-400 block">Nombre del Recorrido</span>
+              <input type="text" id="bikeRouteNameInput" placeholder="Ej. Salida tarde en bici por caminos" class="mt-1 w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white">
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
-              <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
-                <span class="text-[10px] text-slate-400 uppercase font-bold block">Distancia</span>
-                <span id="calcBikeKm" class="text-2xl font-extrabold font-mono text-cyan-400">0.00</span>
-                <span class="text-[11px] text-slate-400 block">kilómetros</span>
+            <!-- Desglose de Velocidad por Tramos en Vivo -->
+            <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2">
+              <div class="flex justify-between items-center">
+                <span class="text-[11px] font-bold text-white">⚡ Últimos Tramos Pintados</span>
+                <span id="segmentsCountBadge" class="text-[10px] font-mono text-cyan-400">0 puntos GPS</span>
               </div>
-              <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
-                <span class="text-[10px] text-slate-400 uppercase font-bold block">Tiempo Estimado</span>
-                <span id="calcBikeMin" class="text-2xl font-extrabold font-mono text-emerald-400">0</span>
-                <span class="text-[11px] text-slate-400 block">minutos</span>
+              <div id="liveSpeedSegmentsFeed" class="space-y-1.5 max-h-36 overflow-y-auto text-[11px] font-mono pr-1">
+                <p class="text-slate-500 italic font-sans">Pulsa "Iniciar Ruta con mi GPS" o "Simular Ruta" para ver cómo se pintan tus velocidades en directo.</p>
               </div>
             </div>
 
-            <div class="space-y-2 pt-1">
-              <label class="flex items-center justify-between text-xs text-slate-300 cursor-pointer bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                <span>🔄 Ruta de Ida y Vuelta (x2)</span>
-                <input type="checkbox" id="bikeRoundTripCheck" onchange="recalculateCurrentBikeRoute()" class="w-4 h-4 accent-cyan-400">
-              </label>
-
-              <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                <span class="text-slate-400">Ritmo medio bici:</span>
-                <select id="bikeSpeedSelect" onchange="recalculateCurrentBikeRoute()" class="bg-slate-900 text-white font-mono text-xs rounded-lg px-2 py-1 border border-slate-700">
-                  <option value="15">Paseo (15 km/h)</option>
-                  <option value="20" selected>Normal (20 km/h)</option>
-                  <option value="25">Rápido (25 km/h)</option>
-                </select>
+            <!-- Modo alternativo: Planificar clicando Punto A y Punto B -->
+            <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800/80 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-slate-300">📐 Planificador Punto A ➔ B (Clic en mapa)</span>
+                <label class="flex items-center gap-1 text-[10px] text-cyan-300 cursor-pointer">
+                  <input type="checkbox" id="bikeRoundTripCheck" onchange="recalculateCurrentBikeRoute()" class="accent-cyan-400"> Ida/Vuelta x2
+                </label>
               </div>
-
-              <input type="text" id="bikeRouteNameInput" placeholder="Nombre (ej. Ruta sendero / pueblo)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+              <div class="flex items-center justify-between text-xs font-mono pt-1">
+                <span>Dist: <b id="calcBikeKm" class="text-cyan-400">0.00</b> km</span>
+                <span>Est: <b id="calcBikeMin" class="text-emerald-400">0</b> min</span>
+                <button onclick="saveCalculatedBikeRoute()" class="px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 font-sans font-bold text-[11px]">
+                  + Guardar A➔B
+                </button>
+              </div>
             </div>
 
-            <button onclick="saveCalculatedBikeRoute()" class="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-cyan-500/20 transition">
-              🚴 Añadir Ruta y Sumar a mi Día
-            </button>
-
-            <div class="pt-3 border-t border-slate-800">
+            <div class="pt-2 border-t border-slate-800">
               <h4 class="text-[11px] font-bold uppercase text-slate-400 mb-2">Rutas Guardadas Hoy</h4>
-              <div id="todayBikeRoutesList" class="space-y-1.5 max-h-36 overflow-y-auto"></div>
+              <div id="todayBikeRoutesList" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
             </div>
           </div>
         </div>
@@ -778,7 +873,6 @@
     <!-- =============================================================== -->
     <section id="view-finances" class="hidden space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- GASTOS EN EUROS -->
         <div class="lg:col-span-6 glass-card rounded-3xl p-6 border-t-4 border-t-emerald-500 space-y-4">
           <div class="flex items-center justify-between">
             <div>
@@ -809,7 +903,6 @@
           <div id="expensesListContainer" class="space-y-2 max-h-56 overflow-y-auto"></div>
         </div>
 
-        <!-- LISTA DE LA COMPRA CONECTADA -->
         <div class="lg:col-span-6 glass-card rounded-3xl p-6 border-t-4 border-t-cyan-500 space-y-4">
           <div class="flex items-center justify-between">
             <div>
@@ -828,7 +921,6 @@
             <button onclick="addShoppingItem()" class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs">+ Añadir</button>
           </div>
 
-          <!-- Conversor de Compra a Gasto -->
           <div class="bg-slate-900/90 p-3 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-2">
             <span class="text-xs text-slate-300 font-semibold">💳 ¿Ya compraste lo marcado?</span>
             <div class="flex items-center gap-2">
@@ -853,7 +945,7 @@
           <div>
             <span class="text-xs font-bold uppercase tracking-widest text-violet-400">Auditoría Inteligente de 7 Días</span>
             <h3 class="text-2xl font-extrabold text-white mt-0.5" id="weeklyVerdictTitle">Analizando tu semana...</h3>
-            <p class="text-xs text-slate-400 mt-1" id="weeklyVerdictSub">Cumplimiento de objetivos de pasos, bici, gimnasio, estudio y pavos.</p>
+            <p class="text-xs text-slate-400 mt-1">Cumplimiento de objetivos de pasos, bici, gimnasio, estudio y pavos.</p>
           </div>
           <div class="bg-slate-900 px-5 py-3 rounded-2xl border border-slate-800 text-center">
             <span class="text-[10px] uppercase font-bold text-slate-400 block">Nota Global Semanal</span>
@@ -938,58 +1030,46 @@
   <script>
     // --- CATÁLOGO DE +40 EJERCICIOS DE GIMNASIO CON ILUSTRACIÓN VECTORIAL ---
     const EXERCISE_ATLAS = [
-      // PECHO
       { name: 'Press de Banca Plano', category: 'Pecho', equipment: 'Barra', pose: 'bench', color: '#f43f5e', tip: 'Retrae escápulas, pies firmes y baja la barra al esternón.' },
       { name: 'Press Inclinado con Mancuernas', category: 'Pecho', equipment: 'Mancuernas', pose: 'incline', color: '#f43f5e', tip: 'Banco a 30-45º para enfocar la parte superior del pectoral.' },
-      { name: 'Aperturas con Mancuernas', category: 'Pecho', equipment: 'Mancuernas', pose: 'fly', color: '#f43f5e', tip: 'Abre los brazos con codos semiflexionados estirando el pecho.' },
-      { name: 'Cruce de Poleas', category: 'Pecho', equipment: 'Polea', pose: 'cable_fly', color: '#f43f5e', tip: 'Junta las manos frente al torso apretando 1 segundo.' },
-      { name: 'Fondos en Paralelas (Dips)', category: 'Pecho', equipment: 'Peso Corporal', pose: 'dip', color: '#f43f5e', tip: 'Inclina ligeramente el torso hacia delante para activar más pecho.' },
-      { name: 'Flexiones (Push-ups)', category: 'Pecho', equipment: 'Peso Corporal', pose: 'pushup', color: '#f43f5e', tip: 'Cuerpo recto en plancha y pecho rozando el suelo.' },
+      { name: 'Aperturas con Mancuernas', category: 'Pecho', equipment: 'Mancuernas', pose: 'bench', color: '#f43f5e', tip: 'Abre los brazos con codos semiflexionados estirando el pecho.' },
+      { name: 'Cruce de Poleas', category: 'Pecho', equipment: 'Polea', pose: 'ohp', color: '#f43f5e', tip: 'Junta las manos frente al torso apretando 1 segundo.' },
+      { name: 'Fondos en Paralelas (Dips)', category: 'Pecho', equipment: 'Peso Corporal', pose: 'pullup', color: '#f43f5e', tip: 'Inclina ligeramente el torso hacia delante para activar más pecho.' },
+      { name: 'Flexiones (Push-ups)', category: 'Pecho', equipment: 'Peso Corporal', pose: 'bench', color: '#f43f5e', tip: 'Cuerpo recto en plancha y pecho rozando el suelo.' },
       { name: 'Press de Pecho en Máquina', category: 'Pecho', equipment: 'Máquina', pose: 'bench', color: '#f43f5e', tip: 'Ideal para llegar al fallo muscular con total seguridad.' },
-
-      // ESPALDA
       { name: 'Dominadas (Pull-ups)', category: 'Espalda', equipment: 'Peso Corporal', pose: 'pullup', color: '#3b82f6', tip: 'Sube hasta pasar la barbilla tirando con los codos hacia abajo.' },
-      { name: 'Jalón al Pecho en Polea', category: 'Espalda', equipment: 'Polea', pose: 'lat_pull', color: '#3b82f6', tip: 'Lleva la barra a la parte alta del pecho sin balancear el cuerpo.' },
-      { name: 'Remo con Barra', category: 'Espalda', equipment: 'Barra', pose: 'row', color: '#3b82f6', tip: 'Espalda recta a 45º, tira de la barra hacia el ombligo.' },
-      { name: 'Remo con Mancuerna a una Mano', category: 'Espalda', equipment: 'Mancuerna', pose: 'row', color: '#3b82f6', tip: 'Apoya rodilla en banco y lleva el codo bien atrás.' },
-      { name: 'Remo en Polea Baja (Gironda)', category: 'Espalda', equipment: 'Polea', pose: 'seated_row', color: '#3b82f6', tip: 'Pecho fuera y junta las escápulas al final del recorrido.' },
+      { name: 'Jalón al Pecho en Polea', category: 'Espalda', equipment: 'Polea', pose: 'pullup', color: '#3b82f6', tip: 'Lleva la barra a la parte alta del pecho sin balancear el cuerpo.' },
+      { name: 'Remo con Barra', category: 'Espalda', equipment: 'Barra', pose: 'deadlift', color: '#3b82f6', tip: 'Espalda recta a 45º, tira de la barra hacia el ombligo.' },
+      { name: 'Remo con Mancuerna a una Mano', category: 'Espalda', equipment: 'Mancuerna', pose: 'deadlift', color: '#3b82f6', tip: 'Apoya rodilla en banco y lleva el codo bien atrás.' },
+      { name: 'Remo en Polea Baja (Gironda)', category: 'Espalda', equipment: 'Polea', pose: 'deadlift', color: '#3b82f6', tip: 'Pecho fuera y junta las escápulas al final del recorrido.' },
       { name: 'Peso Muerto Convencional', category: 'Espalda', equipment: 'Barra', pose: 'deadlift', color: '#3b82f6', tip: 'Barra pegada a las tibias, espalda neutra y empuje de cadera.' },
-      { name: 'Pull-Over en Polea Alta', category: 'Espalda', equipment: 'Polea', pose: 'cable_fly', color: '#3b82f6', tip: 'Brazos casi rectos llevando la cuerda hasta los muslos.' },
-
-      // PIERNAS Y GLÚTEO
-      { name: 'Sentadilla Libre con Barra', category: 'Piernas', equipment: 'Barra', pose: 'squat', color: '#10b981', tip: 'Rompe el paralelo manteniendo rodillas alineadas con laseh puntas.' },
-      { name: 'Prensa de Piernas 45º', category: 'Piernas', equipment: 'Máquina', pose: 'leg_press', color: '#10b981', tip: 'Baja profundo sin despegar la zona lumbar del respaldo.' },
+      { name: 'Pull-Over en Polea Alta', category: 'Espalda', equipment: 'Polea', pose: 'pullup', color: '#3b82f6', tip: 'Brazos casi rectos llevando la cuerda hasta los muslos.' },
+      { name: 'Sentadilla Libre con Barra', category: 'Piernas', equipment: 'Barra', pose: 'squat', color: '#10b981', tip: 'Rompe el paralelo manteniendo rodillas alineadas con las puntas.' },
+      { name: 'Prensa de Piernas 45º', category: 'Piernas', equipment: 'Máquina', pose: 'squat', color: '#10b981', tip: 'Baja profundo sin despegar la zona lumbar del respaldo.' },
       { name: 'Peso Muerto Rumano (Femoral)', category: 'Piernas', equipment: 'Barra', pose: 'deadlift', color: '#10b981', tip: 'Cadera atrás notando el estiramiento en los isquiotibiales.' },
-      { name: 'Hip Thrust (Empuje de Cadera)', category: 'Piernas', equipment: 'Barra', pose: 'hip_thrust', color: '#10b981', tip: 'Aprieta glúteos arriba formando una línea horizontal.' },
-      { name: 'Sentadilla Búlgara', category: 'Piernas', equipment: 'Mancuernas', pose: 'lunge', color: '#10b981', tip: 'Pie trasero elevado en banco, máxima activación de cuádriceps y glúteo.' },
-      { name: 'Zancadas (Lunges)', category: 'Piernas', equipment: 'Mancuernas', pose: 'lunge', color: '#10b981', tip: 'Paso largo controlando que la rodilla trasera casi toque el suelo.' },
-      { name: 'Extensión de Cuádriceps', category: 'Piernas', equipment: 'Máquina', pose: 'leg_ext', color: '#10b981', tip: 'Aguanta 1 segundo arriba apretando el cuádriceps.' },
-      { name: 'Curl Femoral Tumbado/Sentado', category: 'Piernas', equipment: 'Máquina', pose: 'leg_ext', color: '#10b981', tip: 'Controla el retorno sin dar tirones lumbares.' },
-      { name: 'Elevación de Gemelos', category: 'Piernas', equipment: 'Máquina', pose: 'calf', color: '#10b981', tip: 'Estira abajo del todo y sube de puntillas al máximo.' },
-
-      // HOMBROS
+      { name: 'Hip Thrust (Empuje de Cadera)', category: 'Piernas', equipment: 'Barra', pose: 'bench', color: '#10b981', tip: 'Aprieta glúteos arriba formando una línea horizontal.' },
+      { name: 'Sentadilla Búlgara', category: 'Piernas', equipment: 'Mancuernas', pose: 'squat', color: '#10b981', tip: 'Pie trasero elevado en banco, máxima activación de cuádriceps y glúteo.' },
+      { name: 'Zancadas (Lunges)', category: 'Piernas', equipment: 'Mancuernas', pose: 'squat', color: '#10b981', tip: 'Paso largo controlando que la rodilla trasera casi toque el suelo.' },
+      { name: 'Extensión de Cuádriceps', category: 'Piernas', equipment: 'Máquina', pose: 'squat', color: '#10b981', tip: 'Aguanta 1 segundo arriba apretando el cuádriceps.' },
+      { name: 'Curl Femoral Tumbado/Sentado', category: 'Piernas', equipment: 'Máquina', pose: 'squat', color: '#10b981', tip: 'Controla el retorno sin dar tirones lumbares.' },
+      { name: 'Elevación de Gemelos', category: 'Piernas', equipment: 'Máquina', pose: 'squat', color: '#10b981', tip: 'Estira abajo del todo y sube de puntillas al máximo.' },
       { name: 'Press Militar con Barra / Mancuernas', category: 'Hombros', equipment: 'Barra', pose: 'ohp', color: '#f59e0b', tip: 'Empuja vertical sobre la cabeza apretando el abdomen.' },
-      { name: 'Elevaciones Laterales', category: 'Hombros', equipment: 'Mancuernas', pose: 'lat_raise', color: '#f59e0b', tip: 'Sube los codos hasta la altura de los hombros sin impulso.' },
-      { name: 'Pájaros / Posterior en Polea (Face Pull)', category: 'Hombros', equipment: 'Polea', pose: 'face_pull', color: '#f59e0b', tip: 'Tira de la cuerda hacia la frente abriendo los codos.' },
+      { name: 'Elevaciones Laterales', category: 'Hombros', equipment: 'Mancuernas', pose: 'ohp', color: '#f59e0b', tip: 'Sube los codos hasta la altura de los hombros sin impulso.' },
+      { name: 'Pájaros / Posterior en Polea (Face Pull)', category: 'Hombros', equipment: 'Polea', pose: 'ohp', color: '#f59e0b', tip: 'Tira de la cuerda hacia la frente abriendo los codos.' },
       { name: 'Press Arnold', category: 'Hombros', equipment: 'Mancuernas', pose: 'ohp', color: '#f59e0b', tip: 'Gira las muñecas al subir para trabajar todo el deltoides.' },
-      { name: 'Encogimientos de Trapecio', category: 'Hombros', equipment: 'Mancuernas', pose: 'calf', color: '#f59e0b', tip: 'Eleva los hombros hacia las orejas aguantando 1 segundo.' },
-
-      // BRAZOS (BÍCEPS Y TRÍCEPS)
+      { name: 'Encogimientos de Trapecio', category: 'Hombros', equipment: 'Mancuernas', pose: 'ohp', color: '#f59e0b', tip: 'Eleva los hombros hacia las orejas aguantando 1 segundo.' },
       { name: 'Curl de Bíceps con Barra Z', category: 'Brazos', equipment: 'Barra', pose: 'curl', color: '#a855f7', tip: 'Codos pegados al costado sin mover los hombros.' },
       { name: 'Curl Martillo con Mancuernas', category: 'Brazos', equipment: 'Mancuernas', pose: 'curl', color: '#a855f7', tip: 'Agarre neutro para dar grosor al braquial y antebrazo.' },
       { name: 'Curl Predicador (Banco Scott)', category: 'Brazos', equipment: 'Barra/Manc.', pose: 'curl', color: '#a855f7', tip: 'Aísla el bíceps evitando cualquier balanceo.' },
-      { name: 'Extensión de Tríceps en Polea (Cuerda)', category: 'Brazos', equipment: 'Polea', pose: 'tricep', color: '#a855f7', tip: 'Abre la cuerda al final extendiendo el codo por completo.' },
+      { name: 'Extensión de Tríceps en Polea (Cuerda)', category: 'Brazos', equipment: 'Polea', pose: 'curl', color: '#a855f7', tip: 'Abre la cuerda al final extendiendo el codo por completo.' },
       { name: 'Press Francés (Rompecráneos)', category: 'Brazos', equipment: 'Barra Z', pose: 'bench', color: '#a855f7', tip: 'Flexiona solo los codos bajando hacia la frente.' },
-      { name: 'Fondos de Tríceps en Banco', category: 'Brazos', equipment: 'Peso Corporal', pose: 'dip', color: '#a855f7', tip: 'Baja vertical rozando el banco con la espalda.' },
-
-      // CORE Y CARDIO
-      { name: 'Plancha Abdominal (Plank)', category: 'Core', equipment: 'Peso Corporal', pose: 'pushup', color: '#06b6d4', tip: 'Aprieta abdomen y glúteos manteniendo línea recta.' },
+      { name: 'Fondos de Tríceps en Banco', category: 'Brazos', equipment: 'Peso Corporal', pose: 'curl', color: '#a855f7', tip: 'Baja vertical rozando el banco con la espalda.' },
+      { name: 'Plancha Abdominal (Plank)', category: 'Core', equipment: 'Peso Corporal', pose: 'bench', color: '#06b6d4', tip: 'Aprieta abdomen y glúteos manteniendo línea recta.' },
       { name: 'Elevación de Piernas Colgado', category: 'Core', equipment: 'Barra', pose: 'pullup', color: '#06b6d4', tip: 'Sube las rodillas o piernas hacia el pecho controlando la bajada.' },
-      { name: 'Crunch Abdominal en Polea', category: 'Core', equipment: 'Polea', pose: 'crunch', color: '#06b6d4', tip: 'Flexiona la columna llevando los codos hacia las rodillas.' },
-      { name: 'Rueda Abdominal (Ab Wheel)', category: 'Core', equipment: 'Accesorio', pose: 'pushup', color: '#06b6d4', tip: 'Extiende sin arquear la zona lumbar.' }
+      { name: 'Crunch Abdominal en Polea', category: 'Core', equipment: 'Polea', pose: 'curl', color: '#06b6d4', tip: 'Flexiona la columna llevando los codos hacia las rodillas.' },
+      { name: 'Rueda Abdominal (Ab Wheel)', category: 'Core', equipment: 'Accesorio', pose: 'bench', color: '#06b6d4', tip: 'Extiende sin arquear la zona lumbar.' }
     ];
 
-    // Generador de Ilustración SVG Anatómica Dinámica según el tipo de ejercicio
     function getExerciseIllustrationSVG(ex) {
       const c = ex.color || '#f43f5e';
       const poses = {
@@ -1075,7 +1155,7 @@
       set(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
     };
 
-    const STORAGE_KEY = 'LIFEOS_PRO_V3_DATA';
+    const STORAGE_KEY = 'LIFEOS_PRO_V35_DATA';
     let currentCategoryFilter = 'ALL';
     let activeTimers = { study: null, car: null };
     let timerSeconds = { study: 0, car: 0 };
@@ -1167,7 +1247,6 @@
       if (tabId === 'summary') renderDailySummaryAndJournal();
     }
 
-    // --- SELECTOR DE FECHA ---
     function onDateChange(val) {
       if (!val) return;
       currentDate = val;
@@ -1186,7 +1265,6 @@
       renderAll();
     }
 
-    // --- CÁLCULO DE PUNTUACIÓN DEL DÍA ---
     function calculateDayScore(day) {
       let score = 0;
       const tCount = (day.turkeys.fedMorning ? 1 : 0) + (day.turkeys.waterGiven ? 1 : 0) + (day.turkeys.fedEvening ? 1 : 0);
@@ -1216,7 +1294,6 @@
       const spentToday = day.expenses.reduce((acc, e) => acc + Number(e.amount || 0), 0);
       document.getElementById('badge-spent').textContent = `${spentToday.toFixed(0)}€`;
 
-      // Header KPIs
       document.getElementById('topStepsVal').textContent = day.steps.toLocaleString();
       document.getElementById('topBikeVal').textContent = `${day.bikeKm.toFixed(1)} km`;
       const totalVol = day.gymExercises.reduce((acc, g) => acc + (g.weight * g.reps * g.sets), 0);
@@ -1236,10 +1313,7 @@
       saveToStorage();
       renderDashboard();
     }
-    function saveTurkeyNote(val) {
-      getDayData().turkeys.notes = val;
-      saveToStorage();
-    }
+    function saveTurkeyNote(val) { getDayData().turkeys.notes = val; saveToStorage(); }
     function quickAddTurkeyFeedToShop() {
       appState.shoppingList.unshift({ id: Date.now(), text: 'Saco de pienso / maíz para los pavos', category: 'Granja', done: false });
       saveToStorage();
@@ -1296,23 +1370,14 @@
       saveToStorage();
       renderDashboard();
     }
-    function setNutritionScore(score) {
-      getDayData().nutritionScore = score;
-      saveToStorage();
-      renderDashboard();
-    }
-    function setWaterGlasses(n) {
-      getDayData().waterGlasses = n;
-      saveToStorage();
-      renderDashboard();
-    }
+    function setNutritionScore(score) { getDayData().nutritionScore = score; saveToStorage(); renderDashboard(); }
+    function setWaterGlasses(n) { getDayData().waterGlasses = n; saveToStorage(); renderDashboard(); }
 
     function renderDashboard() {
       const day = getDayData();
       document.getElementById('currentDatePicker').value = currentDate;
       document.getElementById('headerDateLabel').textContent = currentDate === getTodayISO() ? 'HOY • ' + currentDate : 'REGISTRO • ' + currentDate;
 
-      // Pavos
       const states = [
         { key: 'fedMorning', timeKey: 'morningTime', btn: 'btn-turkey-morning', timeEl: 'time-turkey-morning' },
         { key: 'waterGiven', timeKey: 'waterTime', btn: 'btn-turkey-water', timeEl: 'time-turkey-water' },
@@ -1334,7 +1399,6 @@
       });
       document.getElementById('turkeyNotesInput').value = day.turkeys.notes || '';
 
-      // Estudio y Coche
       document.getElementById('studyMinutesText').textContent = day.studyMinutes || 0;
       document.getElementById('studyTopicInput').value = day.studyTopic || '';
       const studyPct = Math.min(100, Math.round(((day.studyMinutes || 0) / (appState.goals.dailyStudyMin || 90)) * 100));
@@ -1345,7 +1409,6 @@
       const carPct = Math.min(100, Math.round(((day.carMinutes || 0) / 60) * 100));
       document.getElementById('carProgressBar').style.width = carPct + '%';
 
-      // Cronos activos
       const anyActive = activeTimers.study || activeTimers.car;
       document.getElementById('liveTimerPill').className = anyActive ? 'inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse' : 'hidden';
       document.getElementById('studyLiveDisplay').classList.toggle('hidden', !activeTimers.study);
@@ -1353,7 +1416,6 @@
       document.getElementById('carLiveDisplay').classList.toggle('hidden', !activeTimers.car);
       document.getElementById('btnCarTimer').textContent = activeTimers.car ? '⏹ Parar' : '▶ En Ruta';
 
-      // Estrellas de comida
       const starsContainer = document.getElementById('nutritionQualityStars');
       starsContainer.innerHTML = '';
       for (let i = 1; i <= 5; i++) {
@@ -1364,7 +1426,6 @@
         starsContainer.appendChild(b);
       }
 
-      // Lista de comidas
       const mealsBox = document.getElementById('mealsListContainer');
       if (day.meals.length === 0) {
         mealsBox.innerHTML = `<p class="text-xs text-slate-500 italic py-2">Aún no has anotado comidas hoy.</p>`;
@@ -1383,7 +1444,6 @@
         `).join('');
       }
 
-      // Vasos de agua
       document.getElementById('waterGlassesCount').textContent = day.waterGlasses || 0;
       const wRow = document.getElementById('waterGlassesRow');
       wRow.innerHTML = '';
@@ -1395,20 +1455,19 @@
         wRow.appendChild(btn);
       }
 
-      // Resúmenes de accesos rápidos
       document.getElementById('dashGymSummary').textContent = day.gymExercises.length > 0
         ? `${day.gymExercises.length} ejercicios hechos hoy`
         : 'Sin series hoy — Toca para registrar';
       document.getElementById('dashBikeSummary').textContent = day.bikeKm > 0
         ? `${day.bikeKm.toFixed(2)} km en ${day.bikeMinutes} min hoy`
-        : '0 km hoy — Calcula km y min en el mapa';
+        : 'Pinta tu velocidad en vivo por el mapa';
       const pendingShop = appState.shoppingList.filter(i => !i.done).length;
       document.getElementById('dashShopSummary').textContent = `${pendingShop} productos pendientes en la lista`;
 
       updateSidebarBadges();
     }
 
-    // --- MÓDULO GIMNASIO VISUAL 3.0 ---
+    // --- MÓDULO GIMNASIO VISUAL 3.5 ---
     function filterExerciseCategory(cat) {
       currentCategoryFilter = cat;
       document.querySelectorAll('.cat-pill').forEach(btn => {
@@ -1507,7 +1566,6 @@
 
       const oneRM = Math.round(weight * (1 + reps / 30));
 
-      // Buscar último registro anterior para calcular mejora
       let prevBest = null;
       const sortedDates = Object.keys(appState.days).sort();
       sortedDates.forEach(d => {
@@ -1525,16 +1583,7 @@
         else if (oneRM > prevBest.oneRM) badge = `🏆 ¡NUEVO 1RM (${oneRM} KG)!`;
       }
 
-      getDayData().gymExercises.push({
-        id: Date.now(),
-        name,
-        weight,
-        reps,
-        sets,
-        oneRM,
-        badge
-      });
-
+      getDayData().gymExercises.push({ id: Date.now(), name, weight, reps, sets, oneRM, badge });
       document.getElementById('gymCustomExercise').value = '';
       saveToStorage();
       renderGymView();
@@ -1562,7 +1611,6 @@
       }
       renderVisualExerciseAtlas();
 
-      // Lista de ejercicios de hoy con ilustración en miniatura
       const listEl = document.getElementById('gymTodayList');
       const totalVol = day.gymExercises.reduce((acc, g) => acc + (g.weight * g.reps * g.sets), 0);
       document.getElementById('gymTodayTotalVolume').textContent = `Volumen Total: ${totalVol.toLocaleString()} kg`;
@@ -1596,13 +1644,10 @@
         }).join('');
       }
 
-      // Calcular fuerza relativa por ejercicio
       const maxByEx = {};
       Object.values(appState.days).forEach(d => {
         (d.gymExercises || []).forEach(g => {
-          if (!maxByEx[g.name] || g.oneRM > maxByEx[g.name].oneRM) {
-            maxByEx[g.name] = g;
-          }
+          if (!maxByEx[g.name] || g.oneRM > maxByEx[g.name].oneRM) maxByEx[g.name] = g;
         });
       });
 
@@ -1627,7 +1672,6 @@
         `;
       }).join('') || `<p class="text-[11px] text-slate-500">Registra ejercicios para ver tu comparativa peso/fuerza.</p>`;
 
-      // Poblar selector de historial
       const histSel = document.getElementById('gymHistoryFilterSelect');
       const allLoggedNames = Object.keys(maxByEx);
       if (allLoggedNames.length > 0) {
@@ -1698,32 +1742,45 @@
       }).join('');
     }
 
-    // --- MÓDULO MAPA DE BICICLETA (SIN API KEY) ---
+    // =========================================================================
+    // --- MÓDULO CICLOCOMPUTADOR GPS EN VIVO (PINTA VELOCIDAD POR COLORES) ---
+    // =========================================================================
     let bikeMap = null;
     let currentTileLayer = null;
-    let markerA = null;
-    let markerB = null;
-    let routeLine = null;
-    let lastRawDistanceKm = 0;
+    let riderMarker = null;
+    let gpsWatchId = null;
+    let simIntervalId = null;
+    let rideClockIntervalId = null;
+
+    // Estado de la sesión GPS en vivo
+    let liveRide = {
+      active: false,
+      startTimeMs: 0,
+      elapsedSeconds: 0,
+      totalDistKm: 0,
+      currentSpeedKmh: 0,
+      maxSpeedKmh: 0,
+      speedSamples: [],
+      points: [],       // { lat, lng, timeMs, speedKmh }
+      polylines: []     // Segmentos coloreados en el mapa
+    };
+
+    // Planificador A -> B secundario
+    let markerA = null, markerB = null, routeLine = null, lastRawDistanceKm = 0;
 
     const MAP_LAYERS = {
-      esri_street: {
-        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
-        attr: 'Tiles &copy; Esri'
-      },
-      esri_sat: {
-        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        attr: 'Tiles &copy; Esri Satellite'
-      },
-      ign_spain: {
-        url: 'https://tms-ign-base.idee.es/1.0.0/IGNBaseTodo/{z}/{x}/{y}.jpeg',
-        attr: '&copy; IGN España'
-      },
-      osm_hot: {
-        url: 'https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
-        attr: '&copy; OpenStreetMap HOT'
-      }
+      esri_street: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', attr: 'Tiles &copy; Esri' },
+      esri_sat: { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attr: 'Tiles &copy; Esri Satellite' },
+      ign_spain: { url: 'https://tms-ign-base.idee.es/1.0.0/IGNBaseTodo/{z}/{x}/{y}.jpeg', attr: '&copy; IGN España' },
+      osm_hot: { url: 'https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', attr: '&copy; OpenStreetMap HOT' }
     };
+
+    function getSpeedColorAndLabel(speedKmh) {
+      if (speedKmh < 12) return { color: '#3b82f6', label: 'Subida / Suave (<12 km/h)' };
+      if (speedKmh < 22) return { color: '#10b981', label: 'Ritmo Crucero (12-22 km/h)' };
+      if (speedKmh < 30) return { color: '#f59e0b', label: 'Ritmo Fuerte (22-30 km/h)' };
+      return { color: '#f43f5e', label: '🔥 Sprint / Bajada (>30 km/h)' };
+    }
 
     function initBikeMapIfNeeded() {
       if (bikeMap) {
@@ -1733,14 +1790,15 @@
       const mapEl = document.getElementById('bike-map');
       if (!mapEl) return;
 
-      bikeMap = L.map('bike-map').setView([39.5696, 2.6502], 13);
+      bikeMap = L.map('bike-map').setView([39.5696, 2.6502], 14);
       changeBikeMapStyle('esri_street');
 
+      // Clic en el mapa para medir Punto A -> Punto B si no está grabando GPS en vivo
       bikeMap.on('click', (e) => {
+        if (liveRide.active) return;
         if (!markerA) {
           markerA = L.marker(e.latlng, { draggable: true }).addTo(bikeMap).bindPopup('<b>Punto A (Salida)</b>').openPopup();
           markerA.on('dragend', computeRouteBetweenMarkers);
-          document.getElementById('routeCalcBadge').textContent = 'Ahora marca el Punto B';
         } else if (!markerB) {
           markerB = L.marker(e.latlng, { draggable: true }).addTo(bikeMap).bindPopup('<b>Punto B (Llegada)</b>').openPopup();
           markerB.on('dragend', computeRouteBetweenMarkers);
@@ -1761,12 +1819,296 @@
       currentTileLayer = L.tileLayer(cfg.url, { attribution: cfg.attr, maxZoom: 19 }).addTo(bikeMap);
     }
 
+    function centerMapOnMe() {
+      initBikeMapIfNeeded();
+      if (!navigator.geolocation) {
+        alert('Tu navegador no soporta geolocalización.');
+        return;
+      }
+      document.getElementById('gpsAccuracyBadge').textContent = 'Buscando satélites GPS...';
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const latlng = [pos.coords.latitude, pos.coords.longitude];
+          bikeMap.setView(latlng, 16);
+          updateRiderMarker(latlng, 0);
+          document.getElementById('gpsAccuracyBadge').textContent = `📍 Ubicación centrada (±${Math.round(pos.coords.accuracy)}m)`;
+        },
+        () => {
+          document.getElementById('gpsAccuracyBadge').textContent = '⚠️ Activa el permiso de Ubicación en el navegador';
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
+    function updateRiderMarker(latlng, speedKmh) {
+      if (!bikeMap) return;
+      const icon = L.divIcon({
+        className: '',
+        html: `<div class="gps-rider-dot"></div>`,
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
+      });
+      if (!riderMarker) {
+        riderMarker = L.marker(latlng, { icon }).addTo(bikeMap);
+      } else {
+        riderMarker.setLatLng(latlng);
+      }
+      riderMarker.bindTooltip(`🚴 ${speedKmh.toFixed(1)} km/h`, { permanent: false, direction: 'top' });
+    }
+
+    // Iniciar cronómetro de segundos de la ruta en vivo
+    function startLiveRideClock() {
+      if (rideClockIntervalId) clearInterval(rideClockIntervalId);
+      liveRide.startTimeMs = Date.now() - (liveRide.elapsedSeconds * 1000);
+      rideClockIntervalId = setInterval(() => {
+        if (!liveRide.active) return;
+        liveRide.elapsedSeconds = Math.floor((Date.now() - liveRide.startTimeMs) / 1000);
+        updateLiveTelemetryUI();
+      }, 1000);
+    }
+
+    // Procesar cada nuevo punto GPS (Real o Simulado) y pintar el tramo con su color de velocidad
+    function pushNewGpsPoint(lat, lng, rawSpeedMs = null, accuracy = 8) {
+      const nowMs = Date.now();
+      const newLatLng = L.latLng(lat, lng);
+      let speedKmh = 0;
+
+      if (liveRide.points.length > 0) {
+        const prev = liveRide.points[liveRide.points.length - 1];
+        const prevLatLng = L.latLng(prev.lat, prev.lng);
+        const distMeters = prevLatLng.distanceTo(newLatLng);
+        const timeSec = Math.max(1, (nowMs - prev.timeMs) / 1000);
+
+        // Filtrar ruido GPS si se movió menos de 2 metros en modo real
+        if (distMeters < 2 && rawSpeedMs === null) return;
+
+        // Si el GPS da velocidad directa en m/s la usamos; si no, calculamos Distancia/Tiempo
+        if (rawSpeedMs !== null && !isNaN(rawSpeedMs) && rawSpeedMs >= 0) {
+          speedKmh = rawSpeedMs * 3.6;
+        } else {
+          speedKmh = (distMeters / timeSec) * 3.6;
+        }
+        speedKmh = Math.min(75, Math.max(0, speedKmh));
+
+        liveRide.totalDistKm += (distMeters / 1000);
+        liveRide.currentSpeedKmh = speedKmh;
+        if (speedKmh > liveRide.maxSpeedKmh) liveRide.maxSpeedKmh = speedKmh;
+        liveRide.speedSamples.push(speedKmh);
+
+        // PINTAR TRAMO COLOREADO SEGÚN LA VELOCIDAD EN ESE PUNTO
+        const styleInfo = getSpeedColorAndLabel(speedKmh);
+        const segLine = L.polyline([prevLatLng, newLatLng], {
+          color: styleInfo.color,
+          weight: 6,
+          opacity: 0.95,
+          lineCap: 'round'
+        }).addTo(bikeMap);
+
+        segLine.bindPopup(`
+          <div style="font-family:sans-serif;font-size:12px;">
+            <b>⚡ Velocidad en este tramo: ${speedKmh.toFixed(1)} km/h</b><br/>
+            <span>${styleInfo.label}</span><br/>
+            <span>Minuto: ${Math.floor(liveRide.elapsedSeconds / 60)}m ${liveRide.elapsedSeconds % 60}s</span>
+          </div>
+        `);
+        liveRide.polylines.push(segLine);
+
+        // Añadir al feed lateral de tramos en vivo
+        const feed = document.getElementById('liveSpeedSegmentsFeed');
+        if (feed) {
+          if (liveRide.points.length === 1) feed.innerHTML = '';
+          const itemHtml = `
+            <div class="flex items-center justify-between px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800">
+              <span class="flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full inline-block" style="background:${styleInfo.color}"></span>
+                <b class="text-white">${speedKmh.toFixed(1)} km/h</b>
+              </span>
+              <span class="text-slate-400">${liveRide.totalDistKm.toFixed(2)} km • ${Math.floor(liveRide.elapsedSeconds/60)}m</span>
+            </div>
+          `;
+          feed.insertAdjacentHTML('afterbegin', itemHtml);
+        }
+      }
+
+      liveRide.points.push({ lat, lng, timeMs: nowMs, speedKmh });
+      updateRiderMarker([lat, lng], speedKmh);
+      bikeMap.panTo([lat, lng]);
+      document.getElementById('gpsAccuracyBadge').textContent = `🟢 GPS Activo (±${Math.round(accuracy)}m)`;
+      document.getElementById('segmentsCountBadge').textContent = `${liveRide.points.length} pts GPS`;
+      updateLiveTelemetryUI();
+    }
+
+    function updateLiveTelemetryUI() {
+      const mins = Math.floor(liveRide.elapsedSeconds / 60);
+      const secs = liveRide.elapsedSeconds % 60;
+      const clockStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+      const avgSpeed = liveRide.speedSamples.length > 0
+        ? liveRide.speedSamples.reduce((a, b) => a + b, 0) / liveRide.speedSamples.length
+        : 0;
+
+      const zone = getSpeedColorAndLabel(liveRide.currentSpeedKmh);
+      document.getElementById('liveSpeedVal').textContent = liveRide.currentSpeedKmh.toFixed(1);
+      document.getElementById('liveSpeedZoneLabel').textContent = zone.label;
+      document.getElementById('liveSpeedZoneLabel').style.color = zone.color;
+
+      document.getElementById('liveAvgSpeedVal').textContent = avgSpeed.toFixed(1);
+      document.getElementById('liveMaxSpeedVal').textContent = liveRide.maxSpeedKmh.toFixed(1);
+      document.getElementById('liveDistKmVal').textContent = liveRide.totalDistKm.toFixed(2);
+      document.getElementById('liveDurationClock').textContent = clockStr;
+      document.getElementById('liveMinutesSub').textContent = `${mins} min ${secs} seg`;
+
+      const kcal = Math.round(liveRide.totalDistKm * 32);
+      document.getElementById('liveCaloriesVal').textContent = kcal;
+    }
+
+    // OPCIÓN 1: GPS REAL DEL MÓVIL / NAVEGADOR
+    async function startRealGPSTracking() {
+      initBikeMapIfNeeded();
+      if (!navigator.geolocation) {
+        alert('Tu dispositivo o navegador no soporta GPS en vivo.');
+        return;
+      }
+      stopAllTrackingStreams();
+      liveRide.active = true;
+      toggleRideButtonsUI(true);
+      startLiveRideClock();
+
+      // Intentar mantener pantalla encendida en móvil
+      try {
+        if ('wakeLock' in navigator) await navigator.wakeLock.request('screen');
+      } catch(e) {}
+
+      document.getElementById('gpsAccuracyBadge').textContent = '📡 Conectando GPS de alta precisión...';
+
+      gpsWatchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          pushNewGpsPoint(
+            pos.coords.latitude,
+            pos.coords.longitude,
+            pos.coords.speed,
+            pos.coords.accuracy || 10
+          );
+        },
+        (err) => {
+          document.getElementById('gpsAccuracyBadge').textContent = '⚠️ Permiso GPS denegado o sin señal. Usa el Simulador para probar.';
+        },
+        { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
+      );
+    }
+
+    // OPCIÓN 2: SIMULADOR EN VIVO PARA PROBAR CÓMO PINTA LAS VELOCIDADES Y MINUTOS
+    function startSimulatedGPSTracking() {
+      initBikeMapIfNeeded();
+      stopAllTrackingStreams();
+      liveRide.active = true;
+      toggleRideButtonsUI(true);
+      startLiveRideClock();
+
+      const center = bikeMap.getCenter();
+      let curLat = center.lat;
+      let curLng = center.lng;
+      let angle = 0.4;
+
+      // Primer punto de salida
+      pushNewGpsPoint(curLat, curLng, 0, 5);
+
+      simIntervalId = setInterval(() => {
+        if (!liveRide.active) return;
+        // Variar velocidad simulada entre 9 km/h (subida azul), 18 km/h (verde), 26 km/h (naranja) y 34 km/h (sprint rojo)
+        const speedsKmhPool = [10.5, 16.2, 20.8, 25.4, 32.6, 28.0, 19.5, 11.2, 23.8, 35.1];
+        const simSpeedKmh = speedsKmhPool[liveRide.points.length % speedsKmhPool.length] + (Math.random() * 2 - 1);
+        const simSpeedMs = simSpeedKmh / 3.6;
+
+        angle += (Math.random() - 0.35) * 0.45;
+        const stepDeg = 0.00085 * (simSpeedKmh / 20);
+        curLat += Math.cos(angle) * stepDeg;
+        curLng += Math.sin(angle) * stepDeg;
+
+        pushNewGpsPoint(curLat, curLng, simSpeedMs, 4);
+      }, 1600);
+    }
+
+    function stopAllTrackingStreams() {
+      if (gpsWatchId !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(gpsWatchId);
+        gpsWatchId = null;
+      }
+      if (simIntervalId !== null) {
+        clearInterval(simIntervalId);
+        simIntervalId = null;
+      }
+      if (rideClockIntervalId !== null) {
+        clearInterval(rideClockIntervalId);
+        rideClockIntervalId = null;
+      }
+    }
+
+    function toggleRideButtonsUI(isRiding) {
+      document.getElementById('btnStartLiveGPS').classList.toggle('hidden', isRiding);
+      document.getElementById('btnSimLiveGPS').classList.toggle('hidden', isRiding);
+      document.getElementById('btnStopSaveGPS').classList.toggle('hidden', !isRiding);
+    }
+
+    function finishAndSaveLiveRide() {
+      stopAllTrackingStreams();
+      liveRide.active = false;
+      toggleRideButtonsUI(false);
+
+      const km = Number(liveRide.totalDistKm.toFixed(2));
+      const mins = Math.max(1, Math.round(liveRide.elapsedSeconds / 60));
+      const avgSpeed = liveRide.speedSamples.length > 0
+        ? (liveRide.speedSamples.reduce((a, b) => a + b, 0) / liveRide.speedSamples.length).toFixed(1)
+        : '18.0';
+      const maxSpeed = liveRide.maxSpeedKmh.toFixed(1);
+
+      if (km <= 0 && liveRide.points.length < 2) {
+        alert('Aún no se ha registrado distancia en la ruta.');
+        return;
+      }
+
+      const customName = document.getElementById('bikeRouteNameInput').value.trim();
+      const routeTitle = customName || `Ruta GPS (${avgSpeed} km/h media • Máx ${maxSpeed} km/h)`;
+
+      const day = getDayData();
+      day.bikeRoutes.push({
+        id: Date.now(),
+        name: routeTitle,
+        km: km || 0.1,
+        mins,
+        avgSpeed,
+        maxSpeed
+      });
+      day.bikeKm = Number((day.bikeKm + (km || 0.1)).toFixed(2));
+      day.bikeMinutes = (day.bikeMinutes || 0) + mins;
+
+      document.getElementById('bikeRouteNameInput').value = '';
+      document.getElementById('gpsAccuracyBadge').textContent = '✔ Ruta guardada en tu día';
+      saveToStorage();
+      renderTodayBikeRoutes();
+    }
+
+    function resetLiveRide() {
+      stopAllTrackingStreams();
+      liveRide.active = false;
+      toggleRideButtonsUI(false);
+      liveRide.polylines.forEach(p => { if (bikeMap) bikeMap.removeLayer(p); });
+      if (riderMarker && bikeMap) { bikeMap.removeLayer(riderMarker); riderMarker = null; }
+      liveRide = {
+        active: false, startTimeMs: 0, elapsedSeconds: 0, totalDistKm: 0,
+        currentSpeedKmh: 0, maxSpeedKmh: 0, speedSamples: [], points: [], polylines: []
+      };
+      clearBikeMapPoints();
+      updateLiveTelemetryUI();
+      document.getElementById('liveSpeedSegmentsFeed').innerHTML = `<p class="text-slate-500 italic font-sans">Mapa limpio. Listo para una nueva ruta.</p>`;
+      document.getElementById('segmentsCountBadge').textContent = '0 puntos GPS';
+    }
+
+    // --- FUNCIONES DEL PLANIFICADOR PUNTO A -> PUNTO B ---
     async function computeRouteBetweenMarkers() {
       if (!markerA || !markerB) return;
       const a = markerA.getLatLng();
       const b = markerB.getLatLng();
-      document.getElementById('routeCalcBadge').textContent = 'Calculando ruta...';
-
       try {
         const res = await fetch(`https://router.project-osrm.org/route/v1/bicycle/${a.lng},${a.lat};${b.lng},${b.lat}?overview=full&geometries=geojson`);
         const data = await res.json();
@@ -1777,24 +2119,19 @@
           routeLine = L.polyline(coords, { color: '#06b6d4', weight: 5 }).addTo(bikeMap);
           bikeMap.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
           recalculateCurrentBikeRoute();
-          document.getElementById('routeCalcBadge').textContent = 'Ruta por carretera lista';
           return;
         }
       } catch(e) {}
-
-      // Fallback geodésico directo si falla la red
       lastRawDistanceKm = (a.distanceTo(b) / 1000) * 1.18;
       if (routeLine) bikeMap.removeLayer(routeLine);
       routeLine = L.polyline([a, b], { color: '#06b6d4', weight: 4, dashArray: '6, 6' }).addTo(bikeMap);
       recalculateCurrentBikeRoute();
-      document.getElementById('routeCalcBadge').textContent = 'Ruta calculada';
     }
 
     function recalculateCurrentBikeRoute() {
       const isRound = document.getElementById('bikeRoundTripCheck').checked;
-      const speed = parseFloat(document.getElementById('bikeSpeedSelect').value) || 20;
       const finalKm = lastRawDistanceKm * (isRound ? 2 : 1);
-      const mins = Math.round((finalKm / speed) * 60);
+      const mins = Math.round((finalKm / 20) * 60);
       document.getElementById('calcBikeKm').textContent = finalKm.toFixed(2);
       document.getElementById('calcBikeMin').textContent = mins;
     }
@@ -1806,7 +2143,6 @@
       markerA = null; markerB = null; routeLine = null;
       lastRawDistanceKm = 0;
       recalculateCurrentBikeRoute();
-      document.getElementById('routeCalcBadge').textContent = 'Haz clic en el mapa';
     }
 
     async function searchPlaceOnMap() {
@@ -1821,20 +2157,13 @@
       } catch(e) {}
     }
 
-    function locateUserOnBikeMap() {
-      if (!navigator.geolocation || !bikeMap) return;
-      navigator.geolocation.getCurrentPosition(pos => {
-        bikeMap.setView([pos.coords.latitude, pos.coords.longitude], 15);
-      });
-    }
-
     function saveCalculatedBikeRoute() {
       const km = parseFloat(document.getElementById('calcBikeKm').textContent) || 0;
       const mins = parseInt(document.getElementById('calcBikeMin').textContent) || 0;
       if (km <= 0) return;
-      const name = document.getElementById('bikeRouteNameInput').value.trim() || 'Ruta en Bici';
+      const name = document.getElementById('bikeRouteNameInput').value.trim() || 'Ruta Punto A➔B';
       const day = getDayData();
-      day.bikeRoutes.push({ id: Date.now(), name, km, mins });
+      day.bikeRoutes.push({ id: Date.now(), name, km, mins, avgSpeed: '20.0', maxSpeed: '25.0' });
       day.bikeKm = Number((day.bikeKm + km).toFixed(2));
       day.bikeMinutes = (day.bikeMinutes || 0) + mins;
       document.getElementById('bikeRouteNameInput').value = '';
@@ -1848,12 +2177,15 @@
       const box = document.getElementById('todayBikeRoutesList');
       if (!box) return;
       if (!day.bikeRoutes || day.bikeRoutes.length === 0) {
-        box.innerHTML = `<p class="text-[11px] text-slate-500 italic">Marca dos puntos en el mapa para guardar tu recorrido.</p>`;
+        box.innerHTML = `<p class="text-[11px] text-slate-500 italic">Aún no hay rutas guardadas hoy.</p>`;
       } else {
         box.innerHTML = day.bikeRoutes.map(r => `
-          <div class="flex justify-between items-center bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 text-xs">
-            <span class="text-white font-semibold truncate">${r.name}</span>
-            <span class="font-mono text-cyan-400 font-bold">${r.km} km • ${r.mins}m</span>
+          <div class="bg-slate-950 px-3 py-2 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
+            <div class="truncate pr-2">
+              <p class="text-white font-bold truncate">${r.name}</p>
+              ${r.avgSpeed ? `<p class="text-[10px] font-mono text-emerald-400">Media: ${r.avgSpeed} km/h • Máx: ${r.maxSpeed || r.avgSpeed} km/h</p>` : ''}
+            </div>
+            <span class="font-mono text-cyan-400 font-extrabold shrink-0">${r.km} km • ${r.mins}m</span>
           </div>
         `).join('');
       }
@@ -2131,7 +2463,7 @@
       document.getElementById('autoDailySummaryBox').innerHTML = `
         <p>📅 <b>Resumen del día (${currentDate}):</b> Has alcanzado un nivel de cumplimiento del <b class="text-emerald-400">${calculateDayScore(day)}%</b>.</p>
         <p>🦃 <b>Pavos y Corral:</b> Completaste <b>${tCount}/3</b> tareas (${day.turkeys.waterGiven ? 'agua limpia puesta a las ' + day.turkeys.waterTime : 'pendiente agua'}). ${day.turkeys.notes ? 'Nota: ' + day.turkeys.notes : ''}</p>
-        <p>🏋️ <b>Deporte, Bici y Pasos:</b> Llevas <b>${day.steps.toLocaleString()} pasos</b>, recorriste <b>${day.bikeKm} km en bici</b> y completaste <b>${day.gymExercises.length} ejercicios de gimnasio</b>.</p>
+        <p>🏋️ <b>Deporte, Bici y Pasos:</b> Llevas <b>${day.steps.toLocaleString()} pasos</b>, recorriste <b>${day.bikeKm} km en bici (${day.bikeMinutes || 0} min)</b> y completaste <b>${day.gymExercises.length} ejercicios de gimnasio</b>.</p>
         <p>📚 <b>Tiempo y Finanzas:</b> Estudiaste <b>${day.studyMinutes} min</b> ${day.studyTopic ? '(' + day.studyTopic + ')' : ''}, condujiste el coche <b>${day.carMinutes} min</b> y gastaste <b>${spent.toFixed(2)} €</b>.</p>
       `;
 
@@ -2144,15 +2476,8 @@
       document.getElementById('personalJournalTextarea').value = day.journal || '';
     }
 
-    function setDayMood(m) {
-      getDayData().mood = m;
-      saveToStorage();
-      renderDailySummaryAndJournal();
-    }
-    function saveJournalText(val) {
-      getDayData().journal = val;
-      saveToStorage();
-    }
+    function setDayMood(m) { getDayData().mood = m; saveToStorage(); renderDailySummaryAndJournal(); }
+    function saveJournalText(val) { getDayData().journal = val; saveToStorage(); }
 
     // --- MODAL OBJETIVOS Y DEMO ---
     function openGoalsModal() {
@@ -2177,7 +2502,7 @@
       renderAll();
     }
 
-    function loadDemoData(silent = false) {
+    function loadDemoData() {
       const benchWeights = [60, 62.5, 65, 65, 67.5, 70, 72.5];
       const benchReps = [8, 8, 8, 10, 8, 9, 10];
       for (let i = 6; i >= 0; i--) {
@@ -2193,6 +2518,9 @@
         day.carNotes = 'Ida y vuelta entrenamiento / recados';
         day.bikeKm = i % 2 === 0 ? 12.4 : 0;
         day.bikeMinutes = i % 2 === 0 ? 38 : 0;
+        if (i % 2 === 0) {
+          day.bikeRoutes = [{ id: 90 + i, name: 'Ruta GPS (19.6 km/h media • Máx 31.4 km/h)', km: 12.4, mins: 38, avgSpeed: '19.6', maxSpeed: '31.4' }];
+        }
         day.waterGlasses = 6;
         day.meals = [
           { id: 1, type: '🌅 Desayuno', desc: 'Tostadas con huevos revueltos y avena', kcal: 550 },
