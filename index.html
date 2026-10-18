@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+  const supabaseUrl = 'https://upguromuvzoueznxpavz.supabase.co';
+  const supabaseKey = 'sb_publishable_n1LW5oSdlZ9oRMeaoosCnQ_2T-1f9YA';
+  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+  </script>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -604,27 +610,34 @@
     <!-- PESTAÑA 4: HOGAR (PAVOS, COMPRA Y GASTOS)                                 -->
     <!-- ========================================================================= -->
     <section id="view-hogar" class="hidden space-y-4">
+      <!-- Cuidado de Animales (Pavos y Gatos separados) -->
       <div class="studio-card rounded-2xl p-4 space-y-3">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between mb-2">
           <div>
-            <h3 class="text-base font-extrabold text-white">🦃 Cuidado de los Pavos y Corral</h3>
-            <p class="text-[11px] text-slate-400">Toca para registrar la hora exacta en este día</p>
+            <h3 class="text-base font-extrabold text-white" id="hogarCardTitleText">🦃 Cuidado de los Pavos</h3>
+            <p class="text-[11px] text-slate-400">Toca para registrar la hora exacta</p>
           </div>
-          <button onclick="quickAddTurkeyFeedToShop()" class="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold">+ Falta Pienso</button>
+          <button onclick="quickAddTurkeyFeedToShop()" class="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold">+ Pienso</button>
+        </div>
+
+        <!-- Pestañas para cambiar entre Pavos y Gatos -->
+        <div class="flex gap-2 mb-2">
+          <button onclick="selectAnimalType('pavos')" id="tab-animal-pavos" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950 transition">🦃 Pavos</button>
+          <button onclick="selectAnimalType('gatos')" id="tab-animal-gatos" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-slate-400 border border-slate-800 transition">🐈 Gatos</button>
         </div>
 
         <div class="grid grid-cols-3 gap-2">
-          <button onclick="toggleTurkeyTask('fedMorning')" id="btn-turkey-morning" class="p-3 rounded-xl border border-slate-800 bg-slate-900 flex flex-col items-center text-center">
+          <button onclick="toggleTurkeyTask('fedMorning')" id="btn-turkey-morning" class="p-3 rounded-xl border border-slate-800 bg-slate-900 flex flex-col items-center text-center transition">
             <span class="text-xl">🌾</span>
             <span class="text-xs font-bold text-white mt-1">Mañana</span>
             <span id="time-turkey-morning" class="text-[10px] font-mono text-slate-500 mt-0.5">Pendiente</span>
           </button>
-          <button onclick="toggleTurkeyTask('waterGiven')" id="btn-turkey-water" class="p-3 rounded-xl border border-slate-800 bg-slate-900 flex flex-col items-center text-center">
+          <button onclick="toggleTurkeyTask('waterGiven')" id="btn-turkey-water" class="p-3 rounded-xl border border-slate-800 bg-slate-900 flex flex-col items-center text-center transition">
             <span class="text-xl">💧</span>
-            <span class="text-xs font-bold text-white mt-1">Agua</span>
+            <span class="text-xs font-bold text-white mt-1">Agua/Arena</span>
             <span id="time-turkey-water" class="text-[10px] font-mono text-slate-500 mt-0.5">Pendiente</span>
           </button>
-          <button onclick="toggleTurkeyTask('fedEvening')" id="btn-turkey-evening" class="p-3 rounded-xl border border-slate-800 bg-slate-900 flex flex-col items-center text-center">
+          <button onclick="toggleTurkeyTask('fedEvening')" id="btn-turkey-evening" class="p-3 rounded-xl border border-slate-800 bg-slate-900 flex flex-col items-center text-center transition">
             <span class="text-xl">🌽</span>
             <span class="text-xs font-bold text-white mt-1">Tarde</span>
             <span id="time-turkey-evening" class="text-[10px] font-mono text-slate-500 mt-0.5">Pendiente</span>
@@ -1120,30 +1133,23 @@
 
     function renderHevyRoutinesHub() {
       const box = document.getElementById('hevyRoutinesList');
-      const colorMap = { pecho: 'border-l-rose-500', pierna: 'border-l-amber-500', brazo: 'border-l-purple-500', hombro: 'border-l-violet-400', espalda: 'border-l-blue-500' };
       box.innerHTML = appState.routines.map(r => {
         const names = r.exerciseIds.map(id => getExById(id).name).join(' • ');
-        const titleLow = r.title.toLowerCase();
-        const borderColor = Object.keys(colorMap).find(k => titleLow.includes(k)) ? colorMap[Object.keys(colorMap).find(k => titleLow.includes(k))] : 'border-l-emerald-500';
-        const lastSession = appState.workoutFeed.find(w => w.title === r.title || w.title.includes(r.title.replace(/[🔥💪🦵]/g,'').trim()));
         return `
-          <div class="studio-card rounded-2xl p-4 space-y-3 hover:border-emerald-500/30 transition border-l-4 ${borderColor}">
-            <div class="flex items-start justify-between gap-2">
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2">
-                  <h4 class="text-base font-extrabold text-white">${r.title}</h4>
-                  <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">${r.exerciseIds.length} ejercicios</span>
-                </div>
-                <p class="text-xs text-slate-400 line-clamp-2 mt-0.5">${names || 'Sin ejercicios configurados — toca + Ejercicios'}</p>
-                ${lastSession ? `<p class="text-[11px] text-emerald-400 mt-1">⚡ Última: ${formatHumanDate(lastSession.date)} • ${lastSession.volumeKg.toLocaleString()} kg</p>` : ''}
-              </div>
-              <button onclick="openExercisePickerForRoutine('${r.id}')" class="shrink-0 text-emerald-400 hover:bg-emerald-500/10 text-xs font-bold px-2.5 py-1.5 rounded-xl border border-emerald-500/30">
-                + Ejercicios
+          <div class="studio-card rounded-2xl p-4 space-y-3 border-l-4 border-l-emerald-500">
+            <div class="flex items-center justify-between gap-2">
+              <h4 class="text-sm sm:text-base font-extrabold text-white truncate">${r.title}</h4>
+              <span class="text-[10px] font-mono px-2 py-1 rounded-full bg-slate-800 text-slate-300 shrink-0">${r.exerciseIds.length} ej</span>
+            </div>
+            <p class="text-xs text-slate-400 line-clamp-2">${names || 'Sin ejercicios'}</p>
+            <div class="flex gap-2">
+              <button onclick="startRoutineWorkout('${r.id}')" class="flex-1 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs shadow-md">
+                ▶ Empezar Plan
+              </button>
+              <button onclick="openExercisePickerForRoutine('${r.id}')" class="px-3 py-2.5 rounded-xl border border-emerald-500/30 text-emerald-400 text-xs font-bold shrink-0">
+                + Editar
               </button>
             </div>
-            <button onclick="startRoutineWorkout('${r.id}')" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2">
-              ▶ Empezar Plan — ${r.exerciseIds.length} ejercicios
-            </button>
           </div>
         `;
       }).join('');
@@ -1335,18 +1341,17 @@
     function openSaveWorkoutScreen() {
       let totalVol = 0, doneSets = 0;
       activeWorkout.exercises.forEach(ex => {
-        ex.sets.forEach(st => {
-          if (st.done) {
-            doneSets++;
-            totalVol += (Number(st.kg) || 0) * (Number(st.reps) || 0);
-          }
-        });
+        ex.sets.forEach(st => { if (st.done) { doneSets++; totalVol += (Number(st.kg) || 0) * (Number(st.reps) || 0); } });
       });
+
       if (doneSets === 0) {
-        activeWorkout.exercises.forEach(ex => ex.sets.forEach(st => {
-          st.done = true; doneSets++; totalVol += (Number(st.kg) || 0) * (Number(st.reps) || 0);
-        }));
+        if (!confirm('⚠️ No has marcado ninguna serie con ✓.\n\nDale a ACEPTAR si quieres marcar todas como hechas y guardar, o CANCELAR para volver y darle a Discard.')) {
+          return; // Te deja volver para que le des al botón rojo de Discard Workout
+        } else {
+          activeWorkout.exercises.forEach(ex => ex.sets.forEach(st => { st.done = true; doneSets++; totalVol += (Number(st.kg)||0) * (Number(st.reps)||0); }));
+        }
       }
+      // ... resto del código que ya tienes
 
       const mins = Math.max(1, Math.round(activeWorkout.elapsedSec / 60));
       document.getElementById('saveWorkoutTitleInput').value = activeWorkout.title;
@@ -2143,27 +2148,41 @@
       const nowStr = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
       const actionsDone = [];
 
-      // 1. PAVOS / CORRAL / AGUA
-      if (t.includes('pavo') || t.includes('corral') || t.includes('pienso') || t.includes('agua')) {
-        if (t.includes('tarde') || t.includes('noche') || t.includes('cenar')) {
-          day.turkeys.fedEvening = true; day.turkeys.eveningTime = nowStr;
-          actionsDone.push(`comida de tarde de los pavos marcada a las ${nowStr}`);
-        } else if (t.includes('agua') && !t.includes('com')) {
-          day.turkeys.waterGiven = true; day.turkeys.waterTime = nowStr;
-          actionsDone.push(`agua limpia de los pavos registrada a las ${nowStr}`);
-        } else {
-          day.turkeys.fedMorning = true; day.turkeys.morningTime = nowStr;
-          day.turkeys.waterGiven = true; day.turkeys.waterTime = nowStr;
-          actionsDone.push(`comida y agua de los pavos marcadas a las ${nowStr}`);
-        }
-      }
+      // 1. PAVOS Y GATOS (Separando Agua y Comida)
+      if (!day.animalTasks) day.animalTasks = { pavos: {}, gatos: {} };
 
-      // 2. LISTA DE LA COMPRA
-      if (t.includes('compra') || t.includes('lista') || t.includes('falta')) {
-        let itemText = rawText.replace(/apunta(r)?|anade|añadir|en la compra|a la compra|en la lista|a la lista|comprar|falta/gi, '').trim();
-        if (!itemText) itemText = rawText;
-        appState.shoppingList.unshift({ id: Date.now(), text: itemText, done: false });
-        actionsDone.push(`añadido "${itemText}" a la lista de la compra`);
+      ['pavo', 'gato'].forEach(animal => {
+        if (t.includes(animal)) {
+          const type = animal + 's';
+          if (!day.animalTasks[type]) day.animalTasks[type] = {};
+
+          if (t.includes('agua') || t.includes('beber')) {
+            day.animalTasks[type].waterGiven = true;
+            day.animalTasks[type].waterTime = nowStr;
+            actionsDone.push(`agua de los ${type} a las ${nowStr}`);
+          }
+          if (t.includes('comida') || t.includes('comer') || t.includes('pienso') || (!t.includes('agua') && !t.includes('beber'))) {
+            if (t.includes('tarde') || t.includes('noche')) {
+              day.animalTasks[type].fedEvening = true; day.animalTasks[type].eveningTime = nowStr;
+            } else {
+              day.animalTasks[type].fedMorning = true; day.animalTasks[type].morningTime = nowStr;
+            }
+            actionsDone.push(`comida de los ${type} a las ${nowStr}`);
+          }
+        }
+      });
+
+      // 2. LISTA DE LA COMPRA (Filtro avanzado)
+      if (t.includes('compra') || t.includes('lista') || t.includes('necesito')) {
+        // Filtramos frases basura
+        let itemText = rawText.replace(/apunta(r)?|anade|añadir|necesito|en la compra|para la compra|a la compra|en la lista|a la lista|comprar/gi, '').trim();
+        // Quitamos "para" suelto al final si se quedó cortado
+        itemText = itemText.replace(/\s+para$/i, '').replace(/\s+par$/i, '').trim();
+
+        if (itemText) {
+          appState.shoppingList.unshift({ id: Date.now(), text: itemText, done: false });
+          actionsDone.push(`añadido "${itemText}" a la compra`);
+        }
       }
 
       // 3. GASTOS EN EUROS
@@ -2359,16 +2378,76 @@
       saveToStorage();
     }
 
+    let activeAnimalType = 'pavos'; // pavos | gatos
+
+    function selectAnimalType(type) {
+      activeAnimalType = type;
+      document.getElementById('tab-animal-pavos').className = type === 'pavos' ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950 transition' : 'px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-slate-400 border border-slate-800 transition';
+      document.getElementById('tab-animal-gatos').className = type === 'gatos' ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950 transition' : 'px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-slate-400 border border-slate-800 transition';
+      renderHogarView();
+    }
+
     function toggleTurkeyTask(field) {
       const day = getDayData(currentDate);
-      day.turkeys[field] = !day.turkeys[field];
+      if (!day.animalTasks) day.animalTasks = { pavos: {}, gatos: {} };
+      if (!day.animalTasks[activeAnimalType]) day.animalTasks[activeAnimalType] = {};
+
+      const animalObj = day.animalTasks[activeAnimalType];
+      animalObj[field] = !animalObj[field];
       const nowStr = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-      if (field === 'fedMorning') day.turkeys.morningTime = day.turkeys[field] ? nowStr : '';
-      if (field === 'waterGiven') day.turkeys.waterTime = day.turkeys[field] ? nowStr : '';
-      if (field === 'fedEvening') day.turkeys.eveningTime = day.turkeys[field] ? nowStr : '';
+      animalObj[field + 'Time'] = animalObj[field] ? nowStr : '';
       saveToStorage();
     }
 
+    function renderHogarView() {
+      const day = getDayData(currentDate);
+      if (!day.animalTasks) day.animalTasks = { pavos: {}, gatos: {} };
+      const currentObj = day.animalTasks[activeAnimalType] || {};
+
+      const titleEl = document.getElementById('hogarCardTitleText');
+      if (titleEl) titleEl.textContent = activeAnimalType === 'pavos' ? '🦃 Cuidado de los Pavos' : '🐈 Cuidado de los Gatos';
+
+      const states = [
+        { key: 'fedMorning', timeKey: 'morningTime', btn: 'btn-turkey-morning', timeEl: 'time-turkey-morning' },
+        { key: 'waterGiven', timeKey: 'waterTime', btn: 'btn-turkey-water', timeEl: 'time-turkey-water' },
+        { key: 'fedEvening', timeKey: 'eveningTime', btn: 'btn-turkey-evening', timeEl: 'time-turkey-evening' }
+      ];
+
+      states.forEach(s => {
+        const done = currentObj[s.key];
+        const btnEl = document.getElementById(s.btn);
+        const tEl = document.getElementById(s.timeEl);
+        if (btnEl && tEl) {
+          if (done) {
+            btnEl.className = 'p-3 rounded-xl border-2 border-emerald-500 bg-emerald-500/15 flex flex-col items-center text-center transition';
+            tEl.textContent = `✔ ${currentObj[s.timeKey] || 'Hecho'}`;
+            tEl.className = 'text-[10px] font-mono text-emerald-300 font-bold mt-0.5';
+          } else {
+            btnEl.className = 'p-3 rounded-xl border border-slate-800 bg-slate-900 flex flex-col items-center text-center transition';
+            tEl.textContent = 'Pendiente';
+            tEl.className = 'text-[10px] font-mono text-slate-500 mt-0.5';
+          }
+        }
+      });
+
+      document.getElementById('shoppingListContainer').innerHTML = appState.shoppingList.map(item => `
+        <div onclick="toggleShopItem(${item.id})" class="cursor-pointer flex items-center justify-between bg-slate-900 px-3 py-2.5 rounded-xl border border-slate-800 text-xs transition-all duration-300 ${item.done ? 'opacity-30 line-through scale-[0.98]' : 'hover:bg-slate-800'}">
+          <div class="flex items-center gap-2.5">
+            <span class="w-5 h-5 rounded border flex items-center justify-center transition-colors ${item.done ? 'bg-emerald-500 border-emerald-500 text-slate-950 font-bold' : 'border-slate-700 text-transparent'}">✓</span>
+            <span class="font-semibold ${item.done ? 'text-slate-500' : 'text-white'}">${item.text}</span>
+          </div>
+        </div>
+      `).join('');
+
+      const spent = (day.expenses || []).reduce((a, b) => a + Number(b.amount || 0), 0);
+      document.getElementById('todaySpentTotalLabel').textContent = `${spent.toFixed(2)} €`;
+      document.getElementById('expensesListContainer').innerHTML = (day.expenses || []).map(e => `
+        <div class="flex justify-between items-center bg-slate-900 px-3 py-2 rounded-xl border border-slate-800 text-xs">
+          <span class="text-white">${e.desc}</span>
+          <b class="font-mono text-emerald-400">${Number(e.amount).toFixed(2)} €</b>
+        </div>
+      `).join('');
+    }
     function quickAddTurkeyFeedToShop() {
       appState.shoppingList.unshift({ id: Date.now(), text: 'Saco de pienso para los pavos', done: false });
       saveToStorage();
@@ -2422,10 +2501,10 @@
       });
 
       document.getElementById('shoppingListContainer').innerHTML = appState.shoppingList.map(item => `
-        <div onclick="toggleShopItem(${item.id})" class="cursor-pointer flex items-center justify-between bg-slate-900 px-3 py-2.5 rounded-xl border border-slate-800 text-xs">
+        <div onclick="toggleShopItem(${item.id})" class="cursor-pointer flex items-center justify-between bg-slate-900 px-3 py-2.5 rounded-xl border border-slate-800 text-xs transition-all duration-500 ${item.done ? 'opacity-30 line-through scale-[0.98]' : 'hover:bg-slate-800'}">
           <div class="flex items-center gap-2.5">
-            <span class="w-5 h-5 rounded border flex items-center justify-center ${item.done ? 'bg-emerald-500 border-emerald-500 text-slate-950 font-bold' : 'border-slate-700'}">${item.done ? '✓' : ''}</span>
-            <span class="${item.done ? 'line-through text-slate-500' : 'text-white font-semibold'}">${item.text}</span>
+            <span class="w-5 h-5 rounded border flex items-center justify-center transition-colors ${item.done ? 'bg-emerald-500 border-emerald-500 text-slate-950 font-bold' : 'border-slate-700 text-transparent'}">✓</span>
+            <span class="font-semibold ${item.done ? 'text-slate-500' : 'text-white'}">${item.text}</span>
           </div>
         </div>
       `).join('');
