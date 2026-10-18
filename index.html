@@ -58,6 +58,19 @@
       border-color: #10b981;
       outline: none;
     }
+    .shop-item {
+      transition: opacity 0.4s ease, transform 0.4s ease, filter 0.4s ease;
+    }
+    .shop-item.is-done {
+      text-decoration: line-through;
+      opacity: 0.72;
+    }
+    .shop-item.is-faded {
+      opacity: 0.3;
+      transform: scale(0.98);
+      filter: grayscale(0.35);
+      text-decoration: line-through;
+    }
     /* Serie completada con estilo propio esmeralda */
     .set-row-completed {
       background: linear-gradient(90deg, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0.08) 100%) !important;
@@ -2478,14 +2491,18 @@
         }
       });
 
-      document.getElementById('shoppingListContainer').innerHTML = appState.shoppingList.map(item => `
-        <div onclick="toggleShopItem(${item.id})" class="cursor-pointer flex items-center justify-between bg-slate-900 px-3 py-2.5 rounded-xl border border-slate-800 text-xs transition-all duration-300 ${item.done ? 'opacity-30 line-through scale-[0.98]' : 'hover:bg-slate-800'}">
+      scheduleShopFadeRefresh();
+      document.getElementById('shoppingListContainer').innerHTML = appState.shoppingList.map(item => {
+        const faded = isShopItemFaded(item);
+        const stateClass = faded ? 'is-faded' : (item.done ? 'is-done' : 'hover:bg-slate-800');
+        return `
+        <div onclick="toggleShopItem(${item.id})" class="shop-item cursor-pointer flex items-center justify-between bg-slate-900 px-3 py-2.5 rounded-xl border border-slate-800 text-xs ${stateClass}">
           <div class="flex items-center gap-2.5">
             <span class="w-5 h-5 rounded border flex items-center justify-center transition-colors ${item.done ? 'bg-emerald-500 border-emerald-500 text-slate-950 font-bold' : 'border-slate-700 text-transparent'}">✓</span>
             <span class="font-semibold ${item.done ? 'text-slate-500' : 'text-white'}">${item.text}</span>
           </div>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
 
       const spent = (day.expenses || []).reduce((a, b) => a + Number(b.amount || 0), 0);
       document.getElementById('todaySpentTotalLabel').textContent = `${spent.toFixed(2)} €`;
@@ -2510,9 +2527,31 @@
       saveToStorage();
     }
 
+    const SHOP_FADE_AFTER_MS = 6 * 60 * 60 * 1000;
+    let shopFadeTimer = null;
+
+    function isShopItemFaded(item) {
+      return !!(item && item.done && item.doneAt && (Date.now() - item.doneAt >= SHOP_FADE_AFTER_MS));
+    }
+
+    function scheduleShopFadeRefresh() {
+      clearTimeout(shopFadeTimer);
+      const now = Date.now();
+      const waits = appState.shoppingList
+        .filter(i => i.done && i.doneAt && (now - i.doneAt < SHOP_FADE_AFTER_MS))
+        .map(i => i.doneAt + SHOP_FADE_AFTER_MS - now);
+      if (!waits.length) return;
+      shopFadeTimer = setTimeout(() => {
+        if (currentActiveTab === 'hogar') renderHogarView();
+        else scheduleShopFadeRefresh();
+      }, Math.min(...waits) + 50);
+    }
+
     function toggleShopItem(id) {
       const it = appState.shoppingList.find(i => i.id === id);
-      if (it) it.done = !it.done;
+      if (!it) return;
+      it.done = !it.done;
+      it.doneAt = it.done ? Date.now() : 0;
       saveToStorage();
     }
 
