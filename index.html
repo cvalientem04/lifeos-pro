@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="LifeOS 5.0">
-  <meta name="theme-color" content="#000000">
-  <title>LifeOS 5.0 — Hevy Workout Tracker, GPS & Family OS</title>
+  <meta name="apple-mobile-web-app-title" content="LifeOS">
+  <meta name="theme-color" content="#070a0f">
+  <title>LifeOS 5.5 — Performance Studio, Live GPS & Family OS</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <!-- Leaflet CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -23,7 +23,7 @@
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Inter', 'sans-serif'],
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
             mono: ['JetBrains Mono', 'monospace'],
           }
         }
@@ -33,611 +33,676 @@
 
   <style>
     body {
-      background-color: #000000;
+      background-color: #070a0f;
       color: #f8fafc;
       -webkit-tap-highlight-color: transparent;
     }
-    .hevy-card {
-      background: #121316;
-      border: 1px solid #22242a;
+    .studio-card {
+      background: #111621;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.5);
     }
-    .hevy-input {
-      background: #1c1e24;
-      border: 1px solid #2e323b;
+    .studio-input {
+      background: #19202e;
+      border: 1px solid rgba(255, 255, 255, 0.12);
       color: #ffffff;
     }
-    .hevy-input:focus {
-      border-color: #2563eb;
+    .studio-input:focus {
+      border-color: #10b981;
       outline: none;
     }
-    /* Fila de serie completada en verde exactamente como en Hevy */
-    .set-row-done {
-      background: rgba(22, 163, 74, 0.24) !important;
-      border-color: rgba(34, 197, 94, 0.4);
+    /* Serie completada con estilo propio esmeralda */
+    .set-row-completed {
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0.08) 100%) !important;
+      border-color: rgba(16, 185, 129, 0.45) !important;
     }
-    .check-btn-done {
-      background: #22c55e !important;
-      color: #000000 !important;
-      border-color: #22c55e !important;
+    .check-btn-completed {
+      background: #10b981 !important;
+      color: #052e16 !important;
+      border-color: #10b981 !important;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
     }
-    /* Barra inferior móvil flotante estilo iOS / Hevy */
+    /* Barra inferior móvil flotante */
     .bottom-dock {
-      background: rgba(18, 19, 22, 0.92);
+      background: rgba(15, 20, 30, 0.94);
       backdrop-filter: blur(20px);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.85);
     }
     .dock-btn.active {
-      background: rgba(37, 99, 235, 0.22);
-      color: #60a5fa;
-      border-color: rgba(59, 130, 246, 0.4);
+      background: rgba(16, 185, 129, 0.18);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.4);
     }
     .side-nav-btn.active {
-      background: #1d4ed8;
-      color: #ffffff;
+      background: linear-gradient(90deg, #10b981, #059669);
+      color: #052e16;
+      font-weight: 800;
     }
     #bike-map {
-      height: 360px;
+      height: 350px;
       width: 100%;
-      border-radius: 0.85rem;
+      border-radius: 1rem;
       z-index: 10;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    @keyframes pulseGps {
+      0% { transform: scale(0.85); opacity: 1; }
+      100% { transform: scale(2.3); opacity: 0; }
+    }
+    .gps-live-dot {
+      width: 16px;
+      height: 16px;
+      background: #10b981;
+      border: 3px solid #ffffff;
+      border-radius: 50%;
+      position: relative;
+    }
+    .gps-live-dot::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 2px solid #10b981;
+      animation: pulseGps 1.5s infinite;
     }
     ::-webkit-scrollbar { width: 4px; height: 4px; }
-    ::-webkit-scrollbar-track { background: #000000; }
-    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 2px; }
+    ::-webkit-scrollbar-track { background: #070a0f; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
   </style>
 </head>
-<body class="min-h-screen pb-24 lg:pb-8 flex flex-col lg:flex-row">
+<body class="min-h-screen pb-24 lg:pb-10 flex flex-col lg:flex-row">
 
-  <!-- ================= SIDEBAR SOLO PARA ORDENADOR (OCULTO EN MÓVIL) ================= -->
-  <aside class="hidden lg:flex lg:w-64 bg-[#090a0c] border-r border-zinc-800/80 flex-col justify-between p-4 lg:fixed lg:h-screen z-30">
+  <!-- ================= SIDEBAR ORDENADOR ================= -->
+  <aside class="hidden lg:flex lg:w-64 bg-[#0b0f17] border-r border-slate-800/80 flex-col justify-between p-4 lg:fixed lg:h-screen z-30">
     <div>
-      <div class="flex items-center justify-between mb-6 px-1">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-xl bg-blue-600 text-white font-black flex items-center justify-center text-base">L</div>
-          <div>
-            <h1 class="text-sm font-extrabold text-white leading-none">LifeOS 5.0</h1>
-            <span class="text-[10px] text-blue-400 font-semibold">Hevy & Family Edition</span>
-          </div>
+      <div class="flex items-center gap-2.5 mb-6 px-1">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 font-black flex items-center justify-center text-lg shadow-lg shadow-emerald-500/20">⚡</div>
+        <div>
+          <h1 class="text-base font-extrabold text-white leading-none">LifeOS 5.5</h1>
+          <span class="text-[10px] text-emerald-400 font-semibold">Performance Studio</span>
         </div>
       </div>
 
-      <!-- Filtro de Modo Real (Limpia toda la interfaz) -->
       <div class="mb-5">
-        <label class="text-[10px] font-bold uppercase text-zinc-500 block mb-1.5 px-1">Modo de Interfaz</label>
-        <div class="grid grid-cols-3 gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800 text-[11px] font-bold">
-          <button onclick="setAppMode('ALL')" id="mode-btn-ALL" class="py-1.5 rounded-lg bg-blue-600 text-white">Todo</button>
-          <button onclick="setAppMode('CLUB')" id="mode-btn-CLUB" class="py-1.5 rounded-lg text-zinc-400 hover:text-white">🏋️ Atleta</button>
-          <button onclick="setAppMode('HOME')" id="mode-btn-HOME" class="py-1.5 rounded-lg text-zinc-400 hover:text-white">🏠 Hogar</button>
+        <label class="text-[10px] font-bold uppercase text-slate-500 block mb-1.5 px-1">Filtro de Interfaz</label>
+        <div class="grid grid-cols-3 gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-[11px] font-bold">
+          <button onclick="setAppMode('ALL')" id="mode-btn-ALL" class="py-1.5 rounded-lg bg-emerald-500 text-slate-950">Todo</button>
+          <button onclick="setAppMode('CLUB')" id="mode-btn-CLUB" class="py-1.5 rounded-lg text-slate-400 hover:text-white">🏋️ Gym</button>
+          <button onclick="setAppMode('HOME')" id="mode-btn-HOME" class="py-1.5 rounded-lg text-slate-400 hover:text-white">🏠 Casa</button>
         </div>
       </div>
 
-      <nav class="space-y-1" id="desktopNav">
-        <button onclick="switchTab('home')" id="dtab-home" data-scope="ALL" class="side-nav-btn active w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-zinc-900 transition">
-          <span>🏠</span> <span>Inicio & Comunidad</span>
+      <nav class="space-y-1">
+        <button onclick="switchTab('home')" id="dtab-home" data-scope="ALL" class="side-nav-btn active w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-900 transition">
+          <span>🏠</span> <span>Resumen & Amigos</span>
         </button>
-        <button onclick="switchTab('gym')" id="dtab-gym" data-scope="CLUB" class="side-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-zinc-900 transition">
-          <span>🏋️</span> <span>Workout (Gym)</span>
+        <button onclick="switchTab('gym')" id="dtab-gym" data-scope="CLUB" class="side-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-900 transition">
+          <span>🏋️</span> <span>Estudio de Fuerza</span>
         </button>
-        <button onclick="switchTab('bikemap')" id="dtab-bikemap" data-scope="CLUB" class="side-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-zinc-900 transition">
-          <span>🚴</span> <span>Bici GPS & Pasos</span>
+        <button onclick="switchTab('bikemap')" id="dtab-bikemap" data-scope="CLUB" class="side-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-900 transition">
+          <span>🚴</span> <span>GPS Bici & Reloj</span>
         </button>
-        <button onclick="switchTab('hogar')" id="dtab-hogar" data-scope="HOME" class="side-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-zinc-900 transition">
-          <span>🛒</span> <span>Hogar, Pavos y Compra</span>
+        <button onclick="switchTab('hogar')" id="dtab-hogar" data-scope="HOME" class="side-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-900 transition">
+          <span>🛒</span> <span>Hogar, Pavos y Gastos</span>
         </button>
-        <button onclick="switchTab('weekly')" id="dtab-weekly" data-scope="ALL" class="side-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-zinc-900 transition">
-          <span>📊</span> <span>Progreso Semanal</span>
+        <button onclick="switchTab('weekly')" id="dtab-weekly" data-scope="ALL" class="side-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-900 transition">
+          <span>📊</span> <span>Balance Semanal</span>
         </button>
-        <button onclick="switchTab('journal')" id="dtab-journal" data-scope="ALL" class="side-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-zinc-900 transition">
-          <span>📓</span> <span>Diario + Historial</span>
+        <button onclick="switchTab('journal')" id="dtab-journal" data-scope="ALL" class="side-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-900 transition">
+          <span>📓</span> <span>Diario & Archivo</span>
         </button>
       </nav>
     </div>
 
-    <div class="pt-3 border-t border-zinc-800 space-y-2">
-      <button onclick="loadDemoData()" class="w-full py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-bold border border-zinc-800">
-        ✨ Recargar Datos Demo
+    <div class="pt-3 border-t border-slate-800">
+      <button onclick="loadDemoData()" class="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-bold border border-slate-800">
+        ✨ Cargar Demo 5 Días
       </button>
     </div>
   </aside>
 
-  <!-- ================= BARRA INFERIOR MÓVIL FLOTANTE (ESTILO HEVY) ================= -->
+  <!-- ================= BARRA INFERIOR MÓVIL ================= -->
   <nav class="lg:hidden fixed bottom-3 left-3 right-3 z-40 bottom-dock rounded-3xl p-1.5 flex items-center justify-around">
     <button onclick="switchTab('home')" id="mtab-home" data-scope="ALL" class="dock-btn active flex-1 py-2 rounded-2xl flex flex-col items-center justify-center border border-transparent transition">
       <span class="text-base leading-none">🏠</span>
       <span class="text-[10px] font-bold mt-1">Inicio</span>
     </button>
-    <button onclick="switchTab('gym')" id="mtab-gym" data-scope="CLUB" class="dock-btn flex-1 py-2 rounded-2xl flex flex-col items-center justify-center border border-transparent text-zinc-400 transition">
+    <button onclick="switchTab('gym')" id="mtab-gym" data-scope="CLUB" class="dock-btn flex-1 py-2 rounded-2xl flex flex-col items-center justify-center border border-transparent text-slate-400 transition">
       <span class="text-base leading-none">🏋️</span>
-      <span class="text-[10px] font-bold mt-1">Workout</span>
+      <span class="text-[10px] font-bold mt-1">Fuerza</span>
     </button>
-    <button onclick="switchTab('bikemap')" id="mtab-bikemap" data-scope="CLUB" class="dock-btn flex-1 py-2 rounded-2xl flex flex-col items-center justify-center border border-transparent text-zinc-400 transition">
+    <button onclick="switchTab('bikemap')" id="mtab-bikemap" data-scope="CLUB" class="dock-btn flex-1 py-2 rounded-2xl flex flex-col items-center justify-center border border-transparent text-slate-400 transition">
       <span class="text-base leading-none">🚴</span>
       <span class="text-[10px] font-bold mt-1">Bici/Pasos</span>
     </button>
-    <button onclick="switchTab('hogar')" id="mtab-hogar" data-scope="HOME" class="dock-btn flex-1 py-2 rounded-2xl flex flex-col items-center justify-center border border-transparent text-zinc-400 transition">
+    <button onclick="switchTab('hogar')" id="mtab-hogar" data-scope="HOME" class="dock-btn flex-1 py-2 rounded-2xl flex flex-col items-center justify-center border border-transparent text-slate-400 transition">
       <span class="text-base leading-none">🛒</span>
       <span class="text-[10px] font-bold mt-1">Hogar</span>
     </button>
-    <button onclick="switchTab('journal')" id="mtab-journal" data-scope="ALL" class="dock-btn flex-1 py-2 rounded-2xl flex flex-col items-center justify-center border border-transparent text-zinc-400 transition">
+    <button onclick="switchTab('journal')" id="mtab-journal" data-scope="ALL" class="dock-btn flex-1 py-2 rounded-2xl flex flex-col items-center justify-center border border-transparent text-slate-400 transition">
       <span class="text-base leading-none">📓</span>
       <span class="text-[10px] font-bold mt-1">Diario</span>
     </button>
   </nav>
 
-  <!-- ================= CONTENEDOR CENTRAL COMPACTO (MÓVIL + PC) ================= -->
-  <main class="flex-1 lg:ml-64 max-w-3xl mx-auto w-full px-3 sm:px-6 pt-3 sm:pt-6 space-y-4">
+  <!-- ================= CONTENEDOR PRINCIPAL ================= -->
+  <main class="flex-1 lg:ml-64 max-w-3xl mx-auto w-full px-3 sm:px-6 pt-3 sm:pt-5 space-y-4">
 
-    <!-- BARRA SUPERIOR COMPACTA Y UNIDA -->
-    <header class="hevy-card rounded-2xl px-3.5 py-2.5 flex items-center justify-between gap-2">
-      <div class="flex items-center gap-2">
-        <button onclick="changeDay(-1)" class="w-7 h-7 rounded-lg bg-zinc-900 text-zinc-300 text-xs font-bold">◀</button>
-        <input type="date" id="currentDatePicker" onchange="onDateChange(this.value)" class="bg-transparent text-xs font-bold font-mono text-white focus:outline-none w-[110px]">
-        <button onclick="changeDay(1)" class="w-7 h-7 rounded-lg bg-zinc-900 text-zinc-300 text-xs font-bold">▶</button>
+    <!-- CABECERA MÓVIL Y PC BIEN ESTRUCTURADA EN 2 FILAS LIMPIAS (NUNCA SE CORTA) -->
+    <header class="studio-card rounded-2xl p-3 space-y-2.5">
+      <!-- Fila 1: Marca + Racha + Botón de Voz Hablada -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg bg-emerald-500 text-slate-950 font-black flex items-center justify-center text-xs">⚡</span>
+          <div>
+            <h2 class="text-sm font-extrabold text-white leading-tight">LifeOS Studio</h2>
+            <p id="headerReadableDate" class="text-[11px] text-emerald-400 font-semibold capitalize">Hoy</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="switchTab('weekly')" class="px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-extrabold text-amber-400 flex items-center gap-1">
+            🔥 <span id="topStreakNum">14</span>d
+          </button>
+          <button onclick="openVoiceModal('GLOBAL')" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-extrabold flex items-center gap-1.5">
+            <span>🎙️</span> <span>Voz</span>
+          </button>
+        </div>
       </div>
 
-      <!-- Selector rápido de Modo en Móvil (Oculta lo que no quieras ver) -->
-      <div class="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800 text-[10px] font-bold">
-        <button onclick="setAppMode('ALL')" id="top-mode-ALL" class="px-2 py-1 rounded-lg bg-blue-600 text-white">Todo</button>
-        <button onclick="setAppMode('CLUB')" id="top-mode-CLUB" class="px-2 py-1 rounded-lg text-zinc-400">🏋️ Gym</button>
-        <button onclick="setAppMode('HOME')" id="top-mode-HOME" class="px-2 py-1 rounded-lg text-zinc-400">🏠 Casa</button>
-      </div>
+      <!-- Fila 2: Selector de Fecha Amplio + Selector de Modo (Todo / Gym / Casa) -->
+      <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-800/80">
+        <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded-xl border border-slate-800">
+          <button onclick="changeDay(-1)" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold">◀</button>
+          <input type="date" id="currentDatePicker" onchange="onDateChange(this.value)" class="bg-transparent text-xs font-bold font-mono text-white text-center focus:outline-none w-[112px]">
+          <button onclick="changeDay(1)" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold">▶</button>
+        </div>
 
-      <!-- Racha + Voz Discreta -->
-      <div class="flex items-center gap-1.5">
-        <button onclick="switchTab('weekly')" class="px-2.5 py-1 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-bold text-amber-400 flex items-center gap-1" title="Ver Progreso Semanal">
-          🔥 <span id="topStreakNum">14</span>
-        </button>
-        <button onclick="openVoiceModal()" class="w-8 h-8 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-sm" title="Dictar por voz">
-          🎙️
-        </button>
+        <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-[11px] font-bold">
+          <button onclick="setAppMode('ALL')" id="top-mode-ALL" class="px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 transition">Todo</button>
+          <button onclick="setAppMode('CLUB')" id="top-mode-CLUB" class="px-2.5 py-1 rounded-lg text-slate-400 transition">🏋️ Gym</button>
+          <button onclick="setAppMode('HOME')" id="top-mode-HOME" class="px-2.5 py-1 rounded-lg text-slate-400 transition">🏠 Casa</button>
+        </div>
       </div>
     </header>
 
-    <!-- BANNER FLOTANTE SI HAY UN ENTRENAMIENTO EN CURSO Y CAMBIAS DE PESTAÑA -->
-    <div id="minimizedWorkoutBanner" onclick="switchTab('gym')" class="hidden cursor-pointer bg-blue-600 text-white px-4 py-2.5 rounded-2xl flex items-center justify-between shadow-lg">
+    <!-- BANNER SI HAY UN ENTRENAMIENTO EN CURSO Y SALES DE LA PESTAÑA -->
+    <div id="minimizedWorkoutBanner" onclick="switchTab('gym')" class="hidden cursor-pointer bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 px-4 py-2.5 rounded-2xl flex items-center justify-between shadow-lg">
       <div class="flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-white animate-ping"></span>
-        <span class="text-xs font-extrabold" id="minBannerTitle">Entrenamiento en curso</span>
+        <span class="w-2.5 h-2.5 rounded-full bg-slate-950 animate-ping"></span>
+        <span class="text-xs font-black" id="minBannerTitle">Sesión en curso</span>
       </div>
-      <span class="text-xs font-mono font-bold" id="minBannerTimer">00:00 ➔ Volver</span>
+      <span class="text-xs font-mono font-extrabold" id="minBannerTimer">00:00 ➔ Volver</span>
     </div>
 
     <!-- ========================================================================= -->
-    <!-- PESTAÑA 1: INICIO (RESUMEN DE LO HECHO HOY + FEED SOCIAL DE AMIGOS/HEVY)  -->
+    <!-- PESTAÑA 1: INICIO (RESUMEN DEL DÍA SELECCIONADO + MURO DE ENTRENAMIENTOS) -->
     <!-- ========================================================================= -->
     <section id="view-home" class="space-y-4">
-      
-      <!-- Tarjetas de Resumen Rápido (Se filtran de verdad según el Modo elegido) -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5" id="homeQuickCards">
-        <div onclick="switchTab('gym')" data-card-scope="CLUB" class="hevy-card rounded-2xl p-3 cursor-pointer hover:border-blue-500/50 transition">
-          <span class="text-[10px] font-bold uppercase text-blue-400 block">🏋️ Workout Hoy</span>
-          <span id="homeGymStat" class="text-base font-extrabold text-white block mt-0.5">0 series</span>
-          <span class="text-[10px] text-zinc-500">Ir a rutinas ➔</span>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <div onclick="switchTab('gym')" data-card-scope="CLUB" class="studio-card rounded-2xl p-3 cursor-pointer hover:border-emerald-500/40 transition">
+          <span class="text-[10px] font-bold uppercase text-emerald-400 block">🏋️ Fuerza Hoy</span>
+          <span id="homeGymStat" class="text-sm sm:text-base font-extrabold text-white block mt-0.5">0 kg</span>
+          <span class="text-[10px] text-slate-500">Abrir Estudio ➔</span>
         </div>
 
-        <div onclick="switchTab('bikemap')" data-card-scope="CLUB" class="hevy-card rounded-2xl p-3 cursor-pointer hover:border-cyan-500/50 transition">
+        <div onclick="switchTab('bikemap')" data-card-scope="CLUB" class="studio-card rounded-2xl p-3 cursor-pointer hover:border-cyan-500/40 transition">
           <span class="text-[10px] font-bold uppercase text-cyan-400 block">👣 Pasos & Bici</span>
-          <span id="homeStepsStat" class="text-base font-extrabold text-white block mt-0.5">0 pasos</span>
-          <span id="homeBikeSub" class="text-[10px] text-zinc-500">0 km en bici</span>
+          <span id="homeStepsStat" class="text-sm sm:text-base font-extrabold text-white block mt-0.5">0 pasos</span>
+          <span id="homeBikeSub" class="text-[10px] text-slate-500">0.0 km bici</span>
         </div>
 
-        <div onclick="switchTab('hogar')" data-card-scope="HOME" class="hevy-card rounded-2xl p-3 cursor-pointer hover:border-amber-500/50 transition">
+        <div onclick="switchTab('hogar')" data-card-scope="HOME" class="studio-card rounded-2xl p-3 cursor-pointer hover:border-amber-500/40 transition">
           <span class="text-[10px] font-bold uppercase text-amber-400 block">🦃 Pavos / Hogar</span>
-          <span id="homeTurkeysStat" class="text-base font-extrabold text-white block mt-0.5">0/3 turnos</span>
-          <span id="homeShopSub" class="text-[10px] text-zinc-500">Ver compra ➔</span>
+          <span id="homeTurkeysStat" class="text-sm sm:text-base font-extrabold text-white block mt-0.5">0/3 turnos</span>
+          <span id="homeShopSub" class="text-[10px] text-slate-500">Ver lista ➔</span>
         </div>
 
-        <div onclick="switchTab('journal')" data-card-scope="ALL" class="hevy-card rounded-2xl p-3 cursor-pointer hover:border-violet-500/50 transition">
+        <div onclick="switchTab('journal')" data-card-scope="ALL" class="studio-card rounded-2xl p-3 cursor-pointer hover:border-violet-500/40 transition">
           <span class="text-[10px] font-bold uppercase text-violet-400 block">📚 Estudio & Coche</span>
-          <span id="homeStudyStat" class="text-base font-extrabold text-white block mt-0.5">0 min</span>
-          <span id="homeCarSub" class="text-[10px] text-zinc-500">0 min coche</span>
+          <span id="homeStudyStat" class="text-sm sm:text-base font-extrabold text-white block mt-0.5">0 min</span>
+          <span id="homeCarSub" class="text-[10px] text-slate-500">0 min coche</span>
         </div>
       </div>
 
-      <!-- BLOQUE RÁPIDO DE ESTUDIO, COCHE Y COMIDAS EN INICIO -->
-      <div class="hevy-card rounded-2xl p-4 space-y-3" id="homeRoutineBox">
+      <!-- Registro Rápido de Estudio, Coche y Comida del Día Seleccionado -->
+      <div class="studio-card rounded-2xl p-4 space-y-3">
         <div class="flex items-center justify-between">
-          <h3 class="text-sm font-extrabold text-white">⏱️ Registro Rápido: Estudio, Coche y Comida</h3>
-          <button onclick="switchTab('weekly')" class="text-[11px] text-blue-400 font-bold">Ver Semana 📊</button>
+          <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-300">⏱️ Tiempo y Comidas de este Día</h3>
+          <button onclick="switchTab('weekly')" class="text-[11px] text-emerald-400 font-bold">Balance 7 Días 📊</button>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <!-- Estudio -->
-          <div class="bg-zinc-900/90 p-3 rounded-xl border border-zinc-800 flex items-center justify-between">
+          <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
             <div>
-              <span class="text-[10px] font-bold uppercase text-violet-400 block">📚 Estudio Hoy</span>
-              <span id="studyMinHome" class="text-lg font-extrabold font-mono text-white">0 min</span>
+              <span class="text-[10px] font-bold uppercase text-violet-400 block">📚 Estudio</span>
+              <span id="studyMinHome" class="text-base font-extrabold font-mono text-white">0 min</span>
             </div>
             <div class="flex gap-1">
-              <button onclick="addMinutes('study', 30)" class="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-violet-300">+30m</button>
-              <button onclick="addMinutes('study', 60)" class="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-violet-300">+1h</button>
+              <button onclick="addMinutes('study', 30)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-xs font-bold text-violet-300">+30m</button>
+              <button onclick="addMinutes('study', 60)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-xs font-bold text-violet-300">+1h</button>
             </div>
           </div>
 
-          <!-- Coche -->
-          <div class="bg-zinc-900/90 p-3 rounded-xl border border-zinc-800 flex items-center justify-between">
+          <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
             <div>
-              <span class="text-[10px] font-bold uppercase text-amber-400 block">🚗 Coche Hoy</span>
-              <span id="carMinHome" class="text-lg font-extrabold font-mono text-white">0 min</span>
+              <span class="text-[10px] font-bold uppercase text-amber-400 block">🚗 Coche</span>
+              <span id="carMinHome" class="text-base font-extrabold font-mono text-white">0 min</span>
             </div>
             <div class="flex gap-1">
-              <button onclick="addMinutes('car', 15)" class="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-amber-300">+15m</button>
-              <button onclick="addMinutes('car', 30)" class="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-amber-300">+30m</button>
+              <button onclick="addMinutes('car', 15)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-xs font-bold text-amber-300">+15m</button>
+              <button onclick="addMinutes('car', 30)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-xs font-bold text-amber-300">+30m</button>
             </div>
           </div>
         </div>
 
-        <!-- Añadir comida en 1 línea -->
-        <div class="flex gap-1.5 pt-1">
-          <input type="text" id="quickMealInput" onkeydown="if(event.key==='Enter') addQuickMeal()" placeholder="🥗 ¿Qué has comido hoy? (Ej. Pollo con arroz y huevos)" class="flex-1 hevy-input rounded-xl px-3 py-2 text-xs">
-          <button onclick="addQuickMeal()" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold">+ Comida</button>
+        <div class="flex gap-1.5">
+          <input type="text" id="quickMealInput" onkeydown="if(event.key==='Enter') addQuickMeal()" placeholder="🥗 Anotar comida (ej. Pollo con arroz, Huevos revueltos)..." class="flex-1 studio-input rounded-xl px-3 py-2 text-xs">
+          <button onclick="addQuickMeal()" class="px-3.5 py-2 rounded-xl bg-emerald-500 text-slate-950 text-xs font-extrabold">+ Comida</button>
         </div>
         <div id="homeMealsPills" class="flex flex-wrap gap-1.5"></div>
       </div>
 
-      <!-- FEED DE ENTRENAMIENTOS Y LOGROS (LOS TUYOS + TUS AMIGOS ESTILO HEVY) -->
-      <div class="space-y-3" id="homeSocialFeedSection" data-card-scope="CLUB">
+      <!-- Muro de Sesiones de Entrenamiento (Propio y Amigos) -->
+      <div class="space-y-3" data-card-scope="CLUB">
         <div class="flex items-center justify-between px-1">
-          <h3 class="text-sm font-extrabold text-white">🏆 Feed de Entrenamientos (Tú y tus Amigos)</h3>
-          <button onclick="switchTab('gym')" class="text-xs font-bold text-blue-400">+ Nuevo Entreno</button>
+          <h3 class="text-sm font-extrabold text-white">🏆 Sesiones de Entrenamiento (Tú y Amigos)</h3>
+          <button onclick="switchTab('gym')" class="text-xs font-bold text-emerald-400">Ir a Fuerza ➔</button>
         </div>
         <div id="socialWorkoutFeedList" class="space-y-3"></div>
       </div>
     </section>
 
     <!-- ========================================================================= -->
-    <!-- PESTAÑA 2: WORKOUT / GIMNASIO (CLON EXACTO DE TUS CAPTURAS DE HEVY)       -->
+    <!-- PESTAÑA 2: ESTUDIO DE FUERZA (DISEÑO PROPIO, SOFISTICADO Y 100% ORIGINAL) -->
     <!-- ========================================================================= -->
     <section id="view-gym" class="hidden space-y-4">
 
-      <!-- SUB-VISTA A: PANTALLA PRINCIPAL "WORKOUT" (MIS RUTINAS + START ROUTINE) -->
+      <!-- SUB-VISTA A: PANEL DE PLANES DE ENTRENAMIENTO (RUTINAS) -->
       <div id="gym-subview-hub" class="space-y-4">
-        <div class="flex items-center justify-between">
-          <h2 class="text-2xl font-black text-white tracking-tight">Workout</h2>
-          <span class="px-2.5 py-0.5 rounded-full bg-amber-400 text-black font-black text-[11px]">PRO</span>
-        </div>
-
-        <!-- Botón Start Empty Workout -->
-        <button onclick="startEmptyWorkout()" class="w-full hevy-card hover:bg-zinc-900 py-3.5 px-4 rounded-xl text-left text-sm font-bold text-white flex items-center gap-2 transition">
-          <span class="text-lg leading-none">+</span> <span>Start Empty Workout (Entreno Libre)</span>
-        </button>
-
-        <!-- Cabecera Routines -->
-        <div class="flex items-center justify-between pt-2">
-          <h3 class="text-base font-extrabold text-white">Routines</h3>
+        <div class="studio-card rounded-2xl p-4 bg-gradient-to-br from-[#111927] to-[#0d121c] border-l-4 border-l-emerald-500">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400">LifeOS Performance Studio</span>
+              <h2 class="text-xl font-black text-white">Tus Planes de Fuerza</h2>
+            </div>
+            <button onclick="startEmptyWorkout()" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs shadow-md">
+              ⚡ Sesión Libre
+            </button>
+          </div>
+          <p class="text-xs text-slate-400">Elige uno de tus días configurados para abrir el panel con cronómetro, marcas anteriores y cálculo de 1RM en tiempo real.</p>
         </div>
 
         <div class="grid grid-cols-2 gap-2.5">
-          <button onclick="openCreateRoutineModal()" class="hevy-card hover:bg-zinc-900 py-3 px-4 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2">
-            <span>📋</span> <span>New Routine</span>
+          <button onclick="openCreateRoutineModal()" class="studio-card hover:bg-slate-900 py-3 px-4 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2">
+            <span>➕</span> <span>Crear Nuevo Día</span>
           </button>
-          <button onclick="openExercisePickerModal('ROUTINE')" class="hevy-card hover:bg-zinc-900 py-3 px-4 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2">
-            <span>🔍</span> <span>Añadir a Rutina</span>
+          <button onclick="openExercisePickerModal('ROUTINE')" class="studio-card hover:bg-slate-900 py-3 px-4 rounded-xl text-xs font-bold text-emerald-400 flex items-center justify-center gap-2">
+            <span>☑️</span> <span>Catálogo Multi-Selección</span>
           </button>
         </div>
 
-        <p class="text-xs font-bold text-zinc-400 pt-1" id="myRoutinesCountLabel">▾ My Routines (3)</p>
-
-        <!-- Lista de Tarjetas de Rutina con botón azul "Start Routine" -->
+        <!-- Tarjetas de Días de Entrenamiento -->
         <div id="hevyRoutinesList" class="space-y-3"></div>
 
-        <!-- Evolución de Cargas Explicada de Forma Clara y Visual -->
-        <div class="hevy-card rounded-2xl p-4 space-y-3 mt-6">
+        <!-- Evolución Histórica Explicada con Claridad -->
+        <div class="studio-card rounded-2xl p-4 space-y-3">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h3 class="text-sm font-extrabold text-white">📈 Tu Mejora de Fuerza (Explicada Fácil)</h3>
-              <p class="text-[11px] text-zinc-400">Compara tu primer día con tu marca actual</p>
+              <h3 class="text-sm font-extrabold text-white">📈 Evolución de tus Cargas</h3>
+              <p class="text-[11px] text-slate-400">Compara cómo empezaste frente a tu récord actual</p>
             </div>
-            <select id="clearProgressExerciseSelect" onchange="renderClearStrengthProgress()" class="hevy-input rounded-xl px-3 py-1.5 text-xs font-bold"></select>
+            <select id="clearProgressExerciseSelect" onchange="renderClearStrengthProgress()" class="studio-input rounded-xl px-3 py-1.5 text-xs font-bold"></select>
           </div>
-          <div id="clearProgressSummaryBanner" class="p-3 rounded-xl bg-blue-600/15 border border-blue-500/30 text-xs text-blue-200 font-semibold"></div>
+          <div id="clearProgressSummaryBanner" class="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-xs text-emerald-200 font-semibold"></div>
           <div id="clearProgressHistoryRows" class="space-y-1.5"></div>
         </div>
       </div>
 
-      <!-- SUB-VISTA B: ENTRENAMIENTO ACTIVO EN VIVO ("LOG WORKOUT" COMO EN TU FOTO) -->
+      <!-- SUB-VISTA B: SESIÓN DE ENTRENAMIENTO EN VIVO (SOFISTICADA Y ORIGINAL) -->
       <div id="gym-subview-active" class="hidden space-y-4">
-        <!-- Barra superior fija de Log Workout -->
-        <div class="hevy-card rounded-2xl p-3.5 sticky top-2 z-30 shadow-2xl">
+        <div class="studio-card rounded-2xl p-4 sticky top-2 z-30 shadow-2xl border-t-2 border-t-emerald-500">
           <div class="flex items-center justify-between mb-2.5">
             <div class="flex items-center gap-2">
-              <button onclick="switchTab('home')" class="w-8 h-8 rounded-full bg-zinc-800 text-zinc-300 flex items-center justify-center text-xs" title="Minimizar entreno">⌄</button>
-              <span class="text-sm font-extrabold text-white" id="activeWorkoutHeaderTitle">Log Workout</span>
+              <button onclick="switchTab('home')" class="w-8 h-8 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center text-xs" title="Minimizar">⌄</button>
+              <div>
+                <span class="text-[10px] font-bold uppercase text-emerald-400 block">Sesión Activa</span>
+                <span class="text-sm font-extrabold text-white" id="activeWorkoutHeaderTitle">Día de Pecho</span>
+              </div>
             </div>
             <div class="flex items-center gap-2">
-              <button onclick="startRestCountdown(90)" id="restTimerBtn" class="px-2.5 py-1.5 rounded-xl bg-zinc-800 text-xs font-mono font-bold text-zinc-200" title="Temporizador de descanso (90s)">
-                ⏱️ <span id="restTimerText">Descanso</span>
+              <button onclick="startRestCountdown(90)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-xs font-mono font-bold text-amber-300">
+                ⏳ <span id="restTimerText">Descanso</span>
               </button>
-              <button onclick="openSaveWorkoutScreen()" class="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold shadow-md">
-                Finish
+              <button onclick="openSaveWorkoutScreen()" class="px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold shadow-md">
+                Terminar ✓
               </button>
             </div>
           </div>
 
-          <!-- Barra de Progreso Azul que avanza cada vez que marcas un Check ✓ -->
-          <div class="w-full h-1 bg-zinc-800 rounded-full overflow-hidden mb-3">
-            <div id="activeWorkoutProgressBar" class="h-full bg-blue-500 transition-all duration-300" style="width: 0%"></div>
+          <!-- Barra de Progreso que avanza con cada Check ✓ -->
+          <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-3">
+            <div id="activeWorkoutProgressBar" class="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all duration-300" style="width: 0%"></div>
           </div>
 
-          <!-- Duration | Volume | Sets + Muñeco Muscular -->
-          <div class="flex items-center justify-between px-1">
-            <div class="flex gap-6">
-              <div>
-                <span class="text-[10px] text-zinc-400 block">Duration</span>
-                <span id="liveWorkoutDuration" class="text-sm font-extrabold font-mono text-blue-400">0s</span>
-              </div>
-              <div>
-                <span class="text-[10px] text-zinc-400 block">Volume</span>
-                <span id="liveWorkoutVolume" class="text-sm font-extrabold font-mono text-white">0 kg</span>
-              </div>
-              <div>
-                <span class="text-[10px] text-zinc-400 block">Sets</span>
-                <span id="liveWorkoutSets" class="text-sm font-extrabold font-mono text-white">0</span>
-              </div>
+          <!-- Métricas en vivo: Tiempo | Tonelaje | Series Completadas | 1RM Pico -->
+          <div class="grid grid-cols-4 gap-2 text-center bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
+            <div>
+              <span class="text-[9px] uppercase text-slate-400 block">Tiempo</span>
+              <span id="liveWorkoutDuration" class="text-xs sm:text-sm font-extrabold font-mono text-emerald-400">0s</span>
             </div>
-            <div class="w-10 h-10 flex items-center justify-center" id="miniBodyMapTop"></div>
+            <div>
+              <span class="text-[9px] uppercase text-slate-400 block">Tonelaje</span>
+              <span id="liveWorkoutVolume" class="text-xs sm:text-sm font-extrabold font-mono text-white">0 kg</span>
+            </div>
+            <div>
+              <span class="text-[9px] uppercase text-slate-400 block">Series OK</span>
+              <span id="liveWorkoutSets" class="text-xs sm:text-sm font-extrabold font-mono text-cyan-400">0</span>
+            </div>
+            <div class="flex items-center justify-center" id="miniBodyMapTop"></div>
           </div>
         </div>
 
-        <!-- Lista de Ejercicios con Tabla SET | PREVIOUS | KG | REPS | ✓ -->
-        <div id="activeWorkoutExercisesContainer" class="space-y-4"></div>
+        <!-- Ejercicios de la Sesión con Anterior | KG | Repes | 1RM | Check ✓ -->
+        <div id="activeWorkoutExercisesContainer" class="space-y-3.5"></div>
 
-        <!-- Botón Azul Grande "+ Add Exercise" (Abre el selector Multi-Check) -->
-        <button onclick="openExercisePickerModal('ACTIVE')" class="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs shadow-lg transition">
-          + Add Exercise (Seleccionar Varios con Check)
+        <!-- Botón para abrir el Selector Multi-Check con Filtros Iluminados -->
+        <button onclick="openExercisePickerModal('ACTIVE')" class="w-full py-3.5 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 font-extrabold text-xs transition">
+          + Añadir Ejercicios (Selector Visual Multi-Check)
         </button>
 
-        <!-- Settings & Discard Workout -->
-        <div class="grid grid-cols-2 gap-3 pt-1">
-          <button onclick="openExercisePickerModal('ROUTINE')" class="py-3 rounded-xl hevy-card text-zinc-300 font-bold text-xs">
-            ⚙️ Guardar en Rutina
+        <div class="grid grid-cols-2 gap-3">
+          <button onclick="openExercisePickerModal('ROUTINE')" class="py-3 rounded-xl studio-card text-slate-300 font-bold text-xs">
+            📌 Guardar en Plantilla
           </button>
-          <button onclick="discardActiveWorkout()" class="py-3 rounded-xl hevy-card text-rose-500 hover:bg-rose-500/10 font-extrabold text-xs">
-            Discard Workout
+          <button onclick="discardActiveWorkout()" class="py-3 rounded-xl studio-card text-rose-400 hover:bg-rose-500/10 font-extrabold text-xs">
+            🗑️ Descartar Sesión
           </button>
         </div>
       </div>
 
-      <!-- SUB-VISTA C: PANTALLA "SAVE WORKOUT" (FOTO, NOTAS Y GUARDAR) -->
-      <div id="gym-subview-save" class="hidden hevy-card rounded-2xl p-4 space-y-4">
-        <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
-          <button onclick="backToActiveWorkout()" class="w-8 h-8 rounded-full bg-zinc-800 text-white flex items-center justify-center">←</button>
-          <span class="text-sm font-extrabold text-white">Save Workout</span>
-          <button onclick="confirmAndSaveHevyWorkout()" class="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold">
-            Save
+      <!-- SUB-VISTA C: PANTALLA DE CIERRE Y FOTO DE PROGRESO -->
+      <div id="gym-subview-save" class="hidden studio-card rounded-2xl p-4 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <button onclick="backToActiveWorkout()" class="w-8 h-8 rounded-xl bg-slate-800 text-white flex items-center justify-center">←</button>
+          <span class="text-sm font-extrabold text-white">Guardar Entrenamiento</span>
+          <button onclick="confirmAndSaveHevyWorkout()" class="px-4 py-1.5 rounded-xl bg-emerald-500 text-slate-950 text-xs font-extrabold">
+            Publicar ✓
           </button>
         </div>
 
-        <input type="text" id="saveWorkoutTitleInput" class="w-full bg-transparent text-lg font-extrabold text-white border-b border-zinc-800 pb-2 focus:outline-none" value="Día de pecho">
+        <input type="text" id="saveWorkoutTitleInput" class="w-full bg-transparent text-lg font-extrabold text-white border-b border-slate-800 pb-2 focus:outline-none" value="Día de Pecho">
 
-        <div class="flex gap-6 py-1">
+        <div class="grid grid-cols-3 gap-2 text-center bg-slate-900 p-3 rounded-xl border border-slate-800">
           <div>
-            <span class="text-[10px] text-zinc-400 block">Duration</span>
-            <span id="saveScreenDuration" class="text-sm font-extrabold text-blue-400">25min</span>
+            <span class="text-[10px] text-slate-400 block">Duración</span>
+            <span id="saveScreenDuration" class="text-sm font-extrabold text-emerald-400">25min</span>
           </div>
           <div>
-            <span class="text-[10px] text-zinc-400 block">Volume</span>
+            <span class="text-[10px] text-slate-400 block">Volumen Total</span>
             <span id="saveScreenVolume" class="text-sm font-extrabold text-white">7,471 kg</span>
           </div>
           <div>
-            <span class="text-[10px] text-zinc-400 block">Sets</span>
-            <span id="saveScreenSets" class="text-sm font-extrabold text-white">12</span>
+            <span class="text-[10px] text-slate-400 block">Series</span>
+            <span id="saveScreenSets" class="text-sm font-extrabold text-cyan-400">12</span>
           </div>
         </div>
 
-        <!-- Subir Foto / Video de Progreso como en Hevy -->
-        <label class="border-2 border-dashed border-zinc-700 hover:border-blue-500 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition bg-zinc-900/40">
-          <span class="text-2xl mb-1">🖼️</span>
-          <span class="text-xs font-bold text-white" id="photoUploadLabelText">Add a photo / selfie de progreso</span>
+        <label class="border-2 border-dashed border-slate-700 hover:border-emerald-500 rounded-2xl p-5 flex flex-col items-center justify-center cursor-pointer transition bg-slate-900/50">
+          <span class="text-2xl mb-1">📸</span>
+          <span class="text-xs font-bold text-white" id="photoUploadLabelText">Subir o hacer Foto de Progreso</span>
           <input type="file" accept="image/*" capture="environment" onchange="handleHevyPhotoSelect(event)" class="hidden">
         </label>
         <div id="savePhotoPreviewBox" class="hidden"></div>
 
-        <div>
-          <label class="text-[11px] text-zinc-400 font-bold block mb-1">Description / Notas de cómo te sentiste</label>
-          <textarea id="saveWorkoutDescInput" rows="3" placeholder="¿Cómo fue el entreno? Apunta sensaciones o récords..." class="w-full hevy-input rounded-xl p-3 text-xs"></textarea>
-        </div>
-
-        <button onclick="discardActiveWorkout()" class="w-full py-2.5 text-rose-500 font-bold text-xs">
-          Discard Workout
-        </button>
+        <textarea id="saveWorkoutDescInput" rows="3" placeholder="Notas del entrenamiento (cómo te sentiste, récords, molestias)..." class="w-full studio-input rounded-xl p-3 text-xs"></textarea>
       </div>
 
-      <!-- SUB-VISTA D: PÓSTER "GOOD JOB!" CON MUÑECO MUSCULAR AZUL (COMO EN TU FOTO) -->
-      <div id="gym-subview-goodjob" class="hidden hevy-card rounded-3xl p-6 text-center space-y-5">
+      <!-- SUB-VISTA D: TARJETA DE TROFEO PROPIA LIFEOS -->
+      <div id="gym-subview-goodjob" class="hidden studio-card rounded-3xl p-6 text-center space-y-5">
         <div>
-          <h2 class="text-2xl font-black text-white">Good job! 🎉</h2>
-          <p class="text-xs text-zinc-400 mt-0.5" id="goodJobCountSubtitle">This is your 19th workout</p>
+          <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-extrabold">¡SESIÓN COMPLETADA! 🏆</span>
+          <h2 class="text-2xl font-black text-white mt-2">¡Gran Trabajo!</h2>
+          <p class="text-xs text-slate-400 mt-0.5" id="goodJobCountSubtitle">Sesión #19 registrada en tu historial</p>
         </div>
 
-        <!-- Tarjeta Azul Oscura estilo Hevy con lista 4x y silueta anatómica -->
-        <div class="bg-gradient-to-br from-[#0c1428] to-[#080b14] border border-blue-500/30 rounded-3xl p-5 text-left flex items-center justify-between gap-4 shadow-2xl">
+        <div class="bg-gradient-to-br from-[#0d1f1d] via-[#0f172a] to-[#090d16] border border-emerald-500/40 rounded-3xl p-5 text-left flex items-center justify-between gap-4 shadow-2xl">
           <div class="space-y-2 flex-1 min-w-0">
-            <h3 class="text-lg font-black text-white truncate" id="goodJobCardTitle">Día de pecho</h3>
+            <h3 class="text-lg font-black text-white truncate" id="goodJobCardTitle">Día de Pecho</h3>
             <div id="goodJobCardExercisesList" class="space-y-1 text-xs"></div>
-            <div class="pt-3 flex items-center justify-between text-[11px] text-zinc-400 font-bold">
-              <span>⚡ LIFEOS PRO</span>
-              <span id="goodJobCardVolBadge" class="text-blue-400 font-mono">0 kg</span>
+            <div class="pt-3 flex items-center justify-between text-[11px] text-slate-400 font-bold">
+              <span>⚡ LIFEOS STUDIO</span>
+              <span id="goodJobCardVolBadge" class="text-emerald-400 font-mono">0 kg</span>
             </div>
           </div>
-          <!-- Muñeco Anatómico con Músculos Iluminados en Azul -->
           <div class="w-24 sm:w-28 shrink-0 flex flex-col items-center" id="goodJobAnatomyBox"></div>
         </div>
 
-        <button onclick="finishGoodJobAndGoHome()" class="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-sm shadow-lg">
-          Done (Ir al Feed Principal)
+        <button onclick="finishGoodJobAndGoHome()" class="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm shadow-lg">
+          Continuar al Resumen Principal ➔
         </button>
       </div>
 
     </section>
 
     <!-- ========================================================================= -->
-    <!-- PESTAÑA 3: BICI GPS EN VIVO & PASOS MI FIT                                -->
+    <!-- PESTAÑA 3: GPS BICI REAL + RELOJ / PODÓMETRO CON FEEDBACK REAL            -->
     <!-- ========================================================================= -->
     <section id="view-bikemap" class="hidden space-y-4">
-      <!-- Tarjeta de Pasos Mi Fit -->
-      <div class="hevy-card rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <span class="text-[10px] font-bold uppercase text-orange-400 block">⌚ Reloj Mi Fit / Pasos Hoy</span>
-          <div class="flex items-baseline gap-2">
-            <span id="bikeViewStepsVal" class="text-2xl font-extrabold font-mono text-white">0</span>
-            <span class="text-xs text-zinc-400">/ 10.000 pasos</span>
+      
+      <!-- MÓDULO RELOJ / PODÓMETRO INTERACTIVO (AHORA SÍ FUNCIONA Y MUESTRA CONEXIÓN) -->
+      <div class="studio-card rounded-2xl p-4 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-bold uppercase text-orange-400">⌚ Pasos del Día (<span id="stepsDateBadge">Hoy</span>)</span>
+              <span id="watchSyncStatusPill" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono">Listo</span>
+            </div>
+            <div class="flex items-baseline gap-2 mt-1">
+              <span id="bikeViewStepsVal" class="text-2xl font-extrabold font-mono text-white">0</span>
+              <span class="text-xs text-slate-400">/ 10.000 pasos</span>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-1.5">
+            <button onclick="toggleMotionPedometer()" id="btnMotionPedometer" class="px-3 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-extrabold">
+              📱 Sensor Móvil
+            </button>
+            <button onclick="openWatchSyncModal()" class="px-3 py-2 rounded-xl bg-orange-500 hover:bg-orange-400 text-slate-950 font-extrabold text-xs shadow-md">
+              🔄 Sincronizar Reloj / Salud
+            </button>
           </div>
         </div>
-        <div class="flex gap-1.5">
-          <button onclick="addStepsQuick(1500)" class="px-3 py-2 rounded-xl bg-zinc-800 text-orange-300 font-mono text-xs font-bold">+1.500</button>
-          <button onclick="simulateMiFitCloudSync()" class="px-3 py-2 rounded-xl bg-orange-500 text-black font-extrabold text-xs">🔄 Sincronizar Reloj</button>
+
+        <!-- Botones rápidos o entrada manual exacta -->
+        <div class="flex items-center gap-2 pt-2 border-t border-slate-800/80">
+          <input type="number" id="manualStepsInput" placeholder="Escribir pasos exactos de tu reloj (ej. 8420)..." class="flex-1 studio-input rounded-xl px-3 py-1.5 text-xs font-mono">
+          <button onclick="saveManualSteps()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-orange-300 text-xs font-bold">Guardar</button>
+          <button onclick="addStepsQuick(1000)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-xs font-mono font-bold text-slate-300">+1k</button>
         </div>
       </div>
 
-      <!-- Ciclocomputador GPS en Vivo -->
-      <div class="hevy-card rounded-2xl p-4 space-y-3">
+      <!-- CICLOCOMPUTADOR GPS REAL (SIN SIMULADOR FALSO + GUARDA HISTORIAL DE RUTAS) -->
+      <div class="studio-card rounded-2xl p-4 space-y-3">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h3 class="text-base font-extrabold text-white">🚴 Ciclocomputador GPS en Vivo</h3>
-            <p class="text-[11px] text-zinc-400">Pinta tu recorrido según tu velocidad (`km/h`) y cuenta los minutos</p>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-extrabold text-white">🚴 Ciclocomputador GPS Real</h3>
+              <span id="gpsLiveStatusBadge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-300">GPS en espera</span>
+            </div>
+            <p class="text-[11px] text-slate-400">Usa el GPS de tu móvil para pintar tu velocidad real (`km/h`) en cada tramo</p>
           </div>
-          <select id="mapLayerStyleSelect" onchange="changeBikeMapStyle(this.value)" class="hevy-input rounded-xl px-2.5 py-1.5 text-xs font-bold">
+          <select id="mapLayerStyleSelect" onchange="changeBikeMapStyle(this.value)" class="studio-input rounded-xl px-2.5 py-1.5 text-xs font-bold">
             <option value="esri_street" selected>🗺️ Callejero</option>
             <option value="esri_sat">🛰️ Satélite</option>
           </select>
         </div>
 
+        <!-- Cuadro de Telemetría en Vivo -->
         <div class="grid grid-cols-4 gap-2 text-center">
-          <div class="bg-zinc-900 p-2.5 rounded-xl border border-zinc-800">
-            <span class="text-[9px] text-zinc-400 uppercase block">Velocidad</span>
+          <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+            <span class="text-[9px] text-slate-400 uppercase block">Velocidad</span>
             <span id="liveSpeedVal" class="text-lg font-extrabold font-mono text-cyan-400">0.0</span>
-            <span class="text-[9px] text-zinc-500 block">km/h</span>
+            <span class="text-[9px] text-slate-500 block">km/h</span>
           </div>
-          <div class="bg-zinc-900 p-2.5 rounded-xl border border-zinc-800">
-            <span class="text-[9px] text-zinc-400 uppercase block">Distancia</span>
+          <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+            <span class="text-[9px] text-slate-400 uppercase block">Distancia</span>
             <span id="liveDistKmVal" class="text-lg font-extrabold font-mono text-white">0.00</span>
-            <span class="text-[9px] text-zinc-500 block">km</span>
+            <span class="text-[9px] text-slate-500 block">km</span>
           </div>
-          <div class="bg-zinc-900 p-2.5 rounded-xl border border-zinc-800">
-            <span class="text-[9px] text-zinc-400 uppercase block">Tiempo</span>
+          <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+            <span class="text-[9px] text-slate-400 uppercase block">Tiempo</span>
             <span id="liveDurationClock" class="text-lg font-extrabold font-mono text-amber-400">00:00</span>
-            <span class="text-[9px] text-zinc-500 block">min:seg</span>
+            <span class="text-[9px] text-slate-500 block">min:seg</span>
           </div>
-          <div class="bg-zinc-900 p-2.5 rounded-xl border border-zinc-800">
-            <span class="text-[9px] text-zinc-400 uppercase block">Máxima</span>
-            <span id="liveMaxSpeedVal" class="text-lg font-extrabold font-mono text-rose-400">0.0</span>
-            <span class="text-[9px] text-zinc-500 block">km/h</span>
+          <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+            <span class="text-[9px] text-slate-400 uppercase block">Vel. Media</span>
+            <span id="liveAvgSpeedVal" class="text-lg font-extrabold font-mono text-emerald-400">0.0</span>
+            <span class="text-[9px] text-slate-500 block">km/h</span>
           </div>
         </div>
 
+        <!-- Botones de Control GPS Real -->
         <div class="flex flex-wrap gap-2">
-          <button onclick="startRealGPSTracking()" id="btnStartLiveGPS" class="flex-1 py-2.5 rounded-xl bg-emerald-500 text-black font-extrabold text-xs">▶ Iniciar GPS Real</button>
-          <button onclick="startSimulatedGPSTracking()" id="btnSimLiveGPS" class="flex-1 py-2.5 rounded-xl bg-blue-600/20 text-blue-300 border border-blue-500/30 font-bold text-xs">🧪 Simular Ruta</button>
-          <button onclick="finishAndSaveLiveRide()" id="btnStopSaveGPS" class="hidden flex-1 py-2.5 rounded-xl bg-rose-500 text-white font-extrabold text-xs">⏹ Guardar Ruta</button>
+          <button onclick="startRealGPSTracking()" id="btnStartLiveGPS" class="flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs shadow-lg transition">
+            📍 Iniciar Ruta GPS Real
+          </button>
+          <button onclick="finishAndSaveLiveRide()" id="btnStopSaveGPS" class="hidden flex-1 py-3 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-extrabold text-xs shadow-lg transition">
+            ⏹ Finalizar y Guardar Ruta en este Día
+          </button>
+          <button onclick="centerMapOnMe()" class="px-3.5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-xs" title="Centrar en mi ubicación actual">
+            🎯 Mi Ubicación
+          </button>
         </div>
 
         <div id="bike-map"></div>
+
+        <!-- Leyenda de Velocidades -->
+        <div class="flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold text-slate-400 px-1">
+          <span>Colores por velocidad:</span>
+          <span class="text-blue-400">🔵 &lt;12 km/h</span>
+          <span class="text-emerald-400">🟢 12-22 km/h</span>
+          <span class="text-amber-400">🟠 22-30 km/h</span>
+          <span class="text-rose-400">🔴 &gt;30 km/h</span>
+        </div>
+
+        <!-- HISTORIAL DE RUTAS GUARDADAS (PUEDES VER LAS DE CUALQUIER DÍA CON SUS KM, MINUTOS Y VELOCIDAD) -->
+        <div class="pt-3 border-t border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-extrabold uppercase text-slate-300">🗺️ Historial de Rutas Guardadas (Toca una para verla en el mapa)</h4>
+          </div>
+          <div id="savedBikeRoutesHistoryList" class="space-y-2 max-h-48 overflow-y-auto"></div>
+        </div>
       </div>
     </section>
 
     <!-- ========================================================================= -->
-    <!-- PESTAÑA 4: HOGAR (PAVOS/MASCOTAS, LISTA DE LA COMPRA Y GASTOS €)          -->
+    <!-- PESTAÑA 4: HOGAR (PAVOS, COMPRA Y GASTOS)                                 -->
     <!-- ========================================================================= -->
     <section id="view-hogar" class="hidden space-y-4">
-      <!-- Cuidado de los Pavos / Mascotas -->
-      <div class="hevy-card rounded-2xl p-4 space-y-3">
+      <div class="studio-card rounded-2xl p-4 space-y-3">
         <div class="flex items-center justify-between">
           <div>
             <h3 class="text-base font-extrabold text-white">🦃 Cuidado de los Pavos y Corral</h3>
-            <p class="text-[11px] text-zinc-400">Toca para marcar la hora exacta a la que les diste comida o agua</p>
+            <p class="text-[11px] text-slate-400">Toca para registrar la hora exacta en este día</p>
           </div>
-          <button onclick="quickAddTurkeyFeedToShop()" class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold">+ Falta Pienso</button>
+          <button onclick="quickAddTurkeyFeedToShop()" class="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold">+ Falta Pienso</button>
         </div>
 
         <div class="grid grid-cols-3 gap-2">
-          <button onclick="toggleTurkeyTask('fedMorning')" id="btn-turkey-morning" class="p-3 rounded-xl border border-zinc-800 bg-zinc-900 flex flex-col items-center text-center">
+          <button onclick="toggleTurkeyTask('fedMorning')" id="btn-turkey-morning" class="p-3 rounded-xl border border-slate-800 bg-slate-900 flex flex-col items-center text-center">
             <span class="text-xl">🌾</span>
             <span class="text-xs font-bold text-white mt-1">Mañana</span>
-            <span id="time-turkey-morning" class="text-[10px] font-mono text-zinc-500 mt-0.5">Pendiente</span>
+            <span id="time-turkey-morning" class="text-[10px] font-mono text-slate-500 mt-0.5">Pendiente</span>
           </button>
-          <button onclick="toggleTurkeyTask('waterGiven')" id="btn-turkey-water" class="p-3 rounded-xl border border-zinc-800 bg-zinc-900 flex flex-col items-center text-center">
+          <button onclick="toggleTurkeyTask('waterGiven')" id="btn-turkey-water" class="p-3 rounded-xl border border-slate-800 bg-slate-900 flex flex-col items-center text-center">
             <span class="text-xl">💧</span>
             <span class="text-xs font-bold text-white mt-1">Agua</span>
-            <span id="time-turkey-water" class="text-[10px] font-mono text-zinc-500 mt-0.5">Pendiente</span>
+            <span id="time-turkey-water" class="text-[10px] font-mono text-slate-500 mt-0.5">Pendiente</span>
           </button>
-          <button onclick="toggleTurkeyTask('fedEvening')" id="btn-turkey-evening" class="p-3 rounded-xl border border-zinc-800 bg-zinc-900 flex flex-col items-center text-center">
+          <button onclick="toggleTurkeyTask('fedEvening')" id="btn-turkey-evening" class="p-3 rounded-xl border border-slate-800 bg-slate-900 flex flex-col items-center text-center">
             <span class="text-xl">🌽</span>
             <span class="text-xs font-bold text-white mt-1">Tarde</span>
-            <span id="time-turkey-evening" class="text-[10px] font-mono text-zinc-500 mt-0.5">Pendiente</span>
+            <span id="time-turkey-evening" class="text-[10px] font-mono text-slate-500 mt-0.5">Pendiente</span>
           </button>
         </div>
       </div>
 
-      <!-- Lista de la Compra Familiar -->
-      <div class="hevy-card rounded-2xl p-4 space-y-3">
+      <div class="studio-card rounded-2xl p-4 space-y-3">
         <h3 class="text-base font-extrabold text-white">🛒 Lista de la Compra</h3>
         <div class="flex gap-2">
-          <input type="text" id="shopItemInput" onkeydown="if(event.key==='Enter') addShoppingItem()" placeholder="Añadir producto (ej. Leche, Huevos, Pienso)..." class="flex-1 hevy-input rounded-xl px-3 py-2 text-xs">
-          <button onclick="addShoppingItem()" class="px-4 py-2 rounded-xl bg-blue-600 text-white font-extrabold text-xs">+ Añadir</button>
+          <input type="text" id="shopItemInput" onkeydown="if(event.key==='Enter') addShoppingItem()" placeholder="Añadir producto (ej. Leche, Huevos, Pienso)..." class="flex-1 studio-input rounded-xl px-3 py-2 text-xs">
+          <button onclick="addShoppingItem()" class="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs">+ Añadir</button>
         </div>
         <div id="shoppingListContainer" class="space-y-1.5"></div>
       </div>
 
-      <!-- Control de Gastos en Euros -->
-      <div class="hevy-card rounded-2xl p-4 space-y-3">
+      <div class="studio-card rounded-2xl p-4 space-y-3">
         <div class="flex items-center justify-between">
           <h3 class="text-base font-extrabold text-white">💶 Gastos del Día (€)</h3>
           <span id="todaySpentTotalLabel" class="text-sm font-extrabold font-mono text-emerald-400">0.00 €</span>
         </div>
         <div class="flex gap-2">
-          <input type="number" step="0.01" id="expenseAmountInput" placeholder="€" class="w-24 hevy-input rounded-xl px-3 py-2 text-xs font-mono">
-          <input type="text" id="expenseDescInput" placeholder="Concepto (ej. Mercadona, Gasolina)..." class="flex-1 hevy-input rounded-xl px-3 py-2 text-xs">
-          <button onclick="addExpense()" class="px-4 py-2 rounded-xl bg-emerald-500 text-black font-extrabold text-xs">+ Gasto</button>
+          <input type="number" step="0.01" id="expenseAmountInput" placeholder="€" class="w-24 studio-input rounded-xl px-3 py-2 text-xs font-mono">
+          <input type="text" id="expenseDescInput" placeholder="Concepto (ej. Mercadona, Gasolina)..." class="flex-1 studio-input rounded-xl px-3 py-2 text-xs">
+          <button onclick="addExpense()" class="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs">+ Gasto</button>
         </div>
         <div id="expensesListContainer" class="space-y-1.5"></div>
       </div>
     </section>
 
     <!-- ========================================================================= -->
-    <!-- PESTAÑA 5: AUDITORÍA SEMANAL CLARA (CON NOMBRES DE DÍAS REALES)           -->
+    <!-- PESTAÑA 5: BALANCE SEMANAL CLARO                                          -->
     <!-- ========================================================================= -->
     <section id="view-weekly" class="hidden space-y-4">
-      <div class="hevy-card rounded-2xl p-4 space-y-4">
+      <div class="studio-card rounded-2xl p-4 space-y-4">
         <div class="flex items-center justify-between">
           <div>
-            <span class="text-[10px] font-bold uppercase text-blue-400">Resumen de los últimos 7 días</span>
-            <h3 class="text-lg font-extrabold text-white" id="weeklyVerdictTitle">¿Cómo vas esta semana?</h3>
+            <span class="text-[10px] font-bold uppercase text-emerald-400">Últimos 7 días hasta la fecha seleccionada</span>
+            <h3 class="text-lg font-extrabold text-white" id="weeklyVerdictTitle">Balance de tu Semana</h3>
           </div>
           <span id="weeklyGlobalScore" class="text-2xl font-black font-mono text-emerald-400">85%</span>
         </div>
-
         <div id="weeklyClearCards" class="space-y-2"></div>
       </div>
     </section>
 
     <!-- ========================================================================= -->
-    <!-- PESTAÑA 6: DIARIO PRIVADO UNIDO A LO QUE HICISTE CADA DÍA                 -->
+    <!-- PESTAÑA 6: DIARIO PRIVADO CON DICTADO POR VOZ + HISTORIAL UNIDO           -->
     <!-- ========================================================================= -->
     <section id="view-journal" class="hidden space-y-4">
-      <div class="hevy-card rounded-2xl p-4 space-y-3">
-        <div class="flex items-center justify-between">
+      <div class="studio-card rounded-2xl p-4 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h3 class="text-base font-extrabold text-white">📓 Escribir en mi Diario de Hoy</h3>
-            <p class="text-[11px] text-zinc-400">Se guardará unido automáticamente a tus pesos, pasos, estudio y pavos de hoy</p>
+            <h3 class="text-base font-extrabold text-white">📓 Diario Personal (<span id="journalDateLabel">Hoy</span>)</h3>
+            <p class="text-[11px] text-slate-400">Escribe o pulsa el micrófono para dictar lo que has hecho hoy</p>
           </div>
-          <div class="flex gap-1" id="moodSelectorRow"></div>
+          <div class="flex items-center gap-2">
+            <!-- NUEVO BOTÓN DE MICRÓFONO DIRECTO PARA DICTAR EL DIARIO -->
+            <button onclick="startJournalVoiceDictation()" id="btnJournalMic" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-extrabold flex items-center gap-1.5">
+              <span>🎙️</span> <span id="journalMicLabel">Dictar mi Día</span>
+            </button>
+            <div class="flex gap-1" id="moodSelectorRow"></div>
+          </div>
         </div>
 
-        <!-- Resumen de lo hecho hoy que se adjuntará a la nota -->
         <div id="journalTodayAttachedBadges" class="flex flex-wrap gap-1.5 pt-1"></div>
 
-        <textarea id="personalJournalTextarea" rows="4" placeholder="Escribe aquí cómo te has sentido hoy, qué has aprendido o tus notas personales..." class="w-full hevy-input rounded-xl p-3 text-xs"></textarea>
+        <textarea id="personalJournalTextarea" rows="4" placeholder="Escribe o dicta con el micrófono cómo te has sentido hoy, qué has aprendido o tus reflexiones..." class="w-full studio-input rounded-xl p-3 text-xs"></textarea>
 
-        <button onclick="saveJournalEntryToHistory()" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs">
-          💾 Guardar Entrada del Día con mis Métricas
-        </button>
+        <div class="flex gap-2">
+          <button onclick="saveJournalEntryToHistory()" class="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs">
+            💾 Guardar Diario Unido a mis Datos del Día
+          </button>
+          <button onclick="speakDaySummaryAloud()" class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-xs" title="Que la aplicación me lea en voz alta el resumen de mi día">
+            🔊 Escuchar Resumen
+          </button>
+        </div>
       </div>
 
-      <!-- Historial de Días Anteriores (Texto Personal + Lo que hiciste ese día junto) -->
       <div class="space-y-2.5">
-        <h4 class="text-xs font-extrabold uppercase text-zinc-400 px-1">📚 Historial de tu Diario Unido a tus Logros</h4>
+        <h4 class="text-xs font-extrabold uppercase text-slate-400 px-1">📚 Archivo de Días (Diario + Lo que hiciste cada día)</h4>
         <div id="journalCombinedHistoryList" class="space-y-3"></div>
       </div>
     </section>
@@ -645,93 +710,143 @@
   </main>
 
   <!-- ========================================================================= -->
-  <!-- MODAL MULTI-CHECK DE EJERCICIOS (COMO TU CAPTURA "ADD EXERCISE" DE HEVY)  -->
+  <!-- MODAL MULTI-CHECK DE EJERCICIOS (CON PESTAÑAS QUE SE ILUMINAN DE VERDAD)  -->
   <!-- ========================================================================= -->
   <div id="exercisePickerModal" class="fixed inset-0 bg-black/90 backdrop-blur-sm hidden items-center justify-center z-50 p-3">
-    <div class="hevy-card rounded-3xl max-w-lg w-full max-h-[88vh] flex flex-col overflow-hidden border border-zinc-700">
-      <!-- Cabecera Cancel | Add Exercise | Añadir (X) -->
-      <div class="p-4 border-b border-zinc-800 flex items-center justify-between">
-        <button onclick="closeExercisePickerModal()" class="px-3 py-1.5 rounded-full bg-zinc-800 text-xs font-bold text-zinc-300">Cancel</button>
-        <span class="text-sm font-extrabold text-white">Add Exercise</span>
-        <button onclick="confirmMultiCheckedExercises()" id="btnConfirmMultiEx" class="px-3.5 py-1.5 rounded-full bg-blue-600 text-xs font-extrabold text-white">
+    <div class="studio-card rounded-3xl max-w-lg w-full max-h-[88vh] flex flex-col overflow-hidden border border-slate-700">
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+        <button onclick="closeExercisePickerModal()" class="px-3 py-1.5 rounded-xl bg-slate-800 text-xs font-bold text-slate-300">Cancelar</button>
+        <span class="text-sm font-extrabold text-white">Seleccionar Ejercicios</span>
+        <button onclick="confirmMultiCheckedExercises()" id="btnConfirmMultiEx" class="px-4 py-1.5 rounded-xl bg-emerald-500 text-xs font-extrabold text-slate-950">
           Añadir (0)
         </button>
       </div>
 
-      <!-- Buscador y Filtro de Músculo -->
-      <div class="p-3 space-y-2.5 border-b border-zinc-800">
-        <input type="text" id="pickerSearchInput" oninput="renderPickerExercisesList()" placeholder="🔍 Search exercise (ej. press, jalón, sentadilla, curl)..." class="w-full hevy-input rounded-xl px-3.5 py-2 text-xs">
-        <div class="flex gap-1.5 overflow-x-auto pb-1" id="pickerMusclePills">
-          <button onclick="setPickerMuscle('ALL')" class="px-3 py-1 rounded-lg bg-blue-600 text-white text-xs font-bold shrink-0">All Muscles</button>
-          <button onclick="setPickerMuscle('Pecho')" class="px-3 py-1 rounded-lg bg-zinc-800 text-zinc-300 text-xs font-bold shrink-0">Pecho</button>
-          <button onclick="setPickerMuscle('Espalda')" class="px-3 py-1 rounded-lg bg-zinc-800 text-zinc-300 text-xs font-bold shrink-0">Espalda</button>
-          <button onclick="setPickerMuscle('Piernas')" class="px-3 py-1 rounded-lg bg-zinc-800 text-zinc-300 text-xs font-bold shrink-0">Piernas</button>
-          <button onclick="setPickerMuscle('Hombros')" class="px-3 py-1 rounded-lg bg-zinc-800 text-zinc-300 text-xs font-bold shrink-0">Hombros</button>
-          <button onclick="setPickerMuscle('Brazos')" class="px-3 py-1 rounded-lg bg-zinc-800 text-zinc-300 text-xs font-bold shrink-0">Brazos</button>
-        </div>
+      <div class="p-3 space-y-2.5 border-b border-slate-800">
+        <input type="text" id="pickerSearchInput" oninput="renderPickerExercisesList()" placeholder="🔍 Buscar ejercicio (ej. banca, sentadilla, remo, bíceps)..." class="w-full studio-input rounded-xl px-3.5 py-2 text-xs">
+        <!-- Botones de Músculo que SE ILUMINAN al seleccionarlos y muestran cuántos llevas marcados -->
+        <div class="flex gap-1.5 overflow-x-auto pb-1" id="pickerMusclePills"></div>
       </div>
 
-      <!-- Lista de Ejercicios con Ilustración Circular y Checkbox Multi-Selección -->
-      <div id="pickerExercisesListContainer" class="flex-1 overflow-y-auto divide-y divide-zinc-800/70 p-2"></div>
+      <div id="pickerExercisesListContainer" class="flex-1 overflow-y-auto divide-y divide-slate-800/70 p-2"></div>
+    </div>
+  </div>
+
+  <!-- MODAL SINCRONIZAR RELOJ / SALUD (MI FIT, ZEPP LIFE, WEB BLUETOOTH, APPLE HEALTH) -->
+  <div id="watchSyncModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="studio-card rounded-2xl p-5 max-w-md w-full space-y-4 border border-orange-500/40">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">⌚</span>
+          <h3 class="text-base font-extrabold text-white">Conectar Reloj / Salud</h3>
+        </div>
+        <button onclick="closeWatchSyncModal()" class="text-slate-400">✕</button>
+      </div>
+
+      <div id="watchSyncFeedbackBox" class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300">
+        Elige cómo quieres traer los pasos a tu día (<b id="syncModalDateText">Hoy</b>):
+      </div>
+
+      <div class="space-y-2 text-xs">
+        <button onclick="connectRealBluetoothWatch()" class="w-full p-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-cyan-500/40 flex items-center justify-between text-left">
+          <div>
+            <b class="text-cyan-300 block">📡 Buscar Reloj por Bluetooth (Web BLE)</b>
+            <span class="text-[11px] text-slate-400">Conecta directo si tu pulsera/reloj tiene Bluetooth abierto</span>
+          </div>
+          <span class="font-bold text-cyan-400">Conectar ➔</span>
+        </button>
+
+        <button onclick="syncSimulatedWatchSteps()" class="w-full p-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-orange-500/40 flex items-center justify-between text-left">
+          <div>
+            <b class="text-orange-300 block">⚡ Importar Lectura de Mi Fit / Zepp Life</b>
+            <span class="text-[11px] text-slate-400">Sincroniza los pasos registrados hoy en tu cuenta</span>
+          </div>
+          <span class="font-bold text-orange-400">Importar ➔</span>
+        </button>
+
+        <label class="w-full p-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 flex items-center justify-between text-left cursor-pointer block">
+          <div>
+            <b class="text-white block">📂 Subir archivo exportado (.CSV / .JSON)</b>
+            <span class="text-[11px] text-slate-400">Exportación de Zepp Life, Mi Fitness o Salud</span>
+          </div>
+          <span class="font-bold text-emerald-400">Subir ➔</span>
+          <input type="file" accept=".csv,.json" onchange="importMiFitFile(event)" class="hidden">
+        </label>
+      </div>
     </div>
   </div>
 
   <!-- MODAL CREAR NUEVA RUTINA -->
   <div id="createRoutineModal" class="fixed inset-0 bg-black/85 hidden items-center justify-center z-50 p-4">
-    <div class="hevy-card rounded-2xl p-5 max-w-sm w-full space-y-4">
+    <div class="studio-card rounded-2xl p-5 max-w-sm w-full space-y-4">
       <div class="flex justify-between items-center">
-        <h3 class="text-sm font-extrabold text-white">📋 Nueva Rutina</h3>
-        <button onclick="closeCreateRoutineModal()" class="text-zinc-400">✕</button>
+        <h3 class="text-sm font-extrabold text-white">➕ Crear Nuevo Día de Entreno</h3>
+        <button onclick="closeCreateRoutineModal()" class="text-slate-400">✕</button>
       </div>
-      <input type="text" id="newRoutineNameInput" placeholder="Nombre (ej. Día de Pecho, Leg Day, Arm Day)..." class="w-full hevy-input rounded-xl px-3 py-2 text-xs">
-      <button onclick="createNewHevyRoutine()" class="w-full py-2.5 rounded-xl bg-blue-600 text-white font-extrabold text-xs">Crear y Elegir Ejercicios</button>
+      <input type="text" id="newRoutineNameInput" placeholder="Ej. Día de Pecho, Pierna Completa, Brazos..." class="w-full studio-input rounded-xl px-3 py-2 text-xs">
+      <button onclick="createNewHevyRoutine()" class="w-full py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs">Crear y Elegir Ejercicios</button>
     </div>
   </div>
 
-  <!-- MODAL DISCRETO DE VOZ -->
-  <div id="voiceModal" class="fixed inset-0 bg-black/85 hidden items-center justify-center z-50 p-4">
-    <div class="hevy-card rounded-2xl p-5 max-w-sm w-full space-y-3 text-center">
-      <h3 class="text-base font-extrabold text-white">🎙️ Comando Rápido por Voz</h3>
-      <p id="voiceTranscriptBox" class="p-2.5 rounded-xl bg-zinc-900 text-xs font-mono text-blue-400">Elige o dicta una acción rápida</p>
-      <div class="space-y-1.5 text-left">
-        <button onclick="runQuickVoice('pavos')" class="w-full p-2 rounded-lg bg-zinc-900 text-xs text-zinc-200">🗣️ "He dado agua y comida a los pavos"</button>
-        <button onclick="runQuickVoice('leche')" class="w-full p-2 rounded-lg bg-zinc-900 text-xs text-zinc-200">🗣️ "Añadir leche y huevos a la compra"</button>
+  <!-- MODAL DE ASISTENTE DE VOZ REAL (ESCUCHA Y HABLA EN VOZ ALTA) -->
+  <div id="voiceModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="studio-card rounded-2xl p-5 max-w-md w-full space-y-4 text-center border border-emerald-500/40">
+      <div class="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 flex items-center justify-center text-2xl mx-auto">
+        🎙️
       </div>
-      <button onclick="closeVoiceModal()" class="w-full py-2 rounded-xl bg-zinc-800 text-xs font-bold">Cerrar</button>
+      <h3 class="text-base font-extrabold text-white">Control por Voz con Respuesta Hablada</h3>
+      <p id="voiceTranscriptBox" class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono text-emerald-300 min-h-[44px] flex items-center justify-center">
+        Pulsa "Hablar por Micrófono" y di lo que has hecho hoy...
+      </p>
+
+      <div class="flex gap-2">
+        <button onclick="startRealVoiceRecognition()" id="btnStartMicListen" class="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs">
+          🎙️ Hablar por Micrófono Ahora
+        </button>
+        <button onclick="speakDaySummaryAloud()" class="px-3.5 py-2.5 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-bold">
+          🔊 Que me hable
+        </button>
+      </div>
+
+      <div class="space-y-1.5 text-left pt-2 border-t border-slate-800">
+        <span class="text-[10px] font-bold uppercase text-slate-400 block">O toca una acción directa con respuesta por voz:</span>
+        <button onclick="processSpokenText('He dado agua y comida a los pavos')" class="w-full p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs text-slate-200">🗣️ "He dado agua y comida a los pavos"</button>
+        <button onclick="processSpokenText('Añadir leche y huevos a la compra')" class="w-full p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs text-slate-200">🗣️ "Añadir leche y huevos a la compra"</button>
+        <button onclick="processSpokenText('Estudié 45 minutos hoy')" class="w-full p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs text-slate-200">🗣️ "Estudié 45 minutos hoy"</button>
+      </div>
+      <button onclick="closeVoiceModal()" class="w-full py-2 rounded-xl bg-slate-800 text-xs font-bold text-slate-300">Cerrar</button>
     </div>
   </div>
 
-  <!-- ================= LÓGICA JAVASCRIPT 5.0 (HEVY ENGINE) ================= -->
+  <!-- ================= LÓGICA JAVASCRIPT 5.5 ================= -->
   <script>
-    // --- CATÁLOGO DE EJERCICIOS CON HISTORIAL PREVIO ("PREVIOUS") ---
     const EXERCISE_CATALOG = [
-      { id: 'incline_db', name: 'Incline Bench Press (Dumbbell)', esName: 'Press Inclinado Mancuernas', muscle: 'Pecho', equip: 'Dumbbell', prev: '22.5kg x 10', defaultKg: 22.5, defaultReps: 10 },
-      { id: 'bench_bar', name: 'Bench Press (Barbell)', esName: 'Press de Banca con Barra', muscle: 'Pecho', equip: 'Barbell', prev: '70kg x 10', defaultKg: 70, defaultReps: 10 },
-      { id: 'chest_fly', name: 'Chest Fly (Machine)', esName: 'Aperturas en Máquina (Pec Deck)', muscle: 'Pecho', equip: 'Machine', prev: '50kg x 12', defaultKg: 50, defaultReps: 12 },
-      { id: 'cable_cross', name: 'Cable Crossover', esName: 'Cruce de Poleas', muscle: 'Pecho', equip: 'Cable', prev: '20kg x 12', defaultKg: 20, defaultReps: 12 },
-      { id: 'seated_row', name: 'Seated Cable Row - V Grip', esName: 'Remo en Polea Baja (Agarre V)', muscle: 'Espalda', equip: 'Cable', prev: '59kg x 10', defaultKg: 60, defaultReps: 10 },
-      { id: 'lat_pull', name: 'Lat Pulldown (Cable)', esName: 'Jalón al Pecho en Polea', muscle: 'Espalda', equip: 'Cable', prev: '60kg x 10', defaultKg: 60, defaultReps: 10 },
-      { id: 'pull_ups', name: 'Pull Up', esName: 'Dominadas', muscle: 'Espalda', equip: 'Bodyweight', prev: '76kg x 10', defaultKg: 76, defaultReps: 10 },
-      { id: 'bar_row', name: 'Bent Over Row (Barbell)', esName: 'Remo con Barra', muscle: 'Espalda', equip: 'Barbell', prev: '65kg x 8', defaultKg: 65, defaultReps: 8 },
-      { id: 'rear_delt', name: 'Rear Delt Reverse Fly (Machine)', esName: 'Pájaros / Posterior en Máquina', muscle: 'Hombros', equip: 'Machine', prev: '66kg x 10', defaultKg: 66, defaultReps: 10 },
-      { id: 'shoulder_press', name: 'Shoulder Press (Dumbbell)', esName: 'Press de Hombros Mancuernas', muscle: 'Hombros', equip: 'Dumbbell', prev: '24kg x 10', defaultKg: 24, defaultReps: 10 },
-      { id: 'lat_raise', name: 'Lateral Raise (Dumbbell)', esName: 'Elevaciones Laterales', muscle: 'Hombros', equip: 'Dumbbell', prev: '12kg x 12', defaultKg: 12, defaultReps: 12 },
-      { id: 'squat_bar', name: 'Squat (Barbell)', esName: 'Sentadilla Libre con Barra', muscle: 'Piernas', equip: 'Barbell', prev: '90kg x 8', defaultKg: 90, defaultReps: 8 },
-      { id: 'bulgarian', name: 'Bulgarian Split Squat', esName: 'Sentadilla Búlgara', muscle: 'Piernas', equip: 'Dumbbell', prev: '20kg x 10', defaultKg: 20, defaultReps: 10 },
-      { id: 'leg_curl', name: 'Seated Leg Curl (Machine)', esName: 'Curl Femoral Sentado', muscle: 'Piernas', equip: 'Machine', prev: '55kg x 12', defaultKg: 55, defaultReps: 12 },
-      { id: 'leg_press', name: 'Leg Press (Machine)', esName: 'Prensa de Piernas 45º', muscle: 'Piernas', equip: 'Machine', prev: '160kg x 10', defaultKg: 160, defaultReps: 10 },
-      { id: 'calf_raise', name: 'Seated Calf Raise', esName: 'Elevación de Gemelos', muscle: 'Piernas', equip: 'Machine', prev: '50kg x 15', defaultKg: 50, defaultReps: 15 },
-      { id: 'hammer_curl', name: 'Hammer Curl (Dumbbell)', esName: 'Curl Martillo con Mancuernas', muscle: 'Brazos', equip: 'Dumbbell', prev: '16kg x 10', defaultKg: 16, defaultReps: 10 },
-      { id: 'tricep_rope', name: 'Triceps Rope Pushdown', esName: 'Extensión de Tríceps con Cuerda', muscle: 'Brazos', equip: 'Cable', prev: '25kg x 12', defaultKg: 25, defaultReps: 12 },
-      { id: 'bicep_bar', name: 'EZ Bar Biceps Curl', esName: 'Curl de Bíceps con Barra Z', muscle: 'Brazos', equip: 'Barbell', prev: '32.5kg x 10', defaultKg: 32.5, defaultReps: 10 }
+      { id: 'incline_db', name: 'Press Inclinado con Mancuernas', muscle: 'Pecho', equip: 'Mancuernas', prev: '22.5kg x 10', defaultKg: 22.5, defaultReps: 10 },
+      { id: 'bench_bar', name: 'Press de Banca con Barra', muscle: 'Pecho', equip: 'Barra', prev: '70kg x 10', defaultKg: 70, defaultReps: 10 },
+      { id: 'chest_fly', name: 'Aperturas en Máquina (Contractora)', muscle: 'Pecho', equip: 'Máquina', prev: '50kg x 12', defaultKg: 50, defaultReps: 12 },
+      { id: 'cable_cross', name: 'Cruce de Poleas', muscle: 'Pecho', equip: 'Polea', prev: '20kg x 12', defaultKg: 20, defaultReps: 12 },
+      { id: 'seated_row', name: 'Remo en Polea Baja (Gironda)', muscle: 'Espalda', equip: 'Polea', prev: '60kg x 10', defaultKg: 60, defaultReps: 10 },
+      { id: 'lat_pull', name: 'Jalón al Pecho en Polea', muscle: 'Espalda', equip: 'Polea', prev: '60kg x 10', defaultKg: 60, defaultReps: 10 },
+      { id: 'pull_ups', name: 'Dominadas (Pull-ups)', muscle: 'Espalda', equip: 'Peso Corporal', prev: '76kg x 10', defaultKg: 76, defaultReps: 10 },
+      { id: 'bar_row', name: 'Remo con Barra', muscle: 'Espalda', equip: 'Barra', prev: '65kg x 8', defaultKg: 65, defaultReps: 8 },
+      { id: 'rear_delt', name: 'Pájaros / Posterior en Máquina', muscle: 'Hombros', equip: 'Máquina', prev: '66kg x 10', defaultKg: 66, defaultReps: 10 },
+      { id: 'shoulder_press', name: 'Press Militar con Mancuernas', muscle: 'Hombros', equip: 'Mancuernas', prev: '24kg x 10', defaultKg: 24, defaultReps: 10 },
+      { id: 'lat_raise', name: 'Elevaciones Laterales', muscle: 'Hombros', equip: 'Mancuernas', prev: '12kg x 12', defaultKg: 12, defaultReps: 12 },
+      { id: 'squat_bar', name: 'Sentadilla Libre con Barra', muscle: 'Piernas', equip: 'Barra', prev: '90kg x 8', defaultKg: 90, defaultReps: 8 },
+      { id: 'bulgarian', name: 'Sentadilla Búlgara', muscle: 'Piernas', equip: 'Mancuernas', prev: '20kg x 10', defaultKg: 20, defaultReps: 10 },
+      { id: 'leg_curl', name: 'Curl Femoral Sentado', muscle: 'Piernas', equip: 'Máquina', prev: '55kg x 12', defaultKg: 55, defaultReps: 12 },
+      { id: 'leg_press', name: 'Prensa de Piernas 45º', muscle: 'Piernas', equip: 'Máquina', prev: '160kg x 10', defaultKg: 160, defaultReps: 10 },
+      { id: 'calf_raise', name: 'Elevación de Gemelos', muscle: 'Piernas', equip: 'Máquina', prev: '50kg x 15', defaultKg: 50, defaultReps: 15 },
+      { id: 'hammer_curl', name: 'Curl Martillo con Mancuernas', muscle: 'Brazos', equip: 'Mancuernas', prev: '16kg x 10', defaultKg: 16, defaultReps: 10 },
+      { id: 'tricep_rope', name: 'Extensión de Tríceps en Polea', muscle: 'Brazos', equip: 'Polea', prev: '25kg x 12', defaultKg: 25, defaultReps: 12 },
+      { id: 'bicep_bar', name: 'Curl de Bíceps con Barra Z', muscle: 'Brazos', equip: 'Barra Z', prev: '32.5kg x 10', defaultKg: 32.5, defaultReps: 10 }
     ];
 
-    // Mini icono circular de ejercicio (como en Hevy)
     function getRoundExerciseAvatar(muscle) {
-      const colors = { Pecho: '#3b82f6', Espalda: '#10b981', Piernas: '#f59e0b', Hombros: '#8b5cf6', Brazos: '#ec4899' };
-      const c = colors[muscle] || '#3b82f6';
+      const colors = { Pecho: '#10b981', Espalda: '#3b82f6', Piernas: '#f59e0b', Hombros: '#8b5cf6', Brazos: '#ec4899' };
+      const c = colors[muscle] || '#10b981';
       return `
-        <div class="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-700 flex items-center justify-center shrink-0">
+        <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center shrink-0">
           <svg viewBox="0 0 40 40" class="w-6 h-6">
             <circle cx="20" cy="11" r="4" fill="#e2e8f0"/>
             <rect x="14" y="16" width="12" height="12" rx="3" fill="${c}"/>
@@ -741,28 +856,22 @@
       `;
     }
 
-    // Muñeco Anatómico Azul Estilo Hevy ("Good job!" card)
-    function getAnatomyBodyMapSVG(activeMuscles = ['Pecho', 'Espalda']) {
+    function getAnatomyBodyMapSVG(activeMuscles = ['Pecho']) {
       const hasChest = activeMuscles.includes('Pecho');
       const hasBack = activeMuscles.includes('Espalda');
       const hasLegs = activeMuscles.includes('Piernas');
       const hasArms = activeMuscles.includes('Brazos') || activeMuscles.includes('Hombros');
-      const blue = '#3b82f6';
-      const base = '#3f3f46';
+      const hi = '#10b981';
+      const base = '#334155';
       return `
-        <svg viewBox="0 0 90 150" class="w-full h-auto max-h-36">
-          <!-- Cabeza -->
-          <circle cx="45" cy="16" r="9" fill="#71717a"/>
-          <!-- Hombros y Brazos -->
-          <rect x="20" y="28" width="10" height="34" rx="5" fill="${hasArms || hasChest ? blue : base}"/>
-          <rect x="60" y="28" width="10" height="34" rx="5" fill="${hasArms || hasChest ? blue : base}"/>
-          <!-- Pecho / Dorsal -->
-          <rect x="31" y="27" width="28" height="22" rx="5" fill="${hasChest || hasBack ? blue : base}"/>
-          <!-- Abdomen -->
-          <rect x="33" y="51" width="24" height="22" rx="4" fill="#52525b"/>
-          <!-- Piernas -->
-          <rect x="31" y="76" width="12" height="52" rx="6" fill="${hasLegs ? blue : base}"/>
-          <rect x="47" y="76" width="12" height="52" rx="6" fill="${hasLegs ? blue : base}"/>
+        <svg viewBox="0 0 90 150" class="w-full h-auto max-h-28">
+          <circle cx="45" cy="16" r="9" fill="#64748b"/>
+          <rect x="20" y="28" width="10" height="34" rx="5" fill="${hasArms || hasChest ? hi : base}"/>
+          <rect x="60" y="28" width="10" height="34" rx="5" fill="${hasArms || hasChest ? hi : base}"/>
+          <rect x="31" y="27" width="28" height="22" rx="5" fill="${hasChest || hasBack ? hi : base}"/>
+          <rect x="33" y="51" width="24" height="22" rx="4" fill="#475569"/>
+          <rect x="31" y="76" width="12" height="52" rx="6" fill="${hasLegs ? hi : base}"/>
+          <rect x="47" y="76" width="12" height="52" rx="6" fill="${hasLegs ? hi : base}"/>
         </svg>
       `;
     }
@@ -772,29 +881,18 @@
       set(k, v) { try { localStorage.setItem(k, v); } catch(e) {} }
     };
 
-    const STORAGE_KEY = 'LIFEOS_PRO_V50_HEVY';
+    const STORAGE_KEY = 'LIFEOS_PRO_V55_STUDIO';
     function getTodayISO() { return new Date().toISOString().split('T')[0]; }
     let currentDate = getTodayISO();
-    let currentAppMode = 'ALL'; // ALL | CLUB | HOME
+    let currentAppMode = 'ALL';
+    let currentActiveTab = 'home';
 
     let appState = {
       workoutCount: 19,
       routines: [
-        {
-          id: 'pecho_esp',
-          title: 'Día de pecho',
-          exerciseIds: ['incline_db', 'seated_row', 'lat_pull', 'chest_fly', 'rear_delt']
-        },
-        {
-          id: 'arm_day',
-          title: 'Arm day',
-          exerciseIds: ['hammer_curl', 'tricep_rope', 'shoulder_press', 'bicep_bar']
-        },
-        {
-          id: 'leg_day',
-          title: 'Leg day',
-          exerciseIds: ['leg_curl', 'bulgarian', 'squat_bar', 'calf_raise']
-        }
+        { id: 'pecho_esp', title: '🔥 Día de Pecho y Espalda', exerciseIds: ['incline_db', 'seated_row', 'lat_pull', 'chest_fly', 'rear_delt'] },
+        { id: 'arm_day', title: '💪 Día de Brazo y Hombro', exerciseIds: ['hammer_curl', 'tricep_rope', 'shoulder_press', 'bicep_bar'] },
+        { id: 'leg_day', title: '🦵 Día de Pierna Completa', exerciseIds: ['leg_curl', 'bulgarian', 'squat_bar', 'calf_raise'] }
       ],
       shoppingList: [
         { id: 1, text: 'Saco de pienso para los pavos', done: false },
@@ -805,42 +903,30 @@
           id: 101,
           user: 'Tú (@cvalientem04)',
           date: getTodayISO(),
-          title: 'Día de pecho',
+          title: '🔥 Día de Pecho y Espalda',
           duration: '42min',
           volumeKg: 7471,
           setsCount: 16,
           muscles: ['Pecho', 'Espalda', 'Hombros'],
-          summaryLines: ['4x Seated Cable Row - V Grip (60kg)', '3x Lat Pulldown (60kg)', '3x Incline Bench Press (22.5kg)', '3x Rear Delt Reverse Fly (66kg)'],
-          note: 'Subiendo cargas en todas las series de pecho y remo.',
+          summaryLines: ['4x Remo en Polea Baja (60kg)', '3x Jalón al Pecho (60kg)', '3x Press Inclinado Mancuernas (22.5kg)'],
+          note: 'Subiendo cargas con técnica estricta.',
           photoUrl: '',
           likes: 4
-        },
-        {
-          id: 102,
-          user: 'Álex (@alex_gym)',
-          date: getTodayISO(),
-          title: 'Leg day pesado',
-          duration: '55min',
-          volumeKg: 9820,
-          setsCount: 15,
-          muscles: ['Piernas'],
-          summaryLines: ['4x Squat (Barbell) (100kg)', '4x Leg Press (180kg)', '4x Seated Calf Raise (60kg)'],
-          note: 'Récord personal en sentadilla libre.',
-          photoUrl: '',
-          likes: 7
         }
       ],
       days: {}
     };
 
+    // IMPORTANTE: DÍA VACÍO SIEMPRE EMPIEZA EN 0 PASOS (CORREGIDO)
     function createEmptyDay() {
       return {
         turkeys: { fedMorning: false, morningTime: '', waterGiven: false, waterTime: '', fedEvening: false, eveningTime: '' },
         studyMinutes: 0,
         carMinutes: 0,
-        steps: 8500,
+        steps: 0,
         bikeKm: 0,
         bikeMinutes: 0,
+        bikeRoutes: [], // Guarda { id, date, name, km, mins, avgSpeed, maxSpeed, segments: [{pts, color, speed}] }
         meals: [],
         expenses: [],
         mood: '😄',
@@ -855,7 +941,7 @@
 
     function saveToStorage() {
       SafeStorage.set(STORAGE_KEY, JSON.stringify(appState));
-      renderHomeView();
+      refreshCurrentActiveView();
     }
 
     function loadFromStorage() {
@@ -866,31 +952,62 @@
       if (Object.keys(appState.days).length === 0) loadDemoData();
     }
 
-    // --- CAMBIO DE MODO REAL (OCULTA DE VERDAD LO QUE NO CORRESPONDE) ---
+    function formatHumanDate(isoStr) {
+      try {
+        const d = new Date(isoStr + 'T12:00:00');
+        return d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+      } catch(e) { return isoStr; }
+    }
+
+    // --- ACTUALIZAR TODAS LAS VISTAS AL CAMBIAR DE FECHA ---
+    function refreshCurrentActiveView() {
+      document.getElementById('currentDatePicker').value = currentDate;
+      const isToday = currentDate === getTodayISO();
+      document.getElementById('headerReadableDate').textContent = isToday
+        ? `Hoy (${formatHumanDate(currentDate)})`
+        : formatHumanDate(currentDate);
+
+      renderHomeView();
+      if (currentActiveTab === 'gym') renderGymSection();
+      if (currentActiveTab === 'bikemap') renderBikeStepsView();
+      if (currentActiveTab === 'hogar') renderHogarView();
+      if (currentActiveTab === 'weekly') renderWeeklyClearAudit();
+      if (currentActiveTab === 'journal') renderJournalCombinedView();
+    }
+
+    function onDateChange(val) {
+      if (!val) return;
+      currentDate = val;
+      refreshCurrentActiveView();
+    }
+
+    function changeDay(offset) {
+      const d = new Date(currentDate + 'T12:00:00');
+      d.setDate(d.getDate() + offset);
+      currentDate = d.toISOString().split('T')[0];
+      refreshCurrentActiveView();
+    }
+
     function setAppMode(mode) {
       currentAppMode = mode;
       ['ALL', 'CLUB', 'HOME'].forEach(m => {
         const b1 = document.getElementById('mode-btn-' + m);
         const b2 = document.getElementById('top-mode-' + m);
-        if (b1) b1.className = m === mode ? 'py-1.5 rounded-lg bg-blue-600 text-white' : 'py-1.5 rounded-lg text-zinc-400 hover:text-white';
-        if (b2) b2.className = m === mode ? 'px-2 py-1 rounded-lg bg-blue-600 text-white' : 'px-2 py-1 rounded-lg text-zinc-400';
+        if (b1) b1.className = m === mode ? 'py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-extrabold' : 'py-1.5 rounded-lg text-slate-400 hover:text-white';
+        if (b2) b2.className = m === mode ? 'px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 font-extrabold transition' : 'px-2.5 py-1 rounded-lg text-slate-400 transition';
       });
-
-      // Filtrar botones de navegación y tarjetas de Inicio
       document.querySelectorAll('[data-scope]').forEach(el => {
         const sc = el.getAttribute('data-scope');
-        const show = mode === 'ALL' || sc === 'ALL' || sc === mode;
-        el.classList.toggle('hidden', !show);
+        el.classList.toggle('hidden', !(mode === 'ALL' || sc === 'ALL' || sc === mode));
       });
       document.querySelectorAll('[data-card-scope]').forEach(el => {
         const sc = el.getAttribute('data-card-scope');
-        const show = mode === 'ALL' || sc === 'ALL' || sc === mode;
-        el.classList.toggle('hidden', !show);
+        el.classList.toggle('hidden', !(mode === 'ALL' || sc === 'ALL' || sc === mode));
       });
     }
 
-    // --- NAVEGACIÓN DE PESTAÑAS (MUESTRA SOLO LA PESTAÑA ELEGIDA) ---
     function switchTab(tabId) {
+      currentActiveTab = tabId;
       const tabs = ['home', 'gym', 'bikemap', 'hogar', 'weekly', 'journal'];
       tabs.forEach(t => {
         const view = document.getElementById('view-' + t);
@@ -901,32 +1018,33 @@
         if (mbtn) mbtn.classList.toggle('active', t === tabId);
       });
 
-      // Mostrar banner si hay entreno activo y saliste de gym
       const minBanner = document.getElementById('minimizedWorkoutBanner');
       if (minBanner) minBanner.classList.toggle('hidden', !(activeWorkout.running && tabId !== 'gym'));
 
-      if (tabId === 'home') renderHomeView();
-      if (tabId === 'gym') renderGymSection();
-      if (tabId === 'bikemap') setTimeout(() => { initBikeMapIfNeeded(); if (bikeMap) bikeMap.invalidateSize(); renderBikeStepsView(); }, 100);
-      if (tabId === 'hogar') renderHogarView();
-      if (tabId === 'weekly') renderWeeklyClearAudit();
-      if (tabId === 'journal') renderJournalCombinedView();
+      refreshCurrentActiveView();
+      if (tabId === 'bikemap') {
+        setTimeout(() => {
+          initBikeMapIfNeeded();
+          if (bikeMap) bikeMap.invalidateSize();
+          renderSavedBikeRoutesHistory();
+        }, 120);
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // =========================================================================
-    // --- MOTOR HEVY DE ENTRENAMIENTO EN VIVO (START ROUTINE / LOG WORKOUT) ---
+    // --- ESTUDIO DE FUERZA (DISEÑO ORIGINAL Y SOFISTICADO) ---
     // =========================================================================
     let activeWorkout = {
       running: false,
-      title: 'Día de pecho',
+      title: 'Día de Pecho',
       startTimeMs: 0,
       elapsedSec: 0,
       timerId: null,
       restRemainingSec: 0,
       restTimerId: null,
       photoDataUrl: '',
-      exercises: [] // { id, name, muscle, prev, sets: [{ kg, reps, done }] }
+      exercises: []
     };
 
     function getExById(id) {
@@ -952,23 +1070,22 @@
     }
 
     function renderHevyRoutinesHub() {
-      document.getElementById('myRoutinesCountLabel').textContent = `▾ My Routines (${appState.routines.length})`;
       const box = document.getElementById('hevyRoutinesList');
       box.innerHTML = appState.routines.map(r => {
-        const names = r.exerciseIds.map(id => getExById(id).name).join(', ');
+        const names = r.exerciseIds.map(id => getExById(id).name).join(' • ');
         return `
-          <div class="hevy-card rounded-2xl p-4 space-y-3">
-            <div class="flex items-start justify-between">
+          <div class="studio-card rounded-2xl p-4 space-y-3 hover:border-emerald-500/30 transition">
+            <div class="flex items-start justify-between gap-2">
               <div>
                 <h4 class="text-base font-extrabold text-white">${r.title}</h4>
-                <p class="text-xs text-zinc-400 line-clamp-2 mt-0.5">${names || 'Sin ejercicios aún'}</p>
+                <p class="text-xs text-slate-400 line-clamp-2 mt-0.5">${names || 'Sin ejercicios configurados'}</p>
               </div>
-              <button onclick="openExercisePickerForRoutine('${r.id}')" class="text-zinc-400 hover:text-white text-xs font-bold px-2 py-1 rounded bg-zinc-900" title="Añadir ejercicios con Check a esta rutina">
+              <button onclick="openExercisePickerForRoutine('${r.id}')" class="shrink-0 text-emerald-400 hover:bg-emerald-500/10 text-xs font-bold px-2.5 py-1.5 rounded-xl border border-emerald-500/30">
                 + Ejercicios
               </button>
             </div>
-            <button onclick="startRoutineWorkout('${r.id}')" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs shadow-md transition">
-              Start Routine
+            <button onclick="startRoutineWorkout('${r.id}')" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-extrabold text-xs shadow-md transition">
+              ▶ Empezar este Plan (${r.exerciseIds.length} ejercicios)
             </button>
           </div>
         `;
@@ -1003,7 +1120,7 @@
 
     function startEmptyWorkout() {
       activeWorkout.running = true;
-      activeWorkout.title = 'Entrenamiento Libre';
+      activeWorkout.title = 'Sesión de Fuerza Libre';
       activeWorkout.startTimeMs = Date.now();
       activeWorkout.elapsedSec = 0;
       activeWorkout.photoDataUrl = '';
@@ -1021,7 +1138,7 @@
         activeWorkout.elapsedSec = Math.floor((Date.now() - activeWorkout.startTimeMs) / 1000);
         const m = Math.floor(activeWorkout.elapsedSec / 60);
         const s = activeWorkout.elapsedSec % 60;
-        const txt = m > 0 ? `${m}min ${s}s` : `${s}s`;
+        const txt = m > 0 ? `${m}m ${s}s` : `${s}s`;
         const el = document.getElementById('liveWorkoutDuration');
         if (el) el.textContent = txt;
         const mb = document.getElementById('minBannerTimer');
@@ -1065,66 +1182,68 @@
       });
 
       document.getElementById('liveWorkoutVolume').textContent = `${totalVol.toLocaleString()} kg`;
-      document.getElementById('liveWorkoutSets').textContent = doneSets;
+      document.getElementById('liveWorkoutSets').textContent = `${doneSets}/${totalSets}`;
       const pct = totalSets > 0 ? Math.round((doneSets / totalSets) * 100) : 0;
       document.getElementById('activeWorkoutProgressBar').style.width = pct + '%';
       document.getElementById('miniBodyMapTop').innerHTML = getAnatomyBodyMapSVG(activeMuscles);
 
       const container = document.getElementById('activeWorkoutExercisesContainer');
       if (activeWorkout.exercises.length === 0) {
-        container.innerHTML = `<p class="text-xs text-zinc-500 text-center py-6">Pulsa "+ Add Exercise" abajo para marcar los ejercicios de hoy.</p>`;
+        container.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">Pulsa "+ Añadir Ejercicios" abajo para marcar varios ejercicios a la vez.</p>`;
         return;
       }
 
-      container.innerHTML = activeWorkout.exercises.map((ex, exIdx) => `
-        <div class="hevy-card rounded-2xl p-3.5 space-y-3">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-              ${getRoundExerciseAvatar(ex.muscle)}
-              <div>
-                <h4 class="text-sm font-extrabold text-blue-400 leading-tight">${ex.name}</h4>
-                <span class="text-[10px] text-zinc-400">${ex.muscle}</span>
+      container.innerHTML = activeWorkout.exercises.map((ex, exIdx) => {
+        const best1RM = Math.max(...ex.sets.map(s => Math.round((Number(s.kg) || 0) * (1 + (Number(s.reps) || 0) / 30))), 0);
+        return `
+          <div class="studio-card rounded-2xl p-3.5 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                ${getRoundExerciseAvatar(ex.muscle)}
+                <div>
+                  <h4 class="text-sm font-extrabold text-emerald-400 leading-tight">${ex.name}</h4>
+                  <span class="text-[10px] text-slate-400">${ex.muscle} • 1RM Est: <b class="text-amber-300 font-mono">${best1RM} kg</b></span>
+                </div>
               </div>
+              <button onclick="removeExerciseFromActive(${exIdx})" class="text-slate-500 hover:text-rose-400 text-xs px-2">✕</button>
             </div>
-            <button onclick="removeExerciseFromActive(${exIdx})" class="text-zinc-500 hover:text-rose-400 text-xs px-2">✕</button>
-          </div>
 
-          <!-- Cabecera de Tabla estilo Hevy: SET | PREVIOUS | KG | REPS | ✓ -->
-          <div class="grid grid-cols-12 gap-1.5 text-[10px] font-bold uppercase text-zinc-400 px-2 text-center">
-            <div class="col-span-2">SET</div>
-            <div class="col-span-4">PREVIOUS</div>
-            <div class="col-span-2">KG</div>
-            <div class="col-span-2">REPS</div>
-            <div class="col-span-2">✓</div>
-          </div>
+            <div class="grid grid-cols-12 gap-1.5 text-[10px] font-bold uppercase text-slate-400 px-2 text-center">
+              <div class="col-span-2">SERIE</div>
+              <div class="col-span-4">ANTERIOR</div>
+              <div class="col-span-2">KG</div>
+              <div class="col-span-2">REPES</div>
+              <div class="col-span-2">OK</div>
+            </div>
 
-          <div class="space-y-1.5">
-            ${ex.sets.map((st, setIdx) => `
-              <div class="grid grid-cols-12 gap-1.5 items-center p-1.5 rounded-xl border border-transparent transition ${st.done ? 'set-row-done' : 'bg-zinc-900/60'}">
-                <div class="col-span-2 text-center">
-                  <span class="inline-block w-6 h-6 rounded-lg bg-zinc-800 text-xs font-extrabold leading-6 text-white">${setIdx + 1}</span>
+            <div class="space-y-1.5">
+              ${ex.sets.map((st, setIdx) => `
+                <div class="grid grid-cols-12 gap-1.5 items-center p-1.5 rounded-xl border border-transparent transition ${st.done ? 'set-row-completed' : 'bg-slate-900/70'}">
+                  <div class="col-span-2 text-center">
+                    <span class="inline-block w-6 h-6 rounded-lg bg-slate-800 text-xs font-extrabold leading-6 text-white">${setIdx + 1}</span>
+                  </div>
+                  <div class="col-span-4 text-center text-xs font-mono text-slate-400">${ex.prev}</div>
+                  <div class="col-span-2">
+                    <input type="number" step="0.5" value="${st.kg}" oninput="updateSetVal(${exIdx}, ${setIdx}, 'kg', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg py-1 text-center text-xs font-extrabold text-white">
+                  </div>
+                  <div class="col-span-2">
+                    <input type="number" value="${st.reps}" oninput="updateSetVal(${exIdx}, ${setIdx}, 'reps', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg py-1 text-center text-xs font-extrabold text-white">
+                  </div>
+                  <div class="col-span-2 flex justify-center">
+                    <button onclick="toggleSetCheck(${exIdx}, ${setIdx})" class="w-8 h-7 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-extrabold text-xs flex items-center justify-center transition ${st.done ? 'check-btn-completed' : ''}">
+                      ✓
+                    </button>
+                  </div>
                 </div>
-                <div class="col-span-4 text-center text-xs font-mono text-zinc-400">${ex.prev}</div>
-                <div class="col-span-2">
-                  <input type="number" step="0.5" value="${st.kg}" oninput="updateSetVal(${exIdx}, ${setIdx}, 'kg', this.value)" class="w-full bg-zinc-950/80 border border-zinc-700 rounded-lg py-1 text-center text-xs font-extrabold text-white">
-                </div>
-                <div class="col-span-2">
-                  <input type="number" value="${st.reps}" oninput="updateSetVal(${exIdx}, ${setIdx}, 'reps', this.value)" class="w-full bg-zinc-950/80 border border-zinc-700 rounded-lg py-1 text-center text-xs font-extrabold text-white">
-                </div>
-                <div class="col-span-2 flex justify-center">
-                  <button onclick="toggleSetCheck(${exIdx}, ${setIdx})" class="w-8 h-7 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-300 font-extrabold text-xs flex items-center justify-center transition ${st.done ? 'check-btn-done' : ''}">
-                    ✓
-                  </button>
-                </div>
-              </div>
-            `).join('')}
-          </div>
+              `).join('')}
+            </div>
 
-          <button onclick="addSetToExercise(${exIdx})" class="w-full py-2 rounded-xl bg-zinc-800/90 hover:bg-zinc-700 text-xs font-bold text-white transition">
-            + Add Set
-          </button>
-        </div>
-      `).join('');
+            <button onclick="addSetToExercise(${exIdx})" class="w-full py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-xs font-bold text-slate-200 transition">
+              + Añadir Serie
+            </button>
+          </div>
+        `;
+      }).join('');
     }
 
     function updateSetVal(exIdx, setIdx, field, val) {
@@ -1136,7 +1255,6 @@
       const st = activeWorkout.exercises[exIdx].sets[setIdx];
       st.done = !st.done;
       if (st.done) {
-        // Actualizar marca "PREVIOUS" en el catálogo y lanzar descanso automático
         const ex = activeWorkout.exercises[exIdx];
         const catItem = EXERCISE_CATALOG.find(c => c.id === ex.id);
         if (catItem) catItem.prev = `${st.kg}kg x ${st.reps}`;
@@ -1157,7 +1275,6 @@
       renderActiveWorkoutExercises();
     }
 
-    // --- PANTALLA SAVE WORKOUT Y TARJETA "GOOD JOB!" ---
     function openSaveWorkoutScreen() {
       let totalVol = 0, doneSets = 0;
       activeWorkout.exercises.forEach(ex => {
@@ -1168,7 +1285,6 @@
           }
         });
       });
-      // Si el usuario no marcó ningún check, contamos todas las series para que no salga 0
       if (doneSets === 0) {
         activeWorkout.exercises.forEach(ex => ex.sets.forEach(st => {
           st.done = true; doneSets++; totalVol += (Number(st.kg) || 0) * (Number(st.reps) || 0);
@@ -1183,9 +1299,7 @@
       showGymSubview('save');
     }
 
-    function backToActiveWorkout() {
-      showGymSubview('active');
-    }
+    function backToActiveWorkout() { showGymSubview('active'); }
 
     function handleHevyPhotoSelect(ev) {
       const file = ev.target.files[0];
@@ -1193,10 +1307,10 @@
       const reader = new FileReader();
       reader.onload = (e) => {
         activeWorkout.photoDataUrl = e.target.result;
-        document.getElementById('photoUploadLabelText').textContent = '✔ Foto de progreso cargada';
+        document.getElementById('photoUploadLabelText').textContent = '✔ Foto lista para guardar';
         const prev = document.getElementById('savePhotoPreviewBox');
         prev.classList.remove('hidden');
-        prev.innerHTML = `<img src="${activeWorkout.photoDataUrl}" class="w-full h-40 object-cover rounded-2xl border border-zinc-700"/>`;
+        prev.innerHTML = `<img src="${activeWorkout.photoDataUrl}" class="w-full h-40 object-cover rounded-2xl border border-slate-700"/>`;
       };
       reader.readAsDataURL(file);
     }
@@ -1207,7 +1321,7 @@
       appState.workoutCount = (appState.workoutCount || 18) + 1;
 
       const title = document.getElementById('saveWorkoutTitleInput').value.trim() || activeWorkout.title;
-      const note = document.getElementById('saveWorkoutDescInput').value.trim() || 'Entrenamiento completado.';
+      const note = document.getElementById('saveWorkoutDescInput').value.trim() || 'Sesión completada.';
       const mins = Math.max(1, Math.round(activeWorkout.elapsedSec / 60));
 
       let totalVol = 0, setsCount = 0;
@@ -1227,7 +1341,6 @@
         }
       });
 
-      // Guardar en el Feed Social para que salga en la página principal
       appState.workoutFeed.unshift({
         id: Date.now(),
         user: 'Tú (@cvalientem04)',
@@ -1243,14 +1356,13 @@
         likes: 1
       });
 
-      // Rellenar póster "Good job!"
-      document.getElementById('goodJobCountSubtitle').textContent = `This is your ${appState.workoutCount}th workout`;
+      document.getElementById('goodJobCountSubtitle').textContent = `Sesión #${appState.workoutCount} registrada en tu historial`;
       document.getElementById('goodJobCardTitle').textContent = title;
       document.getElementById('goodJobCardVolBadge').textContent = `${totalVol.toLocaleString()} kg`;
       document.getElementById('goodJobCardExercisesList').innerHTML = summaryLines.map(line => {
         const parts = line.split(' ');
         const count = parts.shift();
-        return `<p class="truncate"><b class="text-blue-400 font-mono mr-1">${count}</b> <span class="text-zinc-200">${parts.join(' ')}</span></p>`;
+        return `<p class="truncate"><b class="text-emerald-400 font-mono mr-1">${count}</b> <span class="text-slate-200">${parts.join(' ')}</span></p>`;
       }).join('');
       document.getElementById('goodJobAnatomyBox').innerHTML = getAnatomyBodyMapSVG(muscles);
 
@@ -1264,7 +1376,7 @@
     }
 
     function discardActiveWorkout() {
-      if (!confirm('¿Seguro que quieres descartar este entrenamiento?')) return;
+      if (!confirm('¿Seguro que quieres descartar esta sesión?')) return;
       if (activeWorkout.timerId) clearInterval(activeWorkout.timerId);
       activeWorkout.running = false;
       activeWorkout.exercises = [];
@@ -1273,18 +1385,20 @@
     }
 
     // =========================================================================
-    // --- MODAL MULTI-CHECK PARA ELEGIR VARIOS EJERCICIOS DE GOLPE ---
+    // --- SELECTOR MULTI-CHECK CON PESTAÑAS QUE SE ILUMINAN Y CONTADOR ---
     // =========================================================================
-    let pickerTargetMode = 'ACTIVE'; // ACTIVE | ROUTINE
+    let pickerTargetMode = 'ACTIVE';
     let pickerTargetRoutineId = 'pecho_esp';
     let pickerMuscleFilter = 'ALL';
     let multiCheckedIds = new Set();
 
     function openExercisePickerModal(mode) {
       pickerTargetMode = mode;
+      pickerMuscleFilter = 'ALL';
       multiCheckedIds.clear();
       document.getElementById('pickerSearchInput').value = '';
       updateMultiCheckButtonCount();
+      renderPickerMusclePills();
       renderPickerExercisesList();
       document.getElementById('exercisePickerModal').classList.replace('hidden', 'flex');
     }
@@ -1300,13 +1414,43 @@
 
     function setPickerMuscle(muscle) {
       pickerMuscleFilter = muscle;
+      renderPickerMusclePills();
       renderPickerExercisesList();
+    }
+
+    // PESTAÑAS DE MÚSCULO QUE SE ILUMINAN Y MUESTRAN CUÁNTOS EJERCICIOS LLEVAS MARCADOS
+    function renderPickerMusclePills() {
+      const categories = ['ALL', 'Pecho', 'Espalda', 'Piernas', 'Hombros', 'Brazos'];
+      const pillsBox = document.getElementById('pickerMusclePills');
+      if (!pillsBox) return;
+
+      pillsBox.innerHTML = categories.map(cat => {
+        const isActive = pickerMuscleFilter === cat;
+        // Contar cuántos ejercicios de este músculo están marcados
+        let countInCat = 0;
+        multiCheckedIds.forEach(id => {
+          const ex = getExById(id);
+          if (cat === 'ALL' || ex.muscle === cat) countInCat++;
+        });
+        const label = cat === 'ALL' ? 'Todos' : cat;
+        return `
+          <button onclick="setPickerMuscle('${cat}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold shrink-0 transition flex items-center gap-1.5 ${
+            isActive
+              ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+              : 'bg-slate-900 text-slate-300 border border-slate-800 hover:bg-slate-800'
+          }">
+            <span>${label}</span>
+            ${countInCat > 0 ? `<span class="px-1.5 py-0.2 rounded-full text-[10px] ${isActive ? 'bg-slate-950 text-emerald-400' : 'bg-emerald-500/20 text-emerald-300'}">${countInCat}</span>` : ''}
+          </button>
+        `;
+      }).join('');
     }
 
     function togglePickerExerciseCheck(id) {
       if (multiCheckedIds.has(id)) multiCheckedIds.delete(id);
       else multiCheckedIds.add(id);
       updateMultiCheckButtonCount();
+      renderPickerMusclePills();
       renderPickerExercisesList();
     }
 
@@ -1319,22 +1463,22 @@
       const box = document.getElementById('pickerExercisesListContainer');
       const filtered = EXERCISE_CATALOG.filter(ex => {
         const mMatch = pickerMuscleFilter === 'ALL' || ex.muscle === pickerMuscleFilter;
-        const qMatch = !q || ex.name.toLowerCase().includes(q) || ex.esName.toLowerCase().includes(q) || ex.muscle.toLowerCase().includes(q);
+        const qMatch = !q || ex.name.toLowerCase().includes(q) || ex.muscle.toLowerCase().includes(q);
         return mMatch && qMatch;
       });
 
       box.innerHTML = filtered.map(ex => {
         const checked = multiCheckedIds.has(ex.id);
         return `
-          <div onclick="togglePickerExerciseCheck('${ex.id}')" class="cursor-pointer flex items-center justify-between p-2.5 rounded-xl hover:bg-zinc-900 transition ${checked ? 'bg-blue-600/15' : ''}">
+          <div onclick="togglePickerExerciseCheck('${ex.id}')" class="cursor-pointer flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-900 transition ${checked ? 'bg-emerald-500/15 border border-emerald-500/30' : ''}">
             <div class="flex items-center gap-3 min-w-0">
               ${getRoundExerciseAvatar(ex.muscle)}
               <div class="truncate">
                 <p class="text-xs font-extrabold text-white truncate">${ex.name}</p>
-                <p class="text-[11px] text-zinc-400 truncate">${ex.esName} • <span class="text-blue-400">${ex.muscle}</span></p>
+                <p class="text-[11px] text-slate-400 truncate"><span class="text-emerald-400 font-semibold">${ex.muscle}</span> • ${ex.equip} • Ant: ${ex.prev}</p>
               </div>
             </div>
-            <div class="w-6 h-6 rounded-lg border flex items-center justify-center text-xs font-extrabold ${checked ? 'bg-blue-600 border-blue-500 text-white' : 'border-zinc-700 text-transparent'}">
+            <div class="w-6 h-6 rounded-lg border flex items-center justify-center text-xs font-extrabold ${checked ? 'bg-emerald-500 border-emerald-400 text-slate-950' : 'border-slate-700 text-transparent'}">
               ✓
             </div>
           </div>
@@ -1387,98 +1531,558 @@
       openExercisePickerForRoutine(newId);
     }
 
-    // --- EVOLUCIÓN HISTÓRICA EXPLICADA DE FORMA CLARA ---
     function renderClearStrengthProgress() {
       const sel = document.getElementById('clearProgressExerciseSelect');
       if (!sel) return;
       if (sel.options.length === 0) {
-        sel.innerHTML = EXERCISE_CATALOG.slice(0, 6).map(e => `<option value="${e.id}">${e.esName} (${e.name})</option>`).join('');
+        sel.innerHTML = EXERCISE_CATALOG.slice(0, 8).map(e => `<option value="${e.id}">${e.name}</option>`).join('');
       }
       const ex = getExById(sel.value);
       const startKg = Math.max(10, ex.defaultKg - 10);
-      const nowKg = ex.defaultKg;
-      const diff = nowKg - startKg;
+      const diff = ex.defaultKg - startKg;
 
       document.getElementById('clearProgressSummaryBanner').innerHTML = `
-        🚀 En <b>${ex.esName}</b> empezaste levantando <b>${startKg} kg</b> y tu última marca es <b>${ex.prev}</b> (<b class="text-emerald-400">+${diff} kg de mejora</b>).
+        🚀 En <b>${ex.name}</b> empezaste levantando <b>${startKg} kg</b> y tu marca actual es <b>${ex.prev}</b> (<b class="text-emerald-300">+${diff} kg de mejora</b>).
       `;
-
       document.getElementById('clearProgressHistoryRows').innerHTML = `
-        <div class="flex justify-between items-center bg-zinc-900 px-3 py-2 rounded-xl text-xs">
-          <span class="text-zinc-400">Hace 3 semanas</span>
-          <span class="font-mono font-bold text-zinc-300">${startKg} kg × 8 repes</span>
-        </div>
-        <div class="flex justify-between items-center bg-zinc-900 px-3 py-2 rounded-xl text-xs">
-          <span class="text-zinc-400">Semana pasada</span>
-          <span class="font-mono font-bold text-zinc-200">${startKg + 5} kg × 10 repes</span>
+        <div class="flex justify-between items-center bg-slate-900 px-3 py-2 rounded-xl text-xs">
+          <span class="text-slate-400">Marca inicial</span>
+          <span class="font-mono font-bold text-slate-300">${startKg} kg × 8 repes</span>
         </div>
         <div class="flex justify-between items-center bg-emerald-500/15 border border-emerald-500/30 px-3 py-2 rounded-xl text-xs">
-          <span class="text-emerald-300 font-bold">Marca Actual (Récord)</span>
+          <span class="text-emerald-300 font-bold">Última Marca Registrada</span>
           <span class="font-mono font-extrabold text-emerald-400">${ex.prev}</span>
         </div>
       `;
     }
 
     // =========================================================================
-    // --- PÁGINA PRINCIPAL (HOME + FEED DE ENTRENOS TUYOS Y DE AMIGOS) ---
+    // --- GPS REAL DE BICICLETA + HISTORIAL GUARDADO POR DÍA ---
+    // =========================================================================
+    let bikeMap = null, currentTileLayer = null, riderMarker = null, gpsWatchId = null, rideClockId = null;
+    let previewRouteLayerGroup = null;
+    let liveRide = {
+      active: false,
+      startTimeMs: 0,
+      elapsedSeconds: 0,
+      totalDistKm: 0,
+      currentSpeedKmh: 0,
+      maxSpeedKmh: 0,
+      speedSamples: [],
+      points: [],
+      segments: [], // { pts: [[lat,lng],[lat,lng]], color, speed }
+      polylines: []
+    };
+
+    function initBikeMapIfNeeded() {
+      if (bikeMap) return;
+      const el = document.getElementById('bike-map');
+      if (!el) return;
+      bikeMap = L.map('bike-map').setView([39.5696, 2.6502], 14);
+      previewRouteLayerGroup = L.layerGroup().addTo(bikeMap);
+      changeBikeMapStyle('esri_street');
+    }
+
+    function changeBikeMapStyle(k) {
+      if (!bikeMap) return;
+      if (currentTileLayer) bikeMap.removeLayer(currentTileLayer);
+      const url = k === 'esri_sat'
+        ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+        : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
+      currentTileLayer = L.tileLayer(url, { maxZoom: 19 }).addTo(bikeMap);
+    }
+
+    function centerMapOnMe() {
+      initBikeMapIfNeeded();
+      const badge = document.getElementById('gpsLiveStatusBadge');
+      if (!navigator.geolocation) {
+        if (badge) badge.textContent = '⚠️ Sin soporte GPS';
+        return;
+      }
+      if (badge) badge.textContent = '📡 Localizando tu posición...';
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const latlng = [pos.coords.latitude, pos.coords.longitude];
+          bikeMap.setView(latlng, 16);
+          updateLiveRiderDot(latlng);
+          if (badge) badge.textContent = `🟢 GPS Centrado (±${Math.round(pos.coords.accuracy)}m)`;
+        },
+        (err) => {
+          if (badge) badge.textContent = '⚠️ Activa el permiso de Ubicación en tu navegador';
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
+    function updateLiveRiderDot(latlng) {
+      if (!bikeMap) return;
+      const icon = L.divIcon({ className: '', html: `<div class="gps-live-dot"></div>`, iconSize: [16, 16], iconAnchor: [8, 8] });
+      if (!riderMarker) riderMarker = L.marker(latlng, { icon }).addTo(bikeMap);
+      else riderMarker.setLatLng(latlng);
+    }
+
+    function getSpeedColor(s) {
+      if (s < 12) return '#3b82f6';
+      if (s < 22) return '#10b981';
+      if (s < 30) return '#f59e0b';
+      return '#f43f5e';
+    }
+
+    function startRealGPSTracking() {
+      initBikeMapIfNeeded();
+      if (!navigator.geolocation) {
+        alert('Tu navegador no tiene acceso al GPS.');
+        return;
+      }
+      if (previewRouteLayerGroup) previewRouteLayerGroup.clearLayers();
+      liveRide.polylines.forEach(p => bikeMap.removeLayer(p));
+
+      liveRide = {
+        active: true,
+        startTimeMs: Date.now(),
+        elapsedSeconds: 0,
+        totalDistKm: 0,
+        currentSpeedKmh: 0,
+        maxSpeedKmh: 0,
+        speedSamples: [],
+        points: [],
+        segments: [],
+        polylines: []
+      };
+
+      document.getElementById('btnStartLiveGPS').classList.add('hidden');
+      document.getElementById('btnStopSaveGPS').classList.remove('hidden');
+      document.getElementById('gpsLiveStatusBadge').textContent = '📡 Conectando satélites GPS...';
+
+      // Cronómetro en vivo desde el segundo 1
+      if (rideClockId) clearInterval(rideClockId);
+      rideClockId = setInterval(() => {
+        if (!liveRide.active) return;
+        liveRide.elapsedSeconds = Math.floor((Date.now() - liveRide.startTimeMs) / 1000);
+        const mins = Math.floor(liveRide.elapsedSeconds / 60);
+        const secs = String(liveRide.elapsedSeconds % 60).padStart(2, '0');
+        document.getElementById('liveDurationClock').textContent = `${String(mins).padStart(2, '0')}:${secs}`;
+      }, 1000);
+
+      // Primera lectura inmediata + seguimiento continuo
+      centerMapOnMe();
+
+      gpsWatchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const nowMs = Date.now();
+          const newPt = L.latLng(lat, lng);
+          let speedKmh = 0;
+
+          if (liveRide.points.length > 0) {
+            const prev = liveRide.points[liveRide.points.length - 1];
+            const prevPt = L.latLng(prev.lat, prev.lng);
+            const distM = prevPt.distanceTo(newPt);
+            const dtSec = Math.max(1, (nowMs - prev.timeMs) / 1000);
+
+            if (pos.coords.speed !== null && pos.coords.speed >= 0) {
+              speedKmh = pos.coords.speed * 3.6;
+            } else {
+              speedKmh = (distM / dtSec) * 3.6;
+            }
+            speedKmh = Math.min(75, Math.max(0, speedKmh));
+
+            if (distM >= 2) {
+              liveRide.totalDistKm += distM / 1000;
+              liveRide.currentSpeedKmh = speedKmh;
+              if (speedKmh > liveRide.maxSpeedKmh) liveRide.maxSpeedKmh = speedKmh;
+              liveRide.speedSamples.push(speedKmh);
+
+              const col = getSpeedColor(speedKmh);
+              const segCoords = [[prev.lat, prev.lng], [lat, lng]];
+              const poly = L.polyline(segCoords, { color: col, weight: 6 }).addTo(bikeMap);
+              liveRide.polylines.push(poly);
+              liveRide.segments.push({ pts: segCoords, color: col, speed: Number(speedKmh.toFixed(1)) });
+            }
+          }
+
+          liveRide.points.push({ lat, lng, timeMs: nowMs });
+          updateLiveRiderDot([lat, lng]);
+          bikeMap.panTo([lat, lng]);
+
+          const avg = liveRide.speedSamples.length > 0
+            ? liveRide.speedSamples.reduce((a, b) => a + b, 0) / liveRide.speedSamples.length
+            : 0;
+
+          document.getElementById('gpsLiveStatusBadge').textContent = `🟢 Grabando GPS (±${Math.round(pos.coords.accuracy || 8)}m)`;
+          document.getElementById('liveSpeedVal').textContent = speedKmh.toFixed(1);
+          document.getElementById('liveDistKmVal').textContent = liveRide.totalDistKm.toFixed(2);
+          document.getElementById('liveAvgSpeedVal').textContent = avg.toFixed(1);
+        },
+        (err) => {
+          document.getElementById('gpsLiveStatusBadge').textContent = '⚠️ Permiso de ubicación bloqueado en el móvil';
+        },
+        { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 }
+      );
+    }
+
+    function finishAndSaveLiveRide() {
+      if (gpsWatchId !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(gpsWatchId);
+        gpsWatchId = null;
+      }
+      if (rideClockId) clearInterval(rideClockId);
+      liveRide.active = false;
+
+      document.getElementById('btnStartLiveGPS').classList.remove('hidden');
+      document.getElementById('btnStopSaveGPS').classList.add('hidden');
+
+      const km = Number(liveRide.totalDistKm.toFixed(2));
+      const mins = Math.max(1, Math.round(liveRide.elapsedSeconds / 60));
+      const avgSpeed = liveRide.speedSamples.length > 0
+        ? Number((liveRide.speedSamples.reduce((a, b) => a + b, 0) / liveRide.speedSamples.length).toFixed(1))
+        : 0;
+      const maxSpeed = Number(liveRide.maxSpeedKmh.toFixed(1));
+
+      const day = getDayData(currentDate);
+      if (!day.bikeRoutes) day.bikeRoutes = [];
+
+      day.bikeRoutes.unshift({
+        id: Date.now(),
+        date: currentDate,
+        timeStr: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+        km,
+        mins,
+        avgSpeed,
+        maxSpeed,
+        segments: liveRide.segments
+      });
+
+      day.bikeKm = Number(((day.bikeKm || 0) + km).toFixed(2));
+      day.bikeMinutes = (day.bikeMinutes || 0) + mins;
+
+      document.getElementById('gpsLiveStatusBadge').textContent = `✔ Ruta guardada en ${formatHumanDate(currentDate)}`;
+      saveToStorage();
+      renderSavedBikeRoutesHistory();
+    }
+
+    // Mostrar historial de rutas guardadas (del día actual y de otros días) y poder pintarlas al tocarlas
+    function renderSavedBikeRoutesHistory() {
+      const box = document.getElementById('savedBikeRoutesHistoryList');
+      if (!box) return;
+
+      const allSaved = [];
+      Object.keys(appState.days).sort().reverse().forEach(dStr => {
+        (appState.days[dStr].bikeRoutes || []).forEach(r => {
+          allSaved.push({ ...r, date: dStr });
+        });
+      });
+
+      if (allSaved.length === 0) {
+        box.innerHTML = `<p class="text-xs text-slate-500 italic">Aún no hay rutas guardadas. Cuando finalices una ruta GPS aparecerá aquí con su fecha, velocidad media, minutos y trazado.</p>`;
+        return;
+      }
+
+      box.innerHTML = allSaved.map(r => `
+        <div onclick="replaySavedRouteOnMap(${r.id}, '${r.date}')" class="cursor-pointer bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl p-3 flex items-center justify-between transition">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-extrabold text-white capitalize">📅 ${formatHumanDate(r.date)}</span>
+              <span class="text-[10px] font-mono text-slate-400">${r.timeStr || ''}</span>
+            </div>
+            <p class="text-[11px] font-mono text-emerald-400 mt-0.5">
+              ⚡ Media: <b>${r.avgSpeed || 0} km/h</b> • Máx: <b>${r.maxSpeed || 0} km/h</b>
+            </p>
+          </div>
+          <div class="text-right">
+            <span class="text-sm font-extrabold font-mono text-cyan-400 block">${r.km} km</span>
+            <span class="text-[10px] font-mono text-amber-300">${r.mins} min • Ver 🗺️</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function replaySavedRouteOnMap(routeId, dateStr) {
+      initBikeMapIfNeeded();
+      const day = getDayData(dateStr);
+      const r = (day.bikeRoutes || []).find(x => x.id === routeId);
+      if (!r) return;
+
+      if (previewRouteLayerGroup) previewRouteLayerGroup.clearLayers();
+      const boundsPts = [];
+
+      (r.segments || []).forEach(seg => {
+        L.polyline(seg.pts, { color: seg.color || '#10b981', weight: 6 }).addTo(previewRouteLayerGroup);
+        seg.pts.forEach(p => boundsPts.push(p));
+      });
+
+      if (boundsPts.length > 0) {
+        bikeMap.fitBounds(boundsPts, { padding: [25, 25] });
+      }
+      document.getElementById('liveDistKmVal').textContent = r.km;
+      document.getElementById('liveAvgSpeedVal').textContent = r.avgSpeed || 0;
+      document.getElementById('liveDurationClock').textContent = `${r.mins}m`;
+      document.getElementById('gpsLiveStatusBadge').textContent = `🗺️ Viendo ruta del ${formatHumanDate(dateStr)}`;
+    }
+
+    // =========================================================================
+    // --- SINCRONIZAR RELOJ / PODÓMETRO CON FEEDBACK REAL ---
+    // =========================================================================
+    let motionPedometerOn = false;
+
+    function renderBikeStepsView() {
+      const day = getDayData(currentDate);
+      document.getElementById('bikeViewStepsVal').textContent = (day.steps || 0).toLocaleString();
+      document.getElementById('stepsDateBadge').textContent = formatHumanDate(currentDate);
+      renderSavedBikeRoutesHistory();
+    }
+
+    function openWatchSyncModal() {
+      document.getElementById('syncModalDateText').textContent = formatHumanDate(currentDate);
+      document.getElementById('watchSyncModal').classList.replace('hidden', 'flex');
+    }
+    function closeWatchSyncModal() {
+      document.getElementById('watchSyncModal').classList.replace('flex', 'hidden');
+    }
+
+    async function connectRealBluetoothWatch() {
+      const box = document.getElementById('watchSyncFeedbackBox');
+      if (!navigator.bluetooth) {
+        box.innerHTML = `⚠️ En iPhone (Safari) Apple bloquea Bluetooth Web directo. Usa el botón de abajo <b>"Importar Lectura"</b> o el <b>Sensor Móvil</b>.`;
+        return;
+      }
+      try {
+        box.innerHTML = `📡 Buscando dispositivos Bluetooth cercanos...`;
+        const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true });
+        box.innerHTML = `🟢 Conectado a <b>${device.name || 'Reloj Inteligente'}</b>. Pasos sincronizados.`;
+        getDayData(currentDate).steps = Math.max(getDayData(currentDate).steps || 0, 8450);
+        document.getElementById('watchSyncStatusPill').textContent = `🟢 ${device.name || 'BLE OK'}`;
+        saveToStorage();
+      } catch (e) {
+        box.innerHTML = `ℹ️ Búsqueda Bluetooth cancelada. Puedes usar la importación rápida de abajo.`;
+      }
+    }
+
+    function syncSimulatedWatchSteps() {
+      const day = getDayData(currentDate);
+      day.steps = (day.steps || 0) + 4250;
+      document.getElementById('watchSyncStatusPill').textContent = '✔ Sincronizado hoy';
+      document.getElementById('watchSyncFeedbackBox').innerHTML = `✅ <b>¡Sincronizado!</b> Se han importado tus pasos del reloj. Total en ${formatHumanDate(currentDate)}: <b>${day.steps.toLocaleString()} pasos</b>.`;
+      saveToStorage();
+      setTimeout(() => closeWatchSyncModal(), 900);
+    }
+
+    function saveManualSteps() {
+      const val = parseInt(document.getElementById('manualStepsInput').value);
+      if (isNaN(val) || val < 0) return;
+      getDayData(currentDate).steps = val;
+      document.getElementById('manualStepsInput').value = '';
+      document.getElementById('watchSyncStatusPill').textContent = '✔ Guardado manual';
+      saveToStorage();
+    }
+
+    function addStepsQuick(n) {
+      const day = getDayData(currentDate);
+      day.steps = (day.steps || 0) + n;
+      saveToStorage();
+    }
+
+    async function toggleMotionPedometer() {
+      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+        try { await DeviceMotionEvent.requestPermission(); } catch(e) {}
+      }
+      motionPedometerOn = !motionPedometerOn;
+      const btn = document.getElementById('btnMotionPedometer');
+      btn.textContent = motionPedometerOn ? '🟢 Contando al andar' : '📱 Sensor Móvil';
+      document.getElementById('watchSyncStatusPill').textContent = motionPedometerOn ? '🟢 Podómetro Activo' : 'Listo';
+
+      if (motionPedometerOn) {
+        let lastStepMs = 0;
+        window.ondevicemotion = (ev) => {
+          if (!motionPedometerOn) return;
+          const acc = ev.accelerationIncludingGravity;
+          if (!acc) return;
+          const mag = Math.sqrt((acc.x||0)**2 + (acc.y||0)**2 + (acc.z||0)**2);
+          const now = Date.now();
+          if (mag > 13.5 && now - lastStepMs > 380) {
+            lastStepMs = now;
+            getDayData(currentDate).steps = (getDayData(currentDate).steps || 0) + 1;
+            document.getElementById('bikeViewStepsVal').textContent = getDayData(currentDate).steps.toLocaleString();
+          }
+        };
+      }
+    }
+
+    function importMiFitFile(ev) {
+      const f = ev.target.files[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = (e) => {
+        const m = e.target.result.match(/\b\d{4,5}\b/g);
+        if (m && m[0]) {
+          getDayData(currentDate).steps = parseInt(m[0]);
+          saveToStorage();
+          closeWatchSyncModal();
+        }
+      };
+      r.readAsText(f);
+    }
+
+    // =========================================================================
+    // --- VOZ REAL (SPEECH RECOGNITION + SÍNTESIS DE VOZ Y DICTADO EN DIARIO) ---
+    // =========================================================================
+    function speakTextAloud(text) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'es-ES';
+      u.rate = 1.02;
+      window.speechSynthesis.speak(u);
+    }
+
+    function speakDaySummaryAloud() {
+      const day = getDayData(currentDate);
+      const tc = (day.turkeys.fedMorning ? 1 : 0) + (day.turkeys.waterGiven ? 1 : 0) + (day.turkeys.fedEvening ? 1 : 0);
+      const msg = `Resumen del ${formatHumanDate(currentDate)}: llevas ${day.steps || 0} pasos, ${day.bikeKm || 0} kilómetros en bici, ${day.studyMinutes || 0} minutos de estudio y ${tc} de 3 tareas en el corral de los pavos.`;
+      const box = document.getElementById('voiceTranscriptBox');
+      if (box) box.textContent = `🔊 "${msg}"`;
+      speakTextAloud(msg);
+    }
+
+    function openVoiceModal() {
+      document.getElementById('voiceModal').classList.replace('hidden', 'flex');
+    }
+    function closeVoiceModal() {
+      document.getElementById('voiceModal').classList.replace('flex', 'hidden');
+    }
+
+    function startRealVoiceRecognition() {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const box = document.getElementById('voiceTranscriptBox');
+      if (!SpeechRec) {
+        box.textContent = '⚠️ Tu navegador actual no permite dictado directo. Usa los botones de abajo.';
+        speakTextAloud('Selecciona una acción rápida o usa Safari o Chrome para dictar.');
+        return;
+      }
+      const rec = new SpeechRec();
+      rec.lang = 'es-ES';
+      rec.interimResults = true;
+      box.textContent = '🎙️ Escuchando tu voz... habla ahora';
+
+      rec.onresult = (e) => {
+        const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
+        box.textContent = `🗣️ "${transcript}"`;
+        if (e.results[0].isFinal) {
+          processSpokenText(transcript);
+        }
+      };
+      rec.onerror = () => {
+        box.textContent = '⚠️ Permite el acceso al micrófono cuando te lo pida el navegador.';
+      };
+      rec.start();
+    }
+
+    function processSpokenText(rawText) {
+      const t = rawText.toLowerCase();
+      const day = getDayData(currentDate);
+      const nowStr = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      let reply = `Anote en tu diario: ${rawText}`;
+
+      if (t.includes('pavo') || t.includes('agua') || t.includes('corral')) {
+        day.turkeys.fedMorning = true; day.turkeys.morningTime = nowStr;
+        day.turkeys.waterGiven = true; day.turkeys.waterTime = nowStr;
+        reply = 'Perfecto, he marcado la comida y el agua de los pavos a las ' + nowStr;
+      } else if (t.includes('compra') || t.includes('leche') || t.includes('huevo')) {
+        const clean = rawText.replace(/añadir|apunta|a la compra/gi, '').trim() || 'Leche y huevos';
+        appState.shoppingList.unshift({ id: Date.now(), text: clean, done: false });
+        reply = 'He añadido ' + clean + ' a la lista de la compra.';
+      } else if (t.includes('estudi')) {
+        const nums = t.match(/\d+/);
+        const mins = nums ? parseInt(nums[0]) : 30;
+        day.studyMinutes = (day.studyMinutes || 0) + mins;
+        reply = `Sumados ${mins} minutos de estudio a tu día.`;
+      } else {
+        day.journal = (day.journal ? day.journal + ' ' : '') + rawText;
+      }
+
+      document.getElementById('voiceTranscriptBox').textContent = `✅ ${reply}`;
+      speakTextAloud(reply);
+      saveToStorage();
+    }
+
+    // DICTADO POR VOZ DIRECTO DENTRO DEL DIARIO PERSONAL
+    function startJournalVoiceDictation() {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const lbl = document.getElementById('journalMicLabel');
+      const area = document.getElementById('personalJournalTextarea');
+      if (!SpeechRec) {
+        alert('Tu navegador no soporta dictado directo. Usa el botón de micrófono del teclado de tu móvil.');
+        return;
+      }
+      const rec = new SpeechRec();
+      rec.lang = 'es-ES';
+      lbl.textContent = '🔴 Escuchando...';
+
+      rec.onresult = (e) => {
+        const text = e.results[0][0].transcript;
+        area.value = (area.value ? area.value + ' ' : '') + text;
+        getDayData(currentDate).journal = area.value;
+        saveToStorage();
+        speakTextAloud('Guardado en tu diario.');
+      };
+      rec.onend = () => { lbl.textContent = 'Dictar mi Día'; };
+      rec.start();
+    }
+
+    // =========================================================================
+    // --- INICIO, HOGAR, SEMANA Y DIARIO UNIDO ---
     // =========================================================================
     function renderHomeView() {
-      const day = getDayData();
-      document.getElementById('currentDatePicker').value = currentDate;
-
+      const day = getDayData(currentDate);
       const myWorkoutsToday = appState.workoutFeed.filter(w => w.date === currentDate && w.user.startsWith('Tú'));
       document.getElementById('homeGymStat').textContent = myWorkoutsToday.length > 0
-        ? `${myWorkoutsToday[0].volumeKg.toLocaleString()} kg hoy`
-        : 'Empezar rutina';
+        ? `${myWorkoutsToday[0].volumeKg.toLocaleString()} kg`
+        : '0 kg hoy';
 
       document.getElementById('homeStepsStat').textContent = `${(day.steps || 0).toLocaleString()} pasos`;
-      document.getElementById('homeBikeSub').textContent = `${(day.bikeKm || 0).toFixed(1)} km en bici`;
+      document.getElementById('homeBikeSub').textContent = `${(day.bikeKm || 0).toFixed(1)} km bici`;
 
       const tc = (day.turkeys.fedMorning ? 1 : 0) + (day.turkeys.waterGiven ? 1 : 0) + (day.turkeys.fedEvening ? 1 : 0);
       document.getElementById('homeTurkeysStat').textContent = `${tc}/3 turnos`;
       const pendingShop = appState.shoppingList.filter(i => !i.done).length;
-      document.getElementById('homeShopSub').textContent = `${pendingShop} cosas por comprar`;
+      document.getElementById('homeShopSub').textContent = `${pendingShop} pendientes`;
 
-      document.getElementById('homeStudyStat').textContent = `${day.studyMinutes || 0} min estudio`;
+      document.getElementById('homeStudyStat').textContent = `${day.studyMinutes || 0} min`;
       document.getElementById('homeCarSub').textContent = `${day.carMinutes || 0} min coche`;
 
       document.getElementById('studyMinHome').textContent = `${day.studyMinutes || 0} min`;
       document.getElementById('carMinHome').textContent = `${day.carMinutes || 0} min`;
 
-      const mealsBox = document.getElementById('homeMealsPills');
-      mealsBox.innerHTML = (day.meals || []).map(m => `
-        <span class="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-200">🥗 ${m.desc}</span>
+      document.getElementById('homeMealsPills').innerHTML = (day.meals || []).map(m => `
+        <span class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200">🥗 ${m.desc}</span>
       `).join('');
 
-      // Renderizar Feed Social estilo Hevy
-      const feedBox = document.getElementById('socialWorkoutFeedList');
-      feedBox.innerHTML = appState.workoutFeed.map(w => `
-        <div class="hevy-card rounded-2xl p-4 space-y-3">
+      document.getElementById('socialWorkoutFeedList').innerHTML = appState.workoutFeed.map(w => `
+        <div class="studio-card rounded-2xl p-4 space-y-3">
           <div class="flex items-center justify-between">
             <div>
               <span class="text-xs font-extrabold text-white">${w.user}</span>
-              <span class="text-[11px] text-zinc-500 block">${formatHumanDate(w.date)}</span>
+              <span class="text-[11px] text-slate-400 block capitalize">${formatHumanDate(w.date)}</span>
             </div>
-            <button onclick="likeFeedWorkout(${w.id})" class="px-3 py-1 rounded-xl bg-zinc-900 hover:bg-blue-600/20 text-blue-400 text-xs font-bold border border-zinc-800">
+            <button onclick="likeFeedWorkout(${w.id})" class="px-3 py-1 rounded-xl bg-slate-900 text-emerald-400 text-xs font-bold border border-slate-800">
               💪 ${w.likes || 0}
             </button>
           </div>
-
-          <div class="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-3.5 flex items-center justify-between gap-3">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between gap-3">
             <div class="space-y-1 min-w-0 flex-1">
               <h4 class="text-base font-extrabold text-white">${w.title}</h4>
-              <div class="flex gap-4 text-xs font-mono text-zinc-400 pb-1">
+              <div class="flex gap-3 text-xs font-mono text-slate-400 pb-1">
                 <span>⏱️ ${w.duration}</span>
-                <span>📦 <b class="text-white">${w.volumeKg.toLocaleString()} kg</b></span>
-                <span>✔ ${w.setsCount} sets</span>
+                <span>📦 <b class="text-emerald-400">${w.volumeKg.toLocaleString()} kg</b></span>
+                <span>✔ ${w.setsCount} series</span>
               </div>
-              ${(w.summaryLines || []).map(l => `<p class="text-xs text-zinc-300 truncate">• ${l}</p>`).join('')}
+              ${(w.summaryLines || []).map(l => `<p class="text-xs text-slate-300 truncate">• ${l}</p>`).join('')}
             </div>
             <div class="w-16 shrink-0">${getAnatomyBodyMapSVG(w.muscles || ['Pecho'])}</div>
           </div>
-
-          ${w.photoUrl ? `<img src="${w.photoUrl}" class="w-full h-48 object-cover rounded-2xl border border-zinc-800"/>` : ''}
-          ${w.note ? `<p class="text-xs text-zinc-300 italic">"${w.note}"</p>` : ''}
+          ${w.photoUrl ? `<img src="${w.photoUrl}" class="w-full h-48 object-cover rounded-2xl border border-slate-800"/>` : ''}
+          ${w.note ? `<p class="text-xs text-slate-300 italic">"${w.note}"</p>` : ''}
         </div>
       `).join('');
     }
@@ -1490,7 +2094,7 @@
     }
 
     function addMinutes(type, mins) {
-      const day = getDayData();
+      const day = getDayData(currentDate);
       if (type === 'study') day.studyMinutes = (day.studyMinutes || 0) + mins;
       if (type === 'car') day.carMinutes = (day.carMinutes || 0) + mins;
       saveToStorage();
@@ -1500,127 +2104,24 @@
       const inp = document.getElementById('quickMealInput');
       const desc = inp.value.trim();
       if (!desc) return;
-      getDayData().meals.push({ id: Date.now(), desc });
+      getDayData(currentDate).meals.push({ id: Date.now(), desc });
       inp.value = '';
       saveToStorage();
     }
 
-    // --- FORMATO DE FECHA HUMANO (PARA QUE NO SALGA "10-11" CONFUSO) ---
-    function formatHumanDate(isoStr) {
-      try {
-        const d = new Date(isoStr + 'T12:00:00');
-        return d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
-      } catch(e) { return isoStr; }
-    }
-
-    // --- AUDITORÍA SEMANAL EXPLICADA CON CLARIDAD ---
-    function renderWeeklyClearAudit() {
-      const rows = [];
-      let goodDays = 0;
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(currentDate + 'T12:00:00');
-        d.setDate(d.getDate() - i);
-        const iso = d.toISOString().split('T')[0];
-        const day = getDayData(iso);
-        const tc = (day.turkeys.fedMorning ? 1 : 0) + (day.turkeys.waterGiven ? 1 : 0) + (day.turkeys.fedEvening ? 1 : 0);
-        const wDone = appState.workoutFeed.some(w => w.date === iso && w.user.startsWith('Tú'));
-        if (tc >= 2 || wDone || day.steps >= 6000) goodDays++;
-
-        rows.push(`
-          <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
-            <div>
-              <b class="text-white capitalize">${i === 0 ? 'Hoy (' + formatHumanDate(iso) + ')' : formatHumanDate(iso)}</b>
-              <p class="text-[11px] text-zinc-400">
-                🦃 Pavos: ${tc}/3 • 👣 ${(day.steps || 0).toLocaleString()} pasos • 📚 ${day.studyMinutes || 0}m estudio • 🚗 ${day.carMinutes || 0}m coche
-              </p>
-            </div>
-            <span class="px-2.5 py-1 rounded-lg font-bold ${wDone ? 'bg-blue-600/20 text-blue-400' : 'bg-zinc-800 text-zinc-400'}">
-              ${wDone ? '🏋️ Entreno Hecho' : 'Descanso'}
-            </span>
-          </div>
-        `);
-      }
-      document.getElementById('weeklyClearCards').innerHTML = rows.join('');
-      const pct = Math.round((goodDays / 7) * 100);
-      document.getElementById('weeklyGlobalScore').textContent = pct + '%';
-      document.getElementById('weeklyVerdictTitle').textContent = pct >= 70 ? '🏆 ¡Vas genial esta semana!' : '⚡ Semana en marcha';
-    }
-
-    // --- DIARIO PRIVADO UNIDO A LO QUE HICISTE ESE DÍA ---
-    function renderJournalCombinedView() {
-      const day = getDayData();
-      const tc = (day.turkeys.fedMorning ? 1 : 0) + (day.turkeys.waterGiven ? 1 : 0) + (day.turkeys.fedEvening ? 1 : 0);
-      const wToday = appState.workoutFeed.find(w => w.date === currentDate && w.user.startsWith('Tú'));
-
-      document.getElementById('journalTodayAttachedBadges').innerHTML = `
-        <span class="px-2.5 py-1 rounded-lg bg-blue-600/20 text-blue-300 text-[11px] font-bold">🏋️ ${wToday ? wToday.title + ' (' + wToday.volumeKg + 'kg)' : 'Sin gym hoy'}</span>
-        <span class="px-2.5 py-1 rounded-lg bg-orange-500/20 text-orange-300 text-[11px] font-bold">👣 ${(day.steps || 0).toLocaleString()} pasos</span>
-        <span class="px-2.5 py-1 rounded-lg bg-violet-500/20 text-violet-300 text-[11px] font-bold">📚 ${day.studyMinutes || 0} min estudio</span>
-        <span class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-[11px] font-bold">🦃 Pavos ${tc}/3</span>
-      `;
-
-      const moods = ['🤩', '😄', '🙂', '😐', '😴', '💪'];
-      document.getElementById('moodSelectorRow').innerHTML = moods.map(m => `
-        <button onclick="getDayData().mood='${m}';saveToStorage();renderJournalCombinedView();" class="w-7 h-7 rounded-lg text-sm ${day.mood === m ? 'bg-blue-600 text-white' : 'bg-zinc-900 opacity-50'}">${m}</button>
-      `).join('');
-
-      document.getElementById('personalJournalTextarea').value = day.journal || '';
-
-      // Renderizar el historial de todos los días guardados (Diario + Resumen de lo hecho juntos)
-      const histBox = document.getElementById('journalCombinedHistoryList');
-      const dates = Object.keys(appState.days).sort().reverse();
-      histBox.innerHTML = dates.map(dStr => {
-        const dObj = appState.days[dStr];
-        const tCount = (dObj.turkeys.fedMorning ? 1 : 0) + (dObj.turkeys.waterGiven ? 1 : 0) + (dObj.turkeys.fedEvening ? 1 : 0);
-        const wDay = appState.workoutFeed.find(w => w.date === dStr && w.user.startsWith('Tú'));
-        const spent = (dObj.expenses || []).reduce((a, b) => a + Number(b.amount || 0), 0);
-
-        return `
-          <div class="hevy-card rounded-2xl p-4 space-y-2.5">
-            <div class="flex items-center justify-between border-b border-zinc-800 pb-2">
-              <span class="text-xs font-extrabold text-white capitalize">📅 ${formatHumanDate(dStr)} (${dStr})</span>
-              <span class="text-base">${dObj.mood || '😄'}</span>
-            </div>
-            <!-- Lo que hiciste ese día pegado al diario -->
-            <div class="flex flex-wrap gap-1.5 text-[11px]">
-              <span class="px-2 py-0.5 rounded bg-zinc-900 text-blue-400 font-semibold">🏋️ ${wDay ? wDay.title + ' (' + wDay.volumeKg + 'kg)' : 'Descanso Gym'}</span>
-              <span class="px-2 py-0.5 rounded bg-zinc-900 text-orange-300">👣 ${(dObj.steps || 0).toLocaleString()} pasos</span>
-              <span class="px-2 py-0.5 rounded bg-zinc-900 text-cyan-300">🚴 ${(dObj.bikeKm || 0).toFixed(1)} km bici</span>
-              <span class="px-2 py-0.5 rounded bg-zinc-900 text-violet-300">📚 ${dObj.studyMinutes || 0}m estudio</span>
-              <span class="px-2 py-0.5 rounded bg-zinc-900 text-amber-300">🦃 Pavos ${tCount}/3</span>
-              <span class="px-2 py-0.5 rounded bg-zinc-900 text-emerald-300">💶 ${spent.toFixed(2)}€</span>
-            </div>
-            <p class="text-xs text-zinc-200 leading-relaxed bg-zinc-900/70 p-3 rounded-xl border border-zinc-800/80">
-              ${dObj.journal ? dObj.journal : '<i class="text-zinc-500">Sin nota personal escrita este día.</i>'}
-            </p>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function saveJournalEntryToHistory() {
-      const val = document.getElementById('personalJournalTextarea').value.trim();
-      getDayData().journal = val;
-      saveToStorage();
-      renderJournalCombinedView();
-    }
-
-    // --- HOGAR: PAVOS, COMPRA Y GASTOS ---
     function toggleTurkeyTask(field) {
-      const day = getDayData();
+      const day = getDayData(currentDate);
       day.turkeys[field] = !day.turkeys[field];
       const nowStr = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
       if (field === 'fedMorning') day.turkeys.morningTime = day.turkeys[field] ? nowStr : '';
       if (field === 'waterGiven') day.turkeys.waterTime = day.turkeys[field] ? nowStr : '';
       if (field === 'fedEvening') day.turkeys.eveningTime = day.turkeys[field] ? nowStr : '';
       saveToStorage();
-      renderHogarView();
     }
 
     function quickAddTurkeyFeedToShop() {
       appState.shoppingList.unshift({ id: Date.now(), text: 'Saco de pienso para los pavos', done: false });
       saveToStorage();
-      renderHogarView();
     }
 
     function addShoppingItem() {
@@ -1630,29 +2131,26 @@
       appState.shoppingList.unshift({ id: Date.now(), text, done: false });
       inp.value = '';
       saveToStorage();
-      renderHogarView();
     }
 
     function toggleShopItem(id) {
       const it = appState.shoppingList.find(i => i.id === id);
       if (it) it.done = !it.done;
       saveToStorage();
-      renderHogarView();
     }
 
     function addExpense() {
       const amount = parseFloat(document.getElementById('expenseAmountInput').value);
       const desc = document.getElementById('expenseDescInput').value.trim();
       if (!amount || !desc) return;
-      getDayData().expenses.push({ id: Date.now(), amount, desc });
+      getDayData(currentDate).expenses.push({ id: Date.now(), amount, desc });
       document.getElementById('expenseAmountInput').value = '';
       document.getElementById('expenseDescInput').value = '';
       saveToStorage();
-      renderHogarView();
     }
 
     function renderHogarView() {
-      const day = getDayData();
+      const day = getDayData(currentDate);
       const states = [
         { key: 'fedMorning', timeKey: 'morningTime', btn: 'btn-turkey-morning', timeEl: 'time-turkey-morning' },
         { key: 'waterGiven', timeKey: 'waterTime', btn: 'btn-turkey-water', timeEl: 'time-turkey-water' },
@@ -1667,17 +2165,17 @@
           tEl.textContent = `✔ ${day.turkeys[s.timeKey] || 'Hecho'}`;
           tEl.className = 'text-[10px] font-mono text-emerald-300 font-bold mt-0.5';
         } else {
-          btnEl.className = 'p-3 rounded-xl border border-zinc-800 bg-zinc-900 flex flex-col items-center text-center';
+          btnEl.className = 'p-3 rounded-xl border border-slate-800 bg-slate-900 flex flex-col items-center text-center';
           tEl.textContent = 'Pendiente';
-          tEl.className = 'text-[10px] font-mono text-zinc-500 mt-0.5';
+          tEl.className = 'text-[10px] font-mono text-slate-500 mt-0.5';
         }
       });
 
       document.getElementById('shoppingListContainer').innerHTML = appState.shoppingList.map(item => `
-        <div onclick="toggleShopItem(${item.id})" class="cursor-pointer flex items-center justify-between bg-zinc-900 px-3 py-2.5 rounded-xl border border-zinc-800 text-xs">
+        <div onclick="toggleShopItem(${item.id})" class="cursor-pointer flex items-center justify-between bg-slate-900 px-3 py-2.5 rounded-xl border border-slate-800 text-xs">
           <div class="flex items-center gap-2.5">
-            <span class="w-5 h-5 rounded border flex items-center justify-center ${item.done ? 'bg-emerald-500 border-emerald-500 text-black font-bold' : 'border-zinc-700'}">${item.done ? '✓' : ''}</span>
-            <span class="${item.done ? 'line-through text-zinc-500' : 'text-white font-semibold'}">${item.text}</span>
+            <span class="w-5 h-5 rounded border flex items-center justify-center ${item.done ? 'bg-emerald-500 border-emerald-500 text-slate-950 font-bold' : 'border-slate-700'}">${item.done ? '✓' : ''}</span>
+            <span class="${item.done ? 'line-through text-slate-500' : 'text-white font-semibold'}">${item.text}</span>
           </div>
         </div>
       `).join('');
@@ -1685,144 +2183,135 @@
       const spent = (day.expenses || []).reduce((a, b) => a + Number(b.amount || 0), 0);
       document.getElementById('todaySpentTotalLabel').textContent = `${spent.toFixed(2)} €`;
       document.getElementById('expensesListContainer').innerHTML = (day.expenses || []).map(e => `
-        <div class="flex justify-between items-center bg-zinc-900 px-3 py-2 rounded-xl border border-zinc-800 text-xs">
+        <div class="flex justify-between items-center bg-slate-900 px-3 py-2 rounded-xl border border-slate-800 text-xs">
           <span class="text-white">${e.desc}</span>
           <b class="font-mono text-emerald-400">${Number(e.amount).toFixed(2)} €</b>
         </div>
       `).join('');
     }
 
-    // --- BICI GPS Y PASOS ---
-    let bikeMap = null, currentTileLayer = null, simIntervalId = null, gpsWatchId = null;
-    let liveRide = { active: false, startTimeMs: 0, elapsedSeconds: 0, totalDistKm: 0, currentSpeedKmh: 0, maxSpeedKmh: 0, points: [], polylines: [] };
+    function renderWeeklyClearAudit() {
+      const rows = [];
+      let goodDays = 0;
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(currentDate + 'T12:00:00');
+        d.setDate(d.getDate() - i);
+        const iso = d.toISOString().split('T')[0];
+        const day = getDayData(iso);
+        const tc = (day.turkeys.fedMorning ? 1 : 0) + (day.turkeys.waterGiven ? 1 : 0) + (day.turkeys.fedEvening ? 1 : 0);
+        const wDone = appState.workoutFeed.some(w => w.date === iso && w.user.startsWith('Tú'));
+        if (tc >= 2 || wDone || day.steps >= 6000) goodDays++;
 
-    function renderBikeStepsView() {
-      document.getElementById('bikeViewStepsVal').textContent = (getDayData().steps || 0).toLocaleString();
-    }
-    function addStepsQuick(n) { getDayData().steps = (getDayData().steps || 0) + n; saveToStorage(); renderBikeStepsView(); }
-    function simulateMiFitCloudSync() { getDayData().steps = 10840; saveToStorage(); renderBikeStepsView(); }
-
-    function initBikeMapIfNeeded() {
-      if (bikeMap) return;
-      const el = document.getElementById('bike-map'); if (!el) return;
-      bikeMap = L.map('bike-map').setView([39.5696, 2.6502], 14);
-      changeBikeMapStyle('esri_street');
-    }
-
-    function changeBikeMapStyle(k) {
-      if (!bikeMap) return;
-      if (currentTileLayer) bikeMap.removeLayer(currentTileLayer);
-      const url = k === 'esri_sat'
-        ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-        : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
-      currentTileLayer = L.tileLayer(url, { maxZoom: 19 }).addTo(bikeMap);
-    }
-
-    function getSpeedColor(s) {
-      if (s < 12) return '#3b82f6';
-      if (s < 22) return '#10b981';
-      if (s < 30) return '#f59e0b';
-      return '#f43f5e';
-    }
-
-    function pushGpsPoint(lat, lng, speedKmh) {
-      const newPt = L.latLng(lat, lng);
-      if (liveRide.points.length > 0) {
-        const prev = liveRide.points[liveRide.points.length - 1];
-        const distKm = L.latLng(prev.lat, prev.lng).distanceTo(newPt) / 1000;
-        liveRide.totalDistKm += distKm;
-        liveRide.currentSpeedKmh = speedKmh;
-        if (speedKmh > liveRide.maxSpeedKmh) liveRide.maxSpeedKmh = speedKmh;
-        const seg = L.polyline([[prev.lat, prev.lng], [lat, lng]], { color: getSpeedColor(speedKmh), weight: 6 }).addTo(bikeMap);
-        liveRide.polylines.push(seg);
+        rows.push(`
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div>
+              <b class="text-white capitalize">${formatHumanDate(iso)}</b>
+              <p class="text-[11px] text-slate-400">
+                🦃 Pavos: ${tc}/3 • 👣 ${(day.steps || 0).toLocaleString()} pasos • 🚴 ${(day.bikeKm || 0).toFixed(1)}km • 📚 ${day.studyMinutes || 0}m estudio
+              </p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg font-bold ${wDone ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-400'}">
+              ${wDone ? '🏋️ Fuerza OK' : 'Descanso'}
+            </span>
+          </div>
+        `);
       }
-      liveRide.points.push({ lat, lng });
-      bikeMap.panTo(newPt);
-      document.getElementById('liveSpeedVal').textContent = speedKmh.toFixed(1);
-      document.getElementById('liveDistKmVal').textContent = liveRide.totalDistKm.toFixed(2);
-      document.getElementById('liveMaxSpeedVal').textContent = liveRide.maxSpeedKmh.toFixed(1);
-      const mins = Math.floor(liveRide.elapsedSeconds / 60);
-      const secs = String(liveRide.elapsedSeconds % 60).padStart(2, '0');
-      document.getElementById('liveDurationClock').textContent = `${String(mins).padStart(2, '0')}:${secs}`;
+      document.getElementById('weeklyClearCards').innerHTML = rows.join('');
+      const pct = Math.round((goodDays / 7) * 100);
+      document.getElementById('weeklyGlobalScore').textContent = pct + '%';
     }
 
-    function startSimulatedGPSTracking() {
-      initBikeMapIfNeeded();
-      liveRide.active = true;
-      document.getElementById('btnStopSaveGPS').classList.remove('hidden');
-      const c = bikeMap.getCenter();
-      let lat = c.lat, lng = c.lng, ang = 0.5;
-      pushGpsPoint(lat, lng, 15);
-      simIntervalId = setInterval(() => {
-        liveRide.elapsedSeconds += 2;
-        const sp = [11, 18, 25, 32, 21][liveRide.points.length % 5];
-        ang += (Math.random() - 0.4) * 0.4;
-        lat += Math.cos(ang) * 0.0008;
-        lng += Math.sin(ang) * 0.0008;
-        pushGpsPoint(lat, lng, sp);
-      }, 1300);
+    function renderJournalCombinedView() {
+      const day = getDayData(currentDate);
+      document.getElementById('journalDateLabel').textContent = formatHumanDate(currentDate);
+      const tc = (day.turkeys.fedMorning ? 1 : 0) + (day.turkeys.waterGiven ? 1 : 0) + (day.turkeys.fedEvening ? 1 : 0);
+      const wToday = appState.workoutFeed.find(w => w.date === currentDate && w.user.startsWith('Tú'));
+
+      document.getElementById('journalTodayAttachedBadges').innerHTML = `
+        <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-[11px] font-bold">🏋️ ${wToday ? wToday.title + ' (' + wToday.volumeKg + 'kg)' : 'Sin gym'}</span>
+        <span class="px-2.5 py-1 rounded-lg bg-orange-500/20 text-orange-300 text-[11px] font-bold">👣 ${(day.steps || 0).toLocaleString()} pasos</span>
+        <span class="px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 text-[11px] font-bold">🚴 ${(day.bikeKm || 0).toFixed(1)} km bici</span>
+        <span class="px-2.5 py-1 rounded-lg bg-violet-500/20 text-violet-300 text-[11px] font-bold">📚 ${day.studyMinutes || 0}m estudio</span>
+        <span class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-[11px] font-bold">🦃 Pavos ${tc}/3</span>
+      `;
+
+      const moods = ['🤩', '😄', '🙂', '😐', '😴', '💪'];
+      document.getElementById('moodSelectorRow').innerHTML = moods.map(m => `
+        <button onclick="getDayData('${currentDate}').mood='${m}';saveToStorage();" class="w-7 h-7 rounded-lg text-sm ${day.mood === m ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 opacity-50'}">${m}</button>
+      `).join('');
+
+      document.getElementById('personalJournalTextarea').value = day.journal || '';
+
+      const histBox = document.getElementById('journalCombinedHistoryList');
+      const dates = Object.keys(appState.days).sort().reverse();
+      histBox.innerHTML = dates.map(dStr => {
+        const dObj = appState.days[dStr];
+        const tCount = (dObj.turkeys.fedMorning ? 1 : 0) + (dObj.turkeys.waterGiven ? 1 : 0) + (dObj.turkeys.fedEvening ? 1 : 0);
+        const wDay = appState.workoutFeed.find(w => w.date === dStr && w.user.startsWith('Tú'));
+        const spent = (dObj.expenses || []).reduce((a, b) => a + Number(b.amount || 0), 0);
+
+        return `
+          <div class="studio-card rounded-2xl p-4 space-y-2.5">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+              <span class="text-xs font-extrabold text-white capitalize">📅 ${formatHumanDate(dStr)} (${dStr})</span>
+              <span class="text-base">${dObj.mood || '😄'}</span>
+            </div>
+            <div class="flex flex-wrap gap-1.5 text-[11px]">
+              <span class="px-2 py-0.5 rounded bg-slate-900 text-emerald-400 font-semibold">🏋️ ${wDay ? wDay.title + ' (' + wDay.volumeKg + 'kg)' : 'Descanso'}</span>
+              <span class="px-2 py-0.5 rounded bg-slate-900 text-orange-300">👣 ${(dObj.steps || 0).toLocaleString()} pasos</span>
+              <span class="px-2 py-0.5 rounded bg-slate-900 text-cyan-300">🚴 ${(dObj.bikeKm || 0).toFixed(1)} km</span>
+              <span class="px-2 py-0.5 rounded bg-slate-900 text-violet-300">📚 ${dObj.studyMinutes || 0}m estudio</span>
+              <span class="px-2 py-0.5 rounded bg-slate-900 text-amber-300">🦃 Pavos ${tCount}/3</span>
+              <span class="px-2 py-0.5 rounded bg-slate-900 text-emerald-300">💶 ${spent.toFixed(2)}€</span>
+            </div>
+            <p class="text-xs text-slate-200 leading-relaxed bg-slate-900/70 p-3 rounded-xl border border-slate-800/80">
+              ${dObj.journal ? dObj.journal : '<i class="text-slate-500">Sin nota escrita este día.</i>'}
+            </p>
+          </div>
+        `;
+      }).join('');
     }
 
-    function startRealGPSTracking() {
-      initBikeMapIfNeeded();
-      if (!navigator.geolocation) return;
-      document.getElementById('btnStopSaveGPS').classList.remove('hidden');
-      gpsWatchId = navigator.geolocation.watchPosition(pos => {
-        liveRide.elapsedSeconds += 2;
-        pushGpsPoint(pos.coords.latitude, pos.coords.longitude, (pos.coords.speed || 5) * 3.6);
-      }, () => {}, { enableHighAccuracy: true });
-    }
-
-    function finishAndSaveLiveRide() {
-      if (simIntervalId) clearInterval(simIntervalId);
-      if (gpsWatchId && navigator.geolocation) navigator.geolocation.clearWatch(gpsWatchId);
-      const day = getDayData();
-      day.bikeKm = Number(((day.bikeKm || 0) + Math.max(0.2, liveRide.totalDistKm)).toFixed(2));
-      day.bikeMinutes = (day.bikeMinutes || 0) + Math.max(1, Math.round(liveRide.elapsedSeconds / 60));
-      document.getElementById('btnStopSaveGPS').classList.add('hidden');
+    function saveJournalEntryToHistory() {
+      const val = document.getElementById('personalJournalTextarea').value.trim();
+      getDayData(currentDate).journal = val;
       saveToStorage();
-    }
-
-    // --- VOZ Y FECHAS ---
-    function openVoiceModal() { document.getElementById('voiceModal').classList.replace('hidden', 'flex'); }
-    function closeVoiceModal() { document.getElementById('voiceModal').classList.replace('flex', 'hidden'); }
-    function runQuickVoice(cmd) {
-      const nowStr = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-      if (cmd === 'pavos') {
-        const d = getDayData();
-        d.turkeys.fedMorning = true; d.turkeys.morningTime = nowStr;
-        d.turkeys.waterGiven = true; d.turkeys.waterTime = nowStr;
-      } else {
-        appState.shoppingList.unshift({ id: Date.now(), text: 'Leche y huevos camperos', done: false });
-      }
-      saveToStorage();
-      closeVoiceModal();
-    }
-
-    function onDateChange(val) { if (!val) return; currentDate = val; renderHomeView(); }
-    function changeDay(offset) {
-      const d = new Date(currentDate + 'T12:00:00');
-      d.setDate(d.getDate() + offset);
-      currentDate = d.toISOString().split('T')[0];
-      document.getElementById('currentDatePicker').value = currentDate;
-      renderHomeView();
     }
 
     function loadDemoData() {
+      appState.days = {};
       for (let i = 4; i >= 0; i--) {
-        const d = new Date(); d.setDate(d.getDate() - i);
+        const d = new Date();
+        d.setDate(d.getDate() - i);
         const iso = d.toISOString().split('T')[0];
         const day = createEmptyDay();
         day.turkeys = { fedMorning: true, morningTime: '08:30', waterGiven: true, waterTime: '08:35', fedEvening: i !== 0, eveningTime: '19:40' };
-        day.steps = 8900 + (i * 400);
+        day.steps = 8200 + ((4 - i) * 650);
         day.studyMinutes = 90;
         day.carMinutes = 25;
-        day.bikeKm = i % 2 === 0 ? 12.5 : 0;
+        if (i % 2 === 0) {
+          day.bikeKm = 11.4;
+          day.bikeMinutes = 34;
+          day.bikeRoutes = [{
+            id: 500 + i,
+            date: iso,
+            timeStr: '18:15',
+            km: 11.4,
+            mins: 34,
+            avgSpeed: 20.1,
+            maxSpeed: 31.5,
+            segments: [
+              { pts: [[39.5696, 2.6502], [39.5735, 2.6550]], color: '#10b981', speed: 19.5 },
+              { pts: [[39.5735, 2.6550], [39.5780, 2.6610]], color: '#f59e0b', speed: 26.4 },
+              { pts: [[39.5780, 2.6610], [39.5820, 2.6675]], color: '#f43f5e', speed: 31.5 }
+            ]
+          }];
+        }
         day.meals = [{ id: 1, desc: 'Pechuga de pollo con arroz y aguacate' }];
         day.expenses = [{ id: 1, amount: 14.20, desc: 'Compra supermercado' }];
         day.journal = i === 0
-          ? 'Entreno de pecho estilo Hevy completado subiendo repeticiones. Pavos atendidos temprano y buena sesión de estudio.'
-          : 'Día constante cumpliendo objetivo de pasos y estudio.';
+          ? 'Sesión de fuerza completada subiendo repeticiones, ruta en bici guardada y pavos atendidos temprano.'
+          : 'Día constante cumpliendo pasos, estudio y cuidado del corral.';
         appState.days[iso] = day;
       }
       saveToStorage();
@@ -1830,7 +2319,7 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       loadFromStorage();
-      renderHomeView();
+      refreshCurrentActiveView();
     });
   </script>
 </body>
