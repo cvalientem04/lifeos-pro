@@ -790,31 +790,39 @@
     </div>
   </div>
 
-  <!-- MODAL DE ASISTENTE DE VOZ REAL (ESCUCHA Y HABLA EN VOZ ALTA) -->
+  <!-- MODAL DE ASISTENTE DE VOZ REAL (CON INDICADOR ROJO EN VIVO) -->
   <div id="voiceModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="studio-card rounded-2xl p-5 max-w-md w-full space-y-4 text-center border border-emerald-500/40">
-      <div class="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 flex items-center justify-center text-2xl mx-auto">
+    <div class="studio-card rounded-2xl p-5 max-w-md w-full space-y-4 text-center border border-emerald-500/40" id="voiceModalCard">
+
+      <!-- Icono central que cambia de Verde a ROJO parpadeante al grabar -->
+      <div id="voiceMicCircle" class="w-14 h-14 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 text-emerald-300 flex items-center justify-center text-2xl mx-auto transition-all duration-300">
         🎙️
       </div>
-      <h3 class="text-base font-extrabold text-white">Control por Voz con Respuesta Hablada</h3>
-      <p id="voiceTranscriptBox" class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono text-emerald-300 min-h-[44px] flex items-center justify-center">
-        Pulsa "Hablar por Micrófono" y di lo que has hecho hoy...
+
+      <div>
+        <h3 class="text-base font-extrabold text-white" id="voiceModalStatusTitle">Control por Voz</h3>
+        <p class="text-[11px] text-slate-400" id="voiceModalStatusSub">Pulsa el botón para hablar (se pondrá en rojo al escuchar)</p>
+      </div>
+
+      <p id="voiceTranscriptBox" class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono text-emerald-300 min-h-[48px] flex items-center justify-center">
+        Esperando orden por voz...
       </p>
 
       <div class="flex gap-2">
-        <button onclick="startRealVoiceRecognition()" id="btnStartMicListen" class="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs">
-          🎙️ Hablar por Micrófono Ahora
+        <button onclick="toggleRealVoiceRecognition()" id="btnStartMicListen" class="flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition-all shadow-lg">
+          🎙️ Empezar a Hablar
         </button>
-        <button onclick="speakDaySummaryAloud()" class="px-3.5 py-2.5 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-bold">
-          🔊 Que me hable
+        <button onclick="speakDaySummaryAloud()" class="px-3.5 py-3 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-bold">
+          🔊 Resumen
         </button>
       </div>
 
       <div class="space-y-1.5 text-left pt-2 border-t border-slate-800">
-        <span class="text-[10px] font-bold uppercase text-slate-400 block">O toca una acción directa con respuesta por voz:</span>
+        <span class="text-[10px] font-bold uppercase text-slate-400 block">Ejemplos de cosas que puedes decirle:</span>
         <button onclick="processSpokenText('He dado agua y comida a los pavos')" class="w-full p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs text-slate-200">🗣️ "He dado agua y comida a los pavos"</button>
-        <button onclick="processSpokenText('Añadir leche y huevos a la compra')" class="w-full p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs text-slate-200">🗣️ "Añadir leche y huevos a la compra"</button>
-        <button onclick="processSpokenText('Estudié 45 minutos hoy')" class="w-full p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs text-slate-200">🗣️ "Estudié 45 minutos hoy"</button>
+        <button onclick="processSpokenText('Apunta en la compra pechuga de pollo')" class="w-full p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs text-slate-200">🗣️ "Apunta en la compra pechuga de pollo"</button>
+        <button onclick="processSpokenText('He gastado 15 euros en gasolina')" class="w-full p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs text-slate-200">🗣️ "He gastado 15 euros en gasolina"</button>
+        <button onclick="processSpokenText('He hecho 8500 pasos y 40 minutos de estudio')" class="w-full p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs text-slate-200">🗣️ "He hecho 8500 pasos y 40 minutos de estudio"</button>
       </div>
       <button onclick="closeVoiceModal()" class="w-full py-2 rounded-xl bg-slate-800 text-xs font-bold text-slate-300">Cerrar</button>
     </div>
@@ -2010,22 +2018,28 @@
       r.readAsText(f);
     }
 
+// =========================================================================
+    // --- VOZ REAL MEJORADA (BOTÓN ROJO AL GRABAR + ENTENDIMIENTO INTELIGENTE) ---
     // =========================================================================
-    // --- VOZ REAL (SPEECH RECOGNITION + SÍNTESIS DE VOZ Y DICTADO EN DIARIO) ---
-    // =========================================================================
+    let activeRecognition = null;
+    let isRecordingVoice = false;
+    let lastCapturedTranscript = '';
+    let commandAlreadyProcessed = false;
+
     function speakTextAloud(text) {
       if (!('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
       u.lang = 'es-ES';
-      u.rate = 1.02;
+      u.rate = 1.03;
       window.speechSynthesis.speak(u);
     }
 
     function speakDaySummaryAloud() {
       const day = getDayData(currentDate);
       const tc = (day.turkeys.fedMorning ? 1 : 0) + (day.turkeys.waterGiven ? 1 : 0) + (day.turkeys.fedEvening ? 1 : 0);
-      const msg = `Resumen del ${formatHumanDate(currentDate)}: llevas ${day.steps || 0} pasos, ${day.bikeKm || 0} kilómetros en bici, ${day.studyMinutes || 0} minutos de estudio y ${tc} de 3 tareas en el corral de los pavos.`;
+      const spent = (day.expenses || []).reduce((a, b) => a + Number(b.amount || 0), 0);
+      const msg = `Resumen del ${formatHumanDate(currentDate)}: llevas ${day.steps || 0} pasos, ${day.bikeKm || 0} kilómetros en bici, ${day.studyMinutes || 0} minutos de estudio, ${spent.toFixed(0)} euros gastados y ${tc} de 3 turnos de los pavos.`;
       const box = document.getElementById('voiceTranscriptBox');
       if (box) box.textContent = `🔊 "${msg}"`;
       speakTextAloud(msg);
@@ -2033,87 +2047,236 @@
 
     function openVoiceModal() {
       document.getElementById('voiceModal').classList.replace('hidden', 'flex');
+      setMicVisualState(false);
     }
+
     function closeVoiceModal() {
+      if (activeRecognition && isRecordingVoice) {
+        try { activeRecognition.stop(); } catch(e) {}
+      }
+      setMicVisualState(false);
       document.getElementById('voiceModal').classList.replace('flex', 'hidden');
     }
 
-    function startRealVoiceRecognition() {
-      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const box = document.getElementById('voiceTranscriptBox');
-      if (!SpeechRec) {
-        box.textContent = '⚠️ Tu navegador actual no permite dictado directo. Usa los botones de abajo.';
-        speakTextAloud('Selecciona una acción rápida o usa Safari o Chrome para dictar.');
-        return;
-      }
-      const rec = new SpeechRec();
-      rec.lang = 'es-ES';
-      rec.interimResults = true;
-      box.textContent = '🎙️ Escuchando tu voz... habla ahora';
+    // Cambia visualmente a ROJO cuando está grabando y a VERDE cuando para
+    function setMicVisualState(recording) {
+      isRecordingVoice = recording;
+      const btn = document.getElementById('btnStartMicListen');
+      const circle = document.getElementById('voiceMicCircle');
+      const title = document.getElementById('voiceModalStatusTitle');
+      const sub = document.getElementById('voiceModalStatusSub');
 
-      rec.onresult = (e) => {
-        const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
-        box.textContent = `🗣️ "${transcript}"`;
-        if (e.results[0].isFinal) {
-          processSpokenText(transcript);
-        }
-      };
-      rec.onerror = () => {
-        box.textContent = '⚠️ Permite el acceso al micrófono cuando te lo pida el navegador.';
-      };
-      rec.start();
+      if (!btn || !circle) return;
+
+      if (recording) {
+        btn.className = 'flex-1 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs transition-all shadow-lg shadow-rose-600/40 animate-pulse';
+        btn.innerHTML = '⏹ GRABANDO... (Toca para parar)';
+        circle.className = 'w-14 h-14 rounded-full bg-rose-500/30 border-2 border-rose-500 text-rose-300 flex items-center justify-center text-2xl mx-auto animate-bounce shadow-lg shadow-rose-500/40';
+        circle.innerHTML = '🔴';
+        if (title) title.textContent = '🔴 Escuchando tu voz ahora...';
+        if (sub) sub.textContent = 'Habla claro. Cuando termines, toca el botón rojo o haz una pausa.';
+      } else {
+        btn.className = 'flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition-all shadow-lg';
+        btn.innerHTML = '🎙️ Empezar a Hablar';
+        circle.className = 'w-14 h-14 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 text-emerald-300 flex items-center justify-center text-2xl mx-auto transition-all';
+        circle.innerHTML = '🎙️';
+        if (title) title.textContent = 'Control por Voz';
+        if (sub) sub.textContent = 'Micrófono en espera. Pulsa el botón verde para hablar.';
+      }
     }
 
-    function processSpokenText(rawText) {
-      const t = rawText.toLowerCase();
-      const day = getDayData(currentDate);
-      const nowStr = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-      let reply = `Anote en tu diario: ${rawText}`;
+    function toggleRealVoiceRecognition() {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const box = document.getElementById('voiceTranscriptBox');
 
-      if (t.includes('pavo') || t.includes('agua') || t.includes('corral')) {
-        day.turkeys.fedMorning = true; day.turkeys.morningTime = nowStr;
-        day.turkeys.waterGiven = true; day.turkeys.waterTime = nowStr;
-        reply = 'Perfecto, he marcado la comida y el agua de los pavos a las ' + nowStr;
-      } else if (t.includes('compra') || t.includes('leche') || t.includes('huevo')) {
-        const clean = rawText.replace(/añadir|apunta|a la compra/gi, '').trim() || 'Leche y huevos';
-        appState.shoppingList.unshift({ id: Date.now(), text: clean, done: false });
-        reply = 'He añadido ' + clean + ' a la lista de la compra.';
-      } else if (t.includes('estudi')) {
-        const nums = t.match(/\d+/);
-        const mins = nums ? parseInt(nums[0]) : 30;
-        day.studyMinutes = (day.studyMinutes || 0) + mins;
-        reply = `Sumados ${mins} minutos de estudio a tu día.`;
-      } else {
-        day.journal = (day.journal ? day.journal + ' ' : '') + rawText;
+      if (!SpeechRec) {
+        box.textContent = '⚠️ Abre la web en Safari para usar el micrófono en iPhone.';
+        return;
       }
 
-      document.getElementById('voiceTranscriptBox').textContent = `✅ ${reply}`;
-      speakTextAloud(reply);
+      // Si ya estaba grabando y el usuario toca el botón rojo, paramos y procesamos
+      if (isRecordingVoice && activeRecognition) {
+        try { activeRecognition.stop(); } catch(e) {}
+        return;
+      }
+
+      lastCapturedTranscript = '';
+      commandAlreadyProcessed = false;
+      activeRecognition = new SpeechRec();
+      activeRecognition.lang = 'es-ES';
+      activeRecognition.continuous = false;
+      activeRecognition.interimResults = true;
+
+      activeRecognition.onstart = () => {
+        setMicVisualState(true);
+        box.textContent = '🔴 Escuchando... di tu orden ahora';
+      };
+
+      activeRecognition.onresult = (e) => {
+        lastCapturedTranscript = Array.from(e.results).map(r => r[0].transcript).join(' ').trim();
+        box.textContent = `🗣️ "${lastCapturedTranscript}"`;
+      };
+
+      activeRecognition.onerror = (err) => {
+        setMicVisualState(false);
+        box.textContent = '⚠️ No se detectó voz o permiso denegado.';
+      };
+
+      // En Safari iOS, procesar al terminar (onend) garantiza que SIEMPRE lea lo que acabas de decir
+      activeRecognition.onend = () => {
+        setMicVisualState(false);
+        if (lastCapturedTranscript && !commandAlreadyProcessed) {
+          commandAlreadyProcessed = true;
+          processSpokenText(lastCapturedTranscript);
+        }
+      };
+
+      activeRecognition.start();
+    }
+
+    // Cerebro inteligente que da respuestas distintas según lo que digas
+    function processSpokenText(rawText) {
+      if (!rawText || !rawText.trim()) return;
+      const t = rawText.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const day = getDayData(currentDate);
+      const nowStr = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      const actionsDone = [];
+
+      // 1. PAVOS / CORRAL / AGUA
+      if (t.includes('pavo') || t.includes('corral') || t.includes('pienso') || t.includes('agua')) {
+        if (t.includes('tarde') || t.includes('noche') || t.includes('cenar')) {
+          day.turkeys.fedEvening = true; day.turkeys.eveningTime = nowStr;
+          actionsDone.push(`comida de tarde de los pavos marcada a las ${nowStr}`);
+        } else if (t.includes('agua') && !t.includes('com')) {
+          day.turkeys.waterGiven = true; day.turkeys.waterTime = nowStr;
+          actionsDone.push(`agua limpia de los pavos registrada a las ${nowStr}`);
+        } else {
+          day.turkeys.fedMorning = true; day.turkeys.morningTime = nowStr;
+          day.turkeys.waterGiven = true; day.turkeys.waterTime = nowStr;
+          actionsDone.push(`comida y agua de los pavos marcadas a las ${nowStr}`);
+        }
+      }
+
+      // 2. LISTA DE LA COMPRA
+      if (t.includes('compra') || t.includes('lista') || t.includes('falta')) {
+        let itemText = rawText.replace(/apunta(r)?|anade|añadir|en la compra|a la compra|en la lista|a la lista|comprar|falta/gi, '').trim();
+        if (!itemText) itemText = rawText;
+        appState.shoppingList.unshift({ id: Date.now(), text: itemText, done: false });
+        actionsDone.push(`añadido "${itemText}" a la lista de la compra`);
+      }
+
+      // 3. GASTOS EN EUROS
+      if (t.includes('gast') || t.includes('euro') || t.includes('pagado') || t.includes('costado')) {
+        const numMatch = t.match(/\d+([.,]\d+)?/);
+        const amount = numMatch ? parseFloat(numMatch[0].replace(',', '.')) : 10;
+        const concept = rawText.replace(/he gastado|gaste|euros|euro|en|pagado/gi, '').replace(/\d+([.,]\d+)?/g, '').trim() || 'Gasto por voz';
+        day.expenses.push({ id: Date.now(), amount, desc: concept });
+        actionsDone.push(`registrado un gasto de ${amount} euros en ${concept}`);
+      }
+
+      // 4. PASOS
+      if (t.includes('paso')) {
+        const numMatch = t.match(/\d+/);
+        const st = numMatch ? parseInt(numMatch[0]) : 2000;
+        day.steps = (day.steps || 0) + st;
+        actionsDone.push(`sumados ${st} pasos, llevas ${day.steps} hoy`);
+      }
+
+      // 5. ESTUDIO
+      if (t.includes('estudi')) {
+        const numMatch = t.match(/\d+/);
+        let mins = numMatch ? parseInt(numMatch[0]) : 30;
+        if (t.includes('hora') && mins <= 10) mins = mins * 60;
+        day.studyMinutes = (day.studyMinutes || 0) + mins;
+        actionsDone.push(`sumados ${mins} minutos de estudio`);
+      }
+
+      // 6. COCHE
+      if (t.includes('coche') || t.includes('conduc')) {
+        const numMatch = t.match(/\d+/);
+        const mins = numMatch ? parseInt(numMatch[0]) : 20;
+        day.carMinutes = (day.carMinutes || 0) + mins;
+        actionsDone.push(`añadidos ${mins} minutos de coche`);
+      }
+
+      // 7. BICI
+      if (t.includes('bici') || t.includes('kilometro')) {
+        const numMatch = t.match(/\d+([.,]\d+)?/);
+        const km = numMatch ? parseFloat(numMatch[0].replace(',', '.')) : 5;
+        day.bikeKm = Number(((day.bikeKm || 0) + km).toFixed(2));
+        actionsDone.push(`sumados ${km} kilómetros de bici`);
+      }
+
+      // 8. COMIDA / DESAYUNO / CENA
+      if (t.includes('comido') || t.includes('cenado') || t.includes('desayunado')) {
+        const food = rawText.replace(/hoy|he comido|he cenado|he desayunado/gi, '').trim() || rawText;
+        day.meals.push({ id: Date.now(), desc: food });
+        actionsDone.push(`anotada tu comida: ${food}`);
+      }
+
+      // 9. SI NO ES NINGUNO DE LOS ANTERIORES, VA AL DIARIO PERSONAL
+      let finalReply = '';
+      if (actionsDone.length > 0) {
+        finalReply = 'Listo: ' + actionsDone.join(', y ') + '.';
+      } else {
+        day.journal = (day.journal ? day.journal + '. ' : '') + rawText;
+        finalReply = `Guardado en tu diario personal: "${rawText}"`;
+      }
+
+      const box = document.getElementById('voiceTranscriptBox');
+      if (box) box.textContent = `✅ ${finalReply}`;
+      speakTextAloud(finalReply);
       saveToStorage();
     }
 
-    // DICTADO POR VOZ DIRECTO DENTRO DEL DIARIO PERSONAL
+    // DICTADO EN EL DIARIO (TAMBIÉN SE PONE ROJO AL GRABAR)
+    let journalRec = null;
+    let isJournalRecording = false;
+
     function startJournalVoiceDictation() {
       const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const btn = document.getElementById('btnJournalMic');
       const lbl = document.getElementById('journalMicLabel');
       const area = document.getElementById('personalJournalTextarea');
+
       if (!SpeechRec) {
-        alert('Tu navegador no soporta dictado directo. Usa el botón de micrófono del teclado de tu móvil.');
+        alert('Abre la web en Safari para dictar por voz.');
         return;
       }
-      const rec = new SpeechRec();
-      rec.lang = 'es-ES';
-      lbl.textContent = '🔴 Escuchando...';
 
-      rec.onresult = (e) => {
-        const text = e.results[0][0].transcript;
-        area.value = (area.value ? area.value + ' ' : '') + text;
-        getDayData(currentDate).journal = area.value;
-        saveToStorage();
-        speakTextAloud('Guardado en tu diario.');
+      if (isJournalRecording && journalRec) {
+        try { journalRec.stop(); } catch(e) {}
+        return;
+      }
+
+      let captured = '';
+      journalRec = new SpeechRec();
+      journalRec.lang = 'es-ES';
+      journalRec.interimResults = true;
+
+      journalRec.onstart = () => {
+        isJournalRecording = true;
+        btn.className = 'px-3 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-extrabold flex items-center gap-1.5 animate-pulse shadow-lg shadow-rose-600/30';
+        lbl.textContent = '🔴 Grabando... (Parar)';
       };
-      rec.onend = () => { lbl.textContent = 'Dictar mi Día'; };
-      rec.start();
+
+      journalRec.onresult = (e) => {
+        captured = Array.from(e.results).map(r => r[0].transcript).join(' ').trim();
+      };
+
+      journalRec.onend = () => {
+        isJournalRecording = false;
+        btn.className = 'px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-extrabold flex items-center gap-1.5';
+        lbl.textContent = 'Dictar mi Día';
+        if (captured) {
+          area.value = (area.value ? area.value + ' ' : '') + captured;
+          getDayData(currentDate).journal = area.value;
+          saveToStorage();
+          speakTextAloud('Añadido a tu diario.');
+        }
+      };
+
+      journalRec.start();
     }
 
     // =========================================================================
