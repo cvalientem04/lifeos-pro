@@ -857,24 +857,61 @@
     }
 
     function getAnatomyBodyMapSVG(activeMuscles = ['Pecho']) {
-      const hasChest = activeMuscles.includes('Pecho');
-      const hasBack = activeMuscles.includes('Espalda');
-      const hasLegs = activeMuscles.includes('Piernas');
-      const hasArms = activeMuscles.includes('Brazos') || activeMuscles.includes('Hombros');
+      const hasChest = activeMuscles.some(m => ['Pecho'].includes(m));
+      const hasBack = activeMuscles.some(m => ['Espalda'].includes(m));
+      const hasLegs = activeMuscles.some(m => ['Piernas'].includes(m));
+      const hasShoulders = activeMuscles.some(m => ['Hombros'].includes(m));
+      const hasArms = activeMuscles.some(m => ['Brazos', 'Hombros'].includes(m));
       const hi = '#10b981';
-      const base = '#334155';
+      const hi2 = '#06b6d4';
+      const base = '#1e293b';
+      const glow = (active, color='#10b981') => active ? color : base;
       return `
-        <svg viewBox="0 0 90 150" class="w-full h-auto max-h-28">
-          <circle cx="45" cy="16" r="9" fill="#64748b"/>
-          <rect x="20" y="28" width="10" height="34" rx="5" fill="${hasArms || hasChest ? hi : base}"/>
-          <rect x="60" y="28" width="10" height="34" rx="5" fill="${hasArms || hasChest ? hi : base}"/>
-          <rect x="31" y="27" width="28" height="22" rx="5" fill="${hasChest || hasBack ? hi : base}"/>
-          <rect x="33" y="51" width="24" height="22" rx="4" fill="#475569"/>
-          <rect x="31" y="76" width="12" height="52" rx="6" fill="${hasLegs ? hi : base}"/>
-          <rect x="47" y="76" width="12" height="52" rx="6" fill="${hasLegs ? hi : base}"/>
+        <svg viewBox="0 0 90 155" class="w-full h-auto max-h-32" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="chestGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="${hasChest ? hi : base}"/><stop offset="100%" stop-color="${hasChest ? '#059669' : base}"/></radialGradient>
+            <radialGradient id="armGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="${hasArms ? hi2 : base}"/><stop offset="100%" stop-color="${hasArms ? '#0284c7' : base}"/></radialGradient>
+            <radialGradient id="legGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="${hasLegs ? '#f59e0b' : base}"/><stop offset="100%" stop-color="${hasLegs ? '#d97706' : base}"/></radialGradient>
+          </defs>
+          <!-- Cabeza -->
+          <circle cx="45" cy="13" r="9" fill="#475569" stroke="#64748b" stroke-width="1"/>
+          <!-- Cuello -->
+          <rect x="41" y="22" width="8" height="6" rx="2" fill="#334155"/>
+          <!-- Hombros -->
+          <ellipse cx="28" cy="32" rx="8" ry="5" fill="${glow(hasShoulders, '#8b5cf6')}"/>
+          <ellipse cx="62" cy="32" rx="8" ry="5" fill="${glow(hasShoulders, '#8b5cf6')}"/>
+          <!-- Brazos superiores -->
+          <rect x="18" y="30" width="9" height="26" rx="4" fill="url(#armGrad)"/>
+          <rect x="63" y="30" width="9" height="26" rx="4" fill="url(#armGrad)"/>
+          <!-- Brazos inferiores -->
+          <rect x="17" y="57" width="8" height="22" rx="4" fill="${glow(hasArms, '#0ea5e9')}"/>
+          <rect x="65" y="57" width="8" height="22" rx="4" fill="${glow(hasArms, '#0ea5e9')}"/>
+          <!-- Torso pecho -->
+          <rect x="30" y="27" width="30" height="20" rx="5" fill="url(#chestGrad)"/>
+          <!-- Abs -->
+          <rect x="33" y="48" width="24" height="22" rx="4" fill="${glow(hasBack && hasChest, '#0f766e')}" opacity="0.6"/>
+          <!-- Línea central abs -->
+          <line x1="45" y1="48" x2="45" y2="70" stroke="#0f172a" stroke-width="1.5" opacity="0.5"/>
+          <!-- Cintura -->
+          <rect x="33" y="70" width="24" height="8" rx="3" fill="#334155"/>
+          <!-- Pierna izquierda cuadriceps -->
+          <rect x="30" y="79" width="13" height="34" rx="6" fill="url(#legGrad)"/>
+          <!-- Pierna derecha cuadriceps -->
+          <rect x="47" y="79" width="13" height="34" rx="6" fill="url(#legGrad)"/>
+          <!-- Espinillas -->
+          <rect x="31" y="113" width="11" height="22" rx="5" fill="${glow(hasLegs, '#b45309')}"/>
+          <rect x="48" y="113" width="11" height="22" rx="5" fill="${glow(hasLegs, '#b45309')}"/>
+          <!-- Pies -->
+          <ellipse cx="36" cy="136" rx="7" ry="4" fill="#1e293b"/>
+          <ellipse cx="54" cy="136" rx="7" ry="4" fill="#1e293b"/>
+          <!-- Indicadores brillantes si está activo -->
+          ${hasChest ? '<circle cx="45" cy="36" r="3" fill="#10b981" opacity="0.8"><animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite"/></circle>' : ''}
+          ${hasLegs ? '<circle cx="37" cy="96" r="2.5" fill="#f59e0b" opacity="0.8"><animate attributeName="opacity" values="0.4;1;0.4" dur="1.8s" repeatCount="indefinite"/></circle>' : ''}
+          ${hasArms ? '<circle cx="23" cy="43" r="2" fill="#06b6d4" opacity="0.8"><animate attributeName="opacity" values="0.4;1;0.4" dur="1.5s" repeatCount="indefinite"/></circle>' : ''}
         </svg>
       `;
     }
+
 
     const SafeStorage = {
       get(k) { try { return localStorage.getItem(k); } catch(e) { return null; } },
@@ -889,6 +926,7 @@
 
     let appState = {
       workoutCount: 19,
+      profile: { weightKg: 76.5, heightCm: 178 },
       routines: [
         { id: 'pecho_esp', title: '🔥 Día de Pecho y Espalda', exerciseIds: ['incline_db', 'seated_row', 'lat_pull', 'chest_fly', 'rear_delt'] },
         { id: 'arm_day', title: '💪 Día de Brazo y Hombro', exerciseIds: ['hammer_curl', 'tricep_rope', 'shoulder_press', 'bicep_bar'] },
@@ -1071,21 +1109,29 @@
 
     function renderHevyRoutinesHub() {
       const box = document.getElementById('hevyRoutinesList');
+      const colorMap = { pecho: 'border-l-rose-500', pierna: 'border-l-amber-500', brazo: 'border-l-purple-500', hombro: 'border-l-violet-400', espalda: 'border-l-blue-500' };
       box.innerHTML = appState.routines.map(r => {
         const names = r.exerciseIds.map(id => getExById(id).name).join(' • ');
+        const titleLow = r.title.toLowerCase();
+        const borderColor = Object.keys(colorMap).find(k => titleLow.includes(k)) ? colorMap[Object.keys(colorMap).find(k => titleLow.includes(k))] : 'border-l-emerald-500';
+        const lastSession = appState.workoutFeed.find(w => w.title === r.title || w.title.includes(r.title.replace(/[🔥💪🦵]/g,'').trim()));
         return `
-          <div class="studio-card rounded-2xl p-4 space-y-3 hover:border-emerald-500/30 transition">
+          <div class="studio-card rounded-2xl p-4 space-y-3 hover:border-emerald-500/30 transition border-l-4 ${borderColor}">
             <div class="flex items-start justify-between gap-2">
-              <div>
-                <h4 class="text-base font-extrabold text-white">${r.title}</h4>
-                <p class="text-xs text-slate-400 line-clamp-2 mt-0.5">${names || 'Sin ejercicios configurados'}</p>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                  <h4 class="text-base font-extrabold text-white">${r.title}</h4>
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">${r.exerciseIds.length} ejercicios</span>
+                </div>
+                <p class="text-xs text-slate-400 line-clamp-2 mt-0.5">${names || 'Sin ejercicios configurados — toca + Ejercicios'}</p>
+                ${lastSession ? `<p class="text-[11px] text-emerald-400 mt-1">⚡ Última: ${formatHumanDate(lastSession.date)} • ${lastSession.volumeKg.toLocaleString()} kg</p>` : ''}
               </div>
               <button onclick="openExercisePickerForRoutine('${r.id}')" class="shrink-0 text-emerald-400 hover:bg-emerald-500/10 text-xs font-bold px-2.5 py-1.5 rounded-xl border border-emerald-500/30">
                 + Ejercicios
               </button>
             </div>
-            <button onclick="startRoutineWorkout('${r.id}')" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-extrabold text-xs shadow-md transition">
-              ▶ Empezar este Plan (${r.exerciseIds.length} ejercicios)
+            <button onclick="startRoutineWorkout('${r.id}')" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2">
+              ▶ Empezar Plan — ${r.exerciseIds.length} ejercicios
             </button>
           </div>
         `;
@@ -1420,27 +1466,33 @@
 
     // PESTAÑAS DE MÚSCULO QUE SE ILUMINAN Y MUESTRAN CUÁNTOS EJERCICIOS LLEVAS MARCADOS
     function renderPickerMusclePills() {
-      const categories = ['ALL', 'Pecho', 'Espalda', 'Piernas', 'Hombros', 'Brazos'];
+      const categoryDefs = [
+        { id: 'ALL', label: 'Todos', icon: '💪' },
+        { id: 'Pecho', label: 'Pecho', icon: '🫁' },
+        { id: 'Espalda', label: 'Espalda', icon: '🔙' },
+        { id: 'Piernas', label: 'Piernas', icon: '🦵' },
+        { id: 'Hombros', label: 'Hombros', icon: '🏔️' },
+        { id: 'Brazos', label: 'Brazos', icon: '💪' }
+      ];
       const pillsBox = document.getElementById('pickerMusclePills');
       if (!pillsBox) return;
 
-      pillsBox.innerHTML = categories.map(cat => {
-        const isActive = pickerMuscleFilter === cat;
-        // Contar cuántos ejercicios de este músculo están marcados
+      pillsBox.innerHTML = categoryDefs.map(cat => {
+        const isActive = pickerMuscleFilter === cat.id;
         let countInCat = 0;
         multiCheckedIds.forEach(id => {
           const ex = getExById(id);
-          if (cat === 'ALL' || ex.muscle === cat) countInCat++;
+          if (cat.id === 'ALL' || ex.muscle === cat.id) countInCat++;
         });
-        const label = cat === 'ALL' ? 'Todos' : cat;
         return `
-          <button onclick="setPickerMuscle('${cat}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold shrink-0 transition flex items-center gap-1.5 ${
+          <button onclick="setPickerMuscle('${cat.id}')" class="px-3 py-2 rounded-xl text-xs font-extrabold shrink-0 transition flex items-center gap-1.5 border ${
             isActive
-              ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-              : 'bg-slate-900 text-slate-300 border border-slate-800 hover:bg-slate-800'
+              ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/30 border-emerald-400 scale-105'
+              : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800 hover:border-slate-700'
           }">
-            <span>${label}</span>
-            ${countInCat > 0 ? `<span class="px-1.5 py-0.2 rounded-full text-[10px] ${isActive ? 'bg-slate-950 text-emerald-400' : 'bg-emerald-500/20 text-emerald-300'}">${countInCat}</span>` : ''}
+            <span>${cat.icon}</span>
+            <span>${cat.label}</span>
+            ${countInCat > 0 ? `<span class="min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-black flex items-center justify-center ${isActive ? 'bg-slate-950 text-emerald-400' : 'bg-emerald-500 text-slate-950'}">${countInCat}</span>` : ''}
           </button>
         `;
       }).join('');
@@ -1535,23 +1587,50 @@
       const sel = document.getElementById('clearProgressExerciseSelect');
       if (!sel) return;
       if (sel.options.length === 0) {
-        sel.innerHTML = EXERCISE_CATALOG.slice(0, 8).map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+        sel.innerHTML = EXERCISE_CATALOG.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
       }
       const ex = getExById(sel.value);
-      const startKg = Math.max(10, ex.defaultKg - 10);
-      const diff = ex.defaultKg - startKg;
+
+      // Buscar historial real de este ejercicio en todos los días guardados
+      const histSessions = [];
+      Object.keys(appState.days).sort().forEach(dateStr => {
+        const dayFeeds = appState.workoutFeed.filter(w => w.date === dateStr);
+        dayFeeds.forEach(w => {
+          w.summaryLines && w.summaryLines.forEach(line => {
+            if (line.toLowerCase().includes(ex.name.toLowerCase().substring(0, 8))) {
+              const match = line.match(/(\d+(?:\.\d+)?)kg/);
+              const repsMatch = line.match(/^(\d+)x/);
+              if (match) histSessions.push({ date: dateStr, kg: parseFloat(match[1]), sets: repsMatch ? parseInt(repsMatch[1]) : 1 });
+            }
+          });
+        });
+      });
+
+      const startKg = histSessions.length > 0 ? histSessions[0].kg : Math.max(10, ex.defaultKg - 12.5);
+      const currentKg = histSessions.length > 0 ? histSessions[histSessions.length - 1].kg : ex.defaultKg;
+      const diff = (currentKg - startKg).toFixed(1);
+      const bodyWeightKg = appState.profile?.weightKg || 76.5;
+      const relStrength = (currentKg / bodyWeightKg).toFixed(2);
+      const level = relStrength >= 1.5 ? '🏆 Élite' : relStrength >= 1.0 ? '💪 Avanzado' : relStrength >= 0.75 ? '📈 Intermedio' : '🌱 Iniciando';
 
       document.getElementById('clearProgressSummaryBanner').innerHTML = `
-        🚀 En <b>${ex.name}</b> empezaste levantando <b>${startKg} kg</b> y tu marca actual es <b>${ex.prev}</b> (<b class="text-emerald-300">+${diff} kg de mejora</b>).
+        <p>🚀 <b>${ex.name}</b>: empezaste con <b>${startKg} kg</b> y tu marca actual es <b>${currentKg} kg × ${ex.defaultReps} reps</b> (<span class="text-emerald-300 font-mono">+${diff} kg de mejora</span>).</p>
+        <p class="mt-1.5">⚡ Fuerza relativa: <b class="text-amber-300">${relStrength}x tu peso corporal</b> — Nivel: <b>${level}</b></p>
       `;
-      document.getElementById('clearProgressHistoryRows').innerHTML = `
-        <div class="flex justify-between items-center bg-slate-900 px-3 py-2 rounded-xl text-xs">
-          <span class="text-slate-400">Marca inicial</span>
-          <span class="font-mono font-bold text-slate-300">${startKg} kg × 8 repes</span>
-        </div>
-        <div class="flex justify-between items-center bg-emerald-500/15 border border-emerald-500/30 px-3 py-2 rounded-xl text-xs">
-          <span class="text-emerald-300 font-bold">Última Marca Registrada</span>
-          <span class="font-mono font-extrabold text-emerald-400">${ex.prev}</span>
+
+      const histRows = histSessions.length > 0
+        ? histSessions.slice(-5).map((s, i) => `
+          <div class="flex justify-between items-center bg-slate-900 px-3 py-2 rounded-xl text-xs">
+            <span class="text-slate-400">${formatHumanDate(s.date)}</span>
+            <span class="font-mono font-bold ${i === histSessions.slice(-5).length - 1 ? 'text-emerald-400' : 'text-slate-300'}">${s.kg} kg</span>
+          </div>
+        `).join('')
+        : `<div class="flex justify-between items-center bg-slate-900 px-3 py-2 rounded-xl text-xs"><span class="text-slate-400">Marca de referencia</span><span class="font-mono font-bold text-slate-300">${ex.prev}</span></div>`;
+
+      document.getElementById('clearProgressHistoryRows').innerHTML = histRows + `
+        <div class="flex justify-between items-center bg-emerald-500/15 border border-emerald-500/30 px-3 py-2 rounded-xl text-xs mt-1">
+          <span class="text-emerald-300 font-bold">Marca Actual</span>
+          <span class="font-mono font-extrabold text-emerald-400">${currentKg} kg — ${relStrength}x tu peso</span>
         </div>
       `;
     }
