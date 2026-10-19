@@ -104,7 +104,7 @@
     }
     .bottom-dock {
       position: fixed;
-      background: rgba(13, 17, 23, 0.4) !important;
+      background: rgba(13, 17, 23, 0.45) !important;
       backdrop-filter: blur(30px) saturate(200%) !important;
       -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
       border: 1px solid rgba(255, 255, 255, 0.18) !important;
@@ -120,36 +120,33 @@
       justify-content: space-around;
       align-items: center;
       touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
     .dock-btn {
       border-radius: 9999px !important;
-      transition: background-color 0.2s ease, transform 0.2s ease !important;
+      background: transparent !important;
+      border: none !important;
+      transition: color 0.2s ease !important;
       position: relative;
       z-index: 2;
-    }
-    .dock-btn.active {
-      background: rgba(16, 185, 129, 0.3) !important;
-      backdrop-filter: blur(15px) !important;
-      -webkit-backdrop-filter: blur(15px) !important;
-      border: 1px solid rgba(52, 211, 153, 0.6) !important;
-      box-shadow: 0 6px 25px rgba(16, 185, 129, 0.5), inset 0 0 12px rgba(16, 185, 129, 0.3) !important;
-      transform: scale(1.08);
+      flex: 1;
+      text-align: center;
     }
     #ios-floating-bubble {
       position: absolute;
       top: 6px;
       bottom: 6px;
-      width: 50px;
-      border-radius: 9999px;
-      background: rgba(16, 185, 129, 0.45) !important;
-      backdrop-filter: blur(15px) !important;
-      -webkit-backdrop-filter: blur(15px) !important;
+      width: 65px;
+      border-radius: 20px !important;
+      background: rgba(16, 185, 129, 0.4) !important;
+      backdrop-filter: blur(16px) !important;
+      -webkit-backdrop-filter: blur(16px) !important;
       border: 1px solid rgba(52, 211, 153, 0.7) !important;
-      box-shadow: 0 6px 25px rgba(16, 185, 129, 0.6), inset 0 0 12px rgba(16, 185, 129, 0.4) !important;
-      transform: scale(1.12);
-      transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.25);
+      box-shadow: 0 6px 25px rgba(16, 185, 129, 0.5), inset 0 0 12px rgba(16, 185, 129, 0.3) !important;
+      transform: scale(1.05);
+      transition: transform 0.1s ease, left 0.08s ease-out;
       pointer-events: none;
-      display: none;
       z-index: 1;
     }
     .side-nav-btn.active {
@@ -2759,6 +2756,18 @@
       const dockButtons = dock.querySelectorAll('.dock-btn');
       let isDragging = false;
 
+      function alignBubbleToButton(btn) {
+        if (!btn || !bubble) return;
+
+        const dockRect = dock.getBoundingClientRect();
+        const btnRect = btn.getBoundingClientRect();
+        const targetLeft = (btnRect.left - dockRect.left) + (btnRect.width / 2) - (bubble.offsetWidth / 2);
+        bubble.style.left = `${targetLeft}px`;
+      }
+
+      const activeBtn = dock.querySelector('.dock-btn.active') || dockButtons[0];
+      alignBubbleToButton(activeBtn);
+
       function updateBubblePosition(clientX) {
         if (!bubble) return;
 
@@ -2769,7 +2778,6 @@
         offsetX = Math.max(minX, Math.min(offsetX - (bubble.offsetWidth / 2), maxX));
 
         bubble.style.left = `${offsetX}px`;
-        bubble.style.display = 'block';
 
         const bubbleCenter = dockRect.left + offsetX + (bubble.offsetWidth / 2);
         dockButtons.forEach(btn => {
@@ -2799,7 +2807,7 @@
 
       const endDrag = () => {
         isDragging = false;
-        if (bubble) bubble.style.display = 'none';
+        alignBubbleToButton(dock.querySelector('.dock-btn.active'));
       };
 
       dock.addEventListener('touchend', endDrag);
