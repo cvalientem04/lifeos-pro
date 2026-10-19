@@ -104,7 +104,7 @@
     }
     .bottom-dock {
       position: fixed;
-      background: rgba(13, 17, 23, 0.45) !important;
+      background: rgba(13, 17, 23, 0.4) !important;
       backdrop-filter: blur(30px) saturate(200%) !important;
       -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
       border: 1px solid rgba(255, 255, 255, 0.18) !important;
@@ -120,33 +120,36 @@
       justify-content: space-around;
       align-items: center;
       touch-action: none;
-      -webkit-user-select: none;
-      user-select: none;
     }
     .dock-btn {
       border-radius: 9999px !important;
-      background: transparent !important;
-      border: none !important;
-      transition: color 0.2s ease !important;
+      transition: background-color 0.2s ease, transform 0.2s ease !important;
       position: relative;
       z-index: 2;
-      flex: 1;
-      text-align: center;
+    }
+    .dock-btn.active {
+      background: rgba(16, 185, 129, 0.3) !important;
+      backdrop-filter: blur(15px) !important;
+      -webkit-backdrop-filter: blur(15px) !important;
+      border: 1px solid rgba(52, 211, 153, 0.6) !important;
+      box-shadow: 0 6px 25px rgba(16, 185, 129, 0.5), inset 0 0 12px rgba(16, 185, 129, 0.3) !important;
+      transform: scale(1.08);
     }
     #ios-floating-bubble {
       position: absolute;
       top: 6px;
       bottom: 6px;
-      width: 65px;
-      border-radius: 20px !important;
-      background: rgba(16, 185, 129, 0.4) !important;
-      backdrop-filter: blur(16px) !important;
-      -webkit-backdrop-filter: blur(16px) !important;
+      width: 50px;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.45) !important;
+      backdrop-filter: blur(15px) !important;
+      -webkit-backdrop-filter: blur(15px) !important;
       border: 1px solid rgba(52, 211, 153, 0.7) !important;
-      box-shadow: 0 6px 25px rgba(16, 185, 129, 0.5), inset 0 0 12px rgba(16, 185, 129, 0.3) !important;
-      transform: scale(1.05);
-      transition: transform 0.1s ease, left 0.08s ease-out;
+      box-shadow: 0 6px 25px rgba(16, 185, 129, 0.6), inset 0 0 12px rgba(16, 185, 129, 0.4) !important;
+      transform: scale(1.12);
+      transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.25);
       pointer-events: none;
+      display: none;
       z-index: 1;
     }
     .side-nav-btn.active {
@@ -2752,55 +2755,52 @@
       const dock = document.querySelector('.bottom-dock');
       if (!dock) return;
 
-      const bubble = document.getElementById('ios-floating-bubble');
       const dockButtons = dock.querySelectorAll('.dock-btn');
-      let isDragging = false;
 
-      function updateBubblePosition(clientX) {
-        if (!bubble) return;
-
-        const dockRect = dock.getBoundingClientRect();
-        let offsetX = clientX - dockRect.left;
-        const minX = 6;
-        const maxX = dock.offsetWidth - bubble.offsetWidth - 6;
-        offsetX = Math.max(minX, Math.min(offsetX - (bubble.offsetWidth / 2), maxX));
-
-        bubble.style.left = `${offsetX}px`;
-        bubble.style.display = 'block';
-
-        const bubbleCenter = dockRect.left + offsetX + (bubble.offsetWidth / 2);
-        dockButtons.forEach(btn => {
+      function getButtonUnderTouch(clientX, clientY) {
+        for (const btn of dockButtons) {
           const rect = btn.getBoundingClientRect();
-          if (bubbleCenter >= rect.left && bubbleCenter <= rect.right) {
-            const onclickAttr = btn.getAttribute('onclick');
-            const match = onclickAttr && onclickAttr.match(/switchTab\(['"]([^'"]+)['"]\)/);
-            if (match && match[1]) {
-              window.switchTab(match[1]);
-            }
+          if (
+            clientX >= rect.left &&
+            clientX <= rect.right &&
+            clientY >= rect.top - 30 &&
+            clientY <= rect.bottom + 30
+          ) {
+            return btn;
           }
-        });
+        }
+        return null;
       }
 
-      dock.addEventListener('touchstart', event => {
-        const touch = event.touches[0];
-        if (!touch) return;
-        isDragging = true;
-        updateBubblePosition(touch.clientX);
-      }, { passive: true });
+      dockButtons.forEach(btn => {
+        btn.addEventListener('touchstart', () => {
+          btn.classList.add('touch-hover');
+        }, { passive: true });
+      });
 
       dock.addEventListener('touchmove', event => {
-        if (!isDragging) return;
         const touch = event.touches[0];
-        if (touch) updateBubblePosition(touch.clientX);
+        if (!touch) return;
+
+        const targetBtn = getButtonUnderTouch(touch.clientX, touch.clientY);
+        dockButtons.forEach(btn => btn.classList.remove('touch-hover'));
+
+        if (targetBtn) {
+          targetBtn.classList.add('touch-hover');
+          const onclickAttr = targetBtn.getAttribute('onclick');
+          const match = onclickAttr && onclickAttr.match(/switchTab\(['"]([^'"]+)['"]\)/);
+          if (match && match[1]) {
+            window.switchTab(match[1]);
+          }
+        }
       }, { passive: true });
 
-      const endDrag = () => {
-        isDragging = false;
-        if (bubble) bubble.style.display = 'none';
+      const clearTouch = () => {
+        dockButtons.forEach(btn => btn.classList.remove('touch-hover'));
       };
 
-      dock.addEventListener('touchend', endDrag);
-      dock.addEventListener('touchcancel', endDrag);
+      dock.addEventListener('touchend', clearTouch);
+      dock.addEventListener('touchcancel', clearTouch);
 
       loadFromStorage();
       refreshCurrentActiveView();
