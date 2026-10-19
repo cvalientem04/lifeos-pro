@@ -110,7 +110,7 @@
       border: 1px solid rgba(255, 255, 255, 0.18) !important;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
       border-radius: 9999px !important;
-      padding: 6px 8px !important;
+      padding: 6px 10px !important;
       margin-left: 16px;
       margin-right: 16px;
       width: auto !important;
@@ -127,7 +127,6 @@
       border-radius: 9999px !important;
       background: transparent !important;
       border: none !important;
-      transition: color 0.2s ease !important;
       position: relative;
       z-index: 2;
       flex: 1;
@@ -137,17 +136,22 @@
       position: absolute;
       top: 6px;
       bottom: 6px;
-      width: 65px;
-      border-radius: 20px !important;
-      background: rgba(16, 185, 129, 0.4) !important;
+      width: 72px;
+      border-radius: 18px !important;
+      background: rgba(16, 185, 129, 0.45) !important;
       backdrop-filter: blur(16px) !important;
       -webkit-backdrop-filter: blur(16px) !important;
       border: 1px solid rgba(52, 211, 153, 0.7) !important;
-      box-shadow: 0 6px 25px rgba(16, 185, 129, 0.5), inset 0 0 12px rgba(16, 185, 129, 0.3) !important;
-      transform: scale(1.05);
-      transition: transform 0.1s ease, left 0.08s ease-out;
+      box-shadow: 0 6px 25px rgba(16, 185, 129, 0.6), inset 0 0 12px rgba(16, 185, 129, 0.4) !important;
+      transform: translateZ(0) scale(1);
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.25), left 0.05s linear !important;
       pointer-events: none;
       z-index: 1;
+    }
+    .dock-dock-active-scale #ios-floating-bubble,
+    .dock-dragging #ios-floating-bubble {
+      transform: translateZ(0) scale(1.12) !important;
+      background: rgba(16, 185, 129, 0.6) !important;
     }
     .side-nav-btn.active {
       background: linear-gradient(90deg, #10b981, #059669);
@@ -2796,6 +2800,7 @@
         const touch = event.touches[0];
         if (!touch) return;
         isDragging = true;
+        dock.classList.add('dock-dragging');
         updateBubblePosition(touch.clientX);
       }, { passive: true });
 
@@ -2807,6 +2812,7 @@
 
       const endDrag = () => {
         isDragging = false;
+        dock.classList.remove('dock-dragging');
         alignBubbleToButton(dock.querySelector('.dock-btn.active'));
       };
 
