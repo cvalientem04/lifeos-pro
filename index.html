@@ -1259,15 +1259,20 @@
       activeWorkout.photoDataUrl = '';
       activeWorkout.exercises = r.exerciseIds.map(id => {
         const meta = getExById(id);
+        const def = (appState.exerciseDefaults && appState.exerciseDefaults[id]) || {
+          kg: meta.defaultKg,
+          reps: meta.defaultReps,
+          prev: meta.prev
+        };
         return {
           id: meta.id,
           name: meta.name,
           muscle: meta.muscle,
-          prev: meta.prev,
+          prev: def.prev,
           sets: [
-            { kg: meta.defaultKg, reps: meta.defaultReps, done: false },
-            { kg: meta.defaultKg, reps: meta.defaultReps, done: false },
-            { kg: meta.defaultKg, reps: meta.defaultReps, done: false }
+            { kg: def.kg, reps: def.reps, done: false },
+            { kg: def.kg, reps: def.reps, done: false },
+            { kg: def.kg, reps: def.reps, done: false }
           ]
         };
       });
@@ -1382,10 +1387,10 @@
                   </div>
                   <div class="col-span-4 text-center text-xs font-mono text-slate-400">${ex.prev}</div>
                   <div class="col-span-2">
-                    <input type="number" step="0.5" value="${st.kg}" oninput="updateSetVal(${exIdx}, ${setIdx}, 'kg', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg py-1 text-center text-xs font-extrabold text-white">
+                    <input type="number" step="0.5" value="${st.kg}" onchange="updateSetVal(${exIdx}, ${setIdx}, 'kg', this.value)" onfocus="this.select()" class="w-full bg-slate-950 border border-slate-700 rounded-lg py-1 text-center text-xs font-extrabold text-white">
                   </div>
                   <div class="col-span-2">
-                    <input type="number" value="${st.reps}" oninput="updateSetVal(${exIdx}, ${setIdx}, 'reps', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg py-1 text-center text-xs font-extrabold text-white">
+                    <input type="number" value="${st.reps}" onchange="updateSetVal(${exIdx}, ${setIdx}, 'reps', this.value)" onfocus="this.select()" class="w-full bg-slate-950 border border-slate-700 rounded-lg py-1 text-center text-xs font-extrabold text-white">
                   </div>
                   <div class="col-span-2 flex justify-center">
                     <button onclick="toggleSetCheck(${exIdx}, ${setIdx})" class="w-8 h-7 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-extrabold text-xs flex items-center justify-center transition ${st.done ? 'check-btn-completed' : ''}">
@@ -1485,11 +1490,19 @@
       const muscles = [];
       const summaryLines = [];
 
+      if (!appState.exerciseDefaults) appState.exerciseDefaults = {};
+
       activeWorkout.exercises.forEach(ex => {
         if (!muscles.includes(ex.muscle)) muscles.push(ex.muscle);
         const doneList = ex.sets.filter(s => s.done);
         if (doneList.length > 0) {
           const bestKg = Math.max(...doneList.map(s => s.kg));
+          const lastSet = doneList[doneList.length - 1];
+          appState.exerciseDefaults[ex.id] = {
+            kg: lastSet.kg,
+            reps: lastSet.reps,
+            prev: `${bestKg}kg x ${lastSet.reps}`
+          };
           summaryLines.push(`${doneList.length}x ${ex.name} (${bestKg}kg)`);
           doneList.forEach(s => {
             setsCount++;
@@ -1657,15 +1670,20 @@
       if (pickerTargetMode === 'ACTIVE') {
         multiCheckedIds.forEach(id => {
           const meta = getExById(id);
+          const def = (appState.exerciseDefaults && appState.exerciseDefaults[id]) || {
+            kg: meta.defaultKg,
+            reps: meta.defaultReps,
+            prev: meta.prev
+          };
           activeWorkout.exercises.push({
             id: meta.id,
             name: meta.name,
             muscle: meta.muscle,
-            prev: meta.prev,
+            prev: def.prev,
             sets: [
-              { kg: meta.defaultKg, reps: meta.defaultReps, done: false },
-              { kg: meta.defaultKg, reps: meta.defaultReps, done: false },
-              { kg: meta.defaultKg, reps: meta.defaultReps, done: false }
+              { kg: def.kg, reps: def.reps, done: false },
+              { kg: def.kg, reps: def.reps, done: false },
+              { kg: def.kg, reps: def.reps, done: false }
             ]
           });
         });
