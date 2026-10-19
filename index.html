@@ -134,31 +134,38 @@
       transition: color 0.2s ease !important;
     }
     .dock-btn.active {
+      background: rgba(16, 185, 129, 0.3) !important;
+      backdrop-filter: blur(15px) !important;
+      -webkit-backdrop-filter: blur(15px) !important;
+      border: 1px solid rgba(52, 211, 153, 0.6) !important;
+      box-shadow: 0 6px 25px rgba(16, 185, 129, 0.5), inset 0 0 12px rgba(16, 185, 129, 0.3) !important;
+      transform: scale(1.08);
+      transition: all 0.2s ease;
+    }
+    .dock-dragging .dock-btn.active {
       background: transparent !important;
-      border: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      border-color: transparent !important;
       box-shadow: none !important;
-      transform: none !important;
+      transform: scale(1);
     }
     #ios-floating-bubble {
       position: absolute;
       top: 6px;
       bottom: 6px;
-      width: 72px;
-      border-radius: 18px !important;
+      width: 50px;
+      border-radius: 9999px;
       background: rgba(16, 185, 129, 0.45) !important;
-      backdrop-filter: blur(16px) !important;
-      -webkit-backdrop-filter: blur(16px) !important;
+      backdrop-filter: blur(15px) !important;
+      -webkit-backdrop-filter: blur(15px) !important;
       border: 1px solid rgba(52, 211, 153, 0.7) !important;
       box-shadow: 0 6px 25px rgba(16, 185, 129, 0.6), inset 0 0 12px rgba(16, 185, 129, 0.4) !important;
-      transform: translateZ(0) scale(1);
-      transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.25), left 0.05s linear !important;
+      transform: scale(1.15);
+      transition: left 0.05s linear;
       pointer-events: none;
-      display: block;
+      display: none;
       z-index: 1;
-    }
-    .dock-dragging #ios-floating-bubble {
-      transform: translateZ(0) scale(1.15) !important;
-      background: rgba(16, 185, 129, 0.6) !important;
     }
     .side-nav-btn.active {
       background: linear-gradient(90deg, #10b981, #059669);
@@ -2766,17 +2773,7 @@
       const bubble = document.getElementById('ios-floating-bubble');
       const dockButtons = dock.querySelectorAll('.dock-btn');
       let isDragging = false;
-
-      function alignBubbleToButton(btn) {
-        if (!btn || !bubble) return;
-        const dockRect = dock.getBoundingClientRect();
-        const btnRect = btn.getBoundingClientRect();
-        const targetLeft = (btnRect.left - dockRect.left) + (btnRect.width / 2) - (bubble.offsetWidth / 2);
-        bubble.style.left = `${targetLeft}px`;
-      }
-
-      const initialActive = dock.querySelector('.dock-btn.active') || dockButtons[0];
-      alignBubbleToButton(initialActive);
+      let targetTabMatch = null;
 
       function updateBubblePosition(clientX) {
         const dockRect = dock.getBoundingClientRect();
@@ -2793,9 +2790,7 @@
             const onclickAttr = btn.getAttribute('onclick');
             const match = onclickAttr && onclickAttr.match(/switchTab\(['"]([^'"]+)['"]\)/);
             if (match && match[1]) {
-              window.switchTab(match[1]);
-              dockButtons.forEach(b => b.classList.remove('active'));
-              btn.classList.add('active');
+              targetTabMatch = match[1];
             }
           }
         });
@@ -2804,6 +2799,7 @@
       dock.addEventListener('touchstart', event => {
         isDragging = true;
         dock.classList.add('dock-dragging');
+        bubble.style.display = 'block';
         const touch = event.touches[0];
         if (touch) updateBubblePosition(touch.clientX);
       }, { passive: true });
@@ -2815,10 +2811,14 @@
       }, { passive: true });
 
       const endDrag = () => {
+        if (!isDragging) return;
         isDragging = false;
         dock.classList.remove('dock-dragging');
-        const currentActive = dock.querySelector('.dock-btn.active');
-        if (currentActive) alignBubbleToButton(currentActive);
+        bubble.style.display = 'none';
+        if (targetTabMatch) {
+          window.switchTab(targetTabMatch);
+          targetTabMatch = null;
+        }
       };
 
       dock.addEventListener('touchend', endDrag);
