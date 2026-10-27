@@ -71,6 +71,29 @@
       border-color: #10b981;
       outline: none;
     }
+    .logo-mark {
+      width: 135%;
+      height: 135%;
+      max-width: none;
+      object-fit: cover;
+      object-position: center;
+      transform: scale(1.08);
+    }
+    .date-picker {
+      color-scheme: dark;
+      cursor: pointer;
+    }
+    .date-picker::-webkit-calendar-picker-indicator {
+      display: none;
+      cursor: pointer;
+    }
+    .header-action {
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    }
     .shop-item {
       transition: opacity 0.4s ease, transform 0.4s ease, filter 0.4s ease;
     }
@@ -112,14 +135,14 @@
       border: 1px solid rgba(255, 255, 255, 0.18) !important;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
       border-radius: 9999px !important;
-      padding: 6px 10px !important;
+      padding: 4px 6px !important;
       margin-left: 16px;
       margin-right: 16px;
       width: auto !important;
       left: 0;
       right: 0;
       display: flex;
-      justify-content: space-around;
+      justify-content: flex-start;
       align-items: center;
       touch-action: none;
     }
@@ -131,16 +154,11 @@
       z-index: 2;
       flex: 1;
       text-align: center;
-      transition: color 0.2s ease !important;
+      transition: color 0.25s ease !important;
     }
     .dock-btn.active {
-      background: rgba(16, 185, 129, 0.3) !important;
-      backdrop-filter: blur(15px) !important;
-      -webkit-backdrop-filter: blur(15px) !important;
-      border: 1px solid rgba(52, 211, 153, 0.6) !important;
-      box-shadow: 0 6px 25px rgba(16, 185, 129, 0.5), inset 0 0 12px rgba(16, 185, 129, 0.3) !important;
-      transform: scale(1.08);
-      transition: all 0.2s ease;
+      color: #a7f3d0 !important;
+      transform: none;
     }
     .dock-dragging .dock-btn.active {
       background: transparent !important;
@@ -152,9 +170,10 @@
     }
     #ios-floating-bubble {
       position: absolute;
-      top: 6px;
-      bottom: 6px;
-      width: 50px;
+      top: 4px;
+      bottom: 4px;
+      width: 68px;
+      min-width: 0;
       border-radius: 9999px;
       background: rgba(16, 185, 129, 0.5) !important;
       backdrop-filter: blur(15px) !important;
@@ -162,17 +181,30 @@
       border: 1px solid rgba(52, 211, 153, 0.7) !important;
       box-shadow: 0 6px 25px rgba(16, 185, 129, 0.6), inset 0 0 12px rgba(16, 185, 129, 0.4) !important;
       transform: scale(1);
-      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.25), background 0.2s ease, backdrop-filter 0.2s ease, left 0.05s linear !important;
+      transition: transform 0.24s cubic-bezier(0.175, 0.885, 0.32, 1.25), background 0.24s ease, backdrop-filter 0.24s ease, left 0.24s cubic-bezier(0.22, 1, 0.36, 1), width 0.24s ease !important;
       pointer-events: none;
-      display: none;
+      display: block;
       z-index: 1;
     }
     .dock-dragging #ios-floating-bubble {
-      transform: scale(1.25) !important;
+      transform: scale(1.12) !important;
       background: rgba(16, 185, 129, 0.20) !important;
       backdrop-filter: blur(24px) !important;
       -webkit-backdrop-filter: blur(24px) !important;
       border-color: rgba(52, 211, 153, 0.4) !important;
+    }
+    .dock-dragging .dock-btn {
+      transform: none !important;
+    }
+    .ghost-mode-ready {
+      background: rgba(16, 185, 129, 0.2) !important;
+      border-color: rgba(52, 211, 153, 0.65) !important;
+      color: #a7f3d0 !important;
+      animation: ghostGlow 2s ease-in-out infinite;
+    }
+    @keyframes ghostGlow {
+      0%, 100% { box-shadow: 0 0 0 rgba(16, 185, 129, 0); }
+      50% { box-shadow: 0 0 18px rgba(16, 185, 129, 0.28); }
     }
     .side-nav-btn.active {
       background: linear-gradient(90deg, #10b981, #059669);
@@ -217,7 +249,7 @@
   <aside class="hidden lg:flex lg:w-64 bg-[#0b0f17] border-r border-slate-800/80 flex-col justify-between p-4 lg:fixed lg:h-screen z-30">
     <div>
       <div class="flex items-center gap-2.5 mb-6 px-1">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 font-black flex items-center justify-center text-lg shadow-lg shadow-emerald-500/20">⚡</div>
+        <div class="w-9 h-9 rounded-xl bg-[#071b18] border border-emerald-400/40 flex items-center justify-center shadow-lg shadow-emerald-500/20 overflow-hidden"><img src="img/logo.png" alt="Logo LifeOS" class="logo-mark rounded-lg drop-shadow-[0_0_5px_rgba(45,212,191,0.8)]"></div>
         <div>
           <h1 class="text-base font-extrabold text-white leading-none">LifeOS 5.5</h1>
           <span class="text-[10px] text-emerald-400 font-semibold">Performance Studio</span>
@@ -295,7 +327,7 @@
       <!-- Fila 1: Marca + Racha + Botón de Voz -->
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-2 min-w-0">
-          <span class="w-7 h-7 rounded-lg bg-emerald-500 text-slate-950 font-black flex items-center justify-center text-xs shrink-0">⚡</span>
+          <span class="w-7 h-7 rounded-lg bg-[#071b18] border border-emerald-400/40 flex items-center justify-center text-xs shrink-0 overflow-hidden"><img src="img/logo.png" alt="Logo LifeOS" class="logo-mark rounded-md drop-shadow-[0_0_4px_rgba(45,212,191,0.8)]"></span>
           <div class="truncate">
             <h2 class="text-sm font-extrabold text-white leading-tight truncate">LifeOS Studio</h2>
             <p id="headerReadableDate" class="text-[11px] text-emerald-400 font-semibold capitalize truncate">Hoy</p>
@@ -303,10 +335,13 @@
         </div>
 
         <div class="flex items-center gap-1.5 shrink-0">
-          <button onclick="switchTab('weekly')" class="px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-extrabold text-amber-400 flex items-center gap-1">
+          <button onclick="switchTab('weekly')" class="header-action px-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-extrabold text-amber-400 flex items-center gap-1">
             🔥 <span id="topStreakNum">14</span>d
           </button>
-          <button onclick="openVoiceModal('GLOBAL')" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-extrabold flex items-center gap-1">
+          <button onclick="toggleGhostMode()" id="ghostModeButton" aria-label="Modo fantasma" class="header-action w-9 rounded-xl bg-slate-900 border border-slate-800 text-base flex items-center justify-center transition" title="Disponible al llegar a 5.000 pasos">
+            👻
+          </button>
+          <button onclick="openVoiceModal('GLOBAL')" class="header-action px-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-extrabold flex items-center gap-1">
             <span>🎙️</span> <span>Voz</span>
           </button>
         </div>
@@ -316,9 +351,9 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
         <!-- Selector de Fecha Centrado -->
         <div class="flex items-center justify-between bg-slate-900 px-2 py-1 rounded-xl border border-slate-800 w-full">
-          <button onclick="changeDay(-1)" class="w-8 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold shrink-0">◀</button>
-          <input type="date" id="currentDatePicker" onchange="onDateChange(this.value)" class="bg-transparent text-xs font-bold font-mono text-white text-center focus:outline-none w-full">
-          <button onclick="changeDay(1)" class="w-8 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold shrink-0">▶</button>
+          <button onclick="changeDay(-1)" class="w-8 h-7 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-bold shrink-0 transition-colors">◀</button>
+          <input type="date" id="currentDatePicker" aria-label="Elegir fecha" onclick="if (this.showPicker) this.showPicker()" onchange="onDateChange(this.value)" class="date-picker bg-transparent text-xs font-bold font-mono text-white text-center focus:outline-none w-full">
+          <button onclick="changeDay(1)" class="w-8 h-7 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-bold shrink-0 transition-colors">▶</button>
         </div>
 
         <!-- Selector Todo / Gym / Casa repartido en 3 columnas iguales y centrado -->
@@ -1084,6 +1119,7 @@
         bikeKm: 0,
         bikeMinutes: 0,
         bikeRoutes: [], // Guarda { id, date, name, km, mins, avgSpeed, maxSpeed, segments: [{pts, color, speed}] }
+        ghostMode: false,
         meals: [],
         expenses: [],
         mood: '😄',
@@ -1123,6 +1159,7 @@
       document.getElementById('headerReadableDate').textContent = isToday
         ? `Hoy (${formatHumanDate(currentDate)})`
         : formatHumanDate(currentDate);
+      renderStreakAndGhostMode();
 
       renderHomeView();
       if (currentActiveTab === 'gym') renderGymSection();
@@ -1174,6 +1211,7 @@
         if (dbtn) dbtn.classList.toggle('active', t === tabId);
         if (mbtn) mbtn.classList.toggle('active', t === tabId);
       });
+        moveDockBubbleToActiveTab(tabId);
 
       const minBanner = document.getElementById('minimizedWorkoutBanner');
       if (minBanner) minBanner.classList.toggle('hidden', !(activeWorkout.running && tabId !== 'gym'));
@@ -1187,6 +1225,93 @@
         }, 120);
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function getWeekKey(dateStr = currentDate) {
+      const date = new Date(dateStr + 'T12:00:00');
+      const day = date.getDay() || 7;
+      date.setDate(date.getDate() + 4 - day);
+      const yearStart = new Date(date.getFullYear(), 0, 1);
+      return `${date.getFullYear()}-${Math.ceil((((date - yearStart) / 86400000) + 1) / 7)}`;
+    }
+
+    function isWorkoutDay(dateStr) {
+      return appState.workoutFeed.some(w => w.date === dateStr && w.user.startsWith('Tú'));
+    }
+
+    function isStreakDay(dateStr) {
+      const day = appState.days[dateStr];
+      if (!day) return false;
+      const turkeyCount = (day.turkeys.fedMorning ? 1 : 0) + (day.turkeys.waterGiven ? 1 : 0) + (day.turkeys.fedEvening ? 1 : 0);
+      return (day.steps || 0) >= 6000 || isWorkoutDay(dateStr) || !!day.ghostMode || turkeyCount >= 2;
+    }
+
+    function getCurrentStreak() {
+      let streak = 0;
+      const date = new Date(currentDate + 'T12:00:00');
+      while (streak < 365) {
+        const iso = date.toISOString().split('T')[0];
+        if (!isStreakDay(iso)) break;
+        streak++;
+        date.setDate(date.getDate() - 1);
+      }
+      return streak;
+    }
+
+    function getGhostUsesThisWeek() {
+      return Object.keys(appState.days).filter(dateStr =>
+        getWeekKey(dateStr) === getWeekKey(currentDate) && appState.days[dateStr].ghostMode
+      ).length;
+    }
+
+    function renderStreakAndGhostMode() {
+      const day = getDayData(currentDate);
+      const streakEl = document.getElementById('topStreakNum');
+      const button = document.getElementById('ghostModeButton');
+      if (streakEl) streakEl.textContent = getCurrentStreak();
+      if (!button) return;
+
+      const uses = getGhostUsesThisWeek();
+      const canActivate = (day.steps || 0) >= 5000 && uses < 2;
+      button.classList.toggle('ghost-mode-ready', canActivate && !day.ghostMode);
+      button.classList.toggle('bg-emerald-500/20', !!day.ghostMode);
+      button.classList.toggle('border-emerald-500/40', !!day.ghostMode);
+      button.classList.toggle('text-emerald-300', !!day.ghostMode);
+      button.classList.toggle('border-slate-800', !day.ghostMode);
+      button.classList.toggle('text-slate-400', !day.ghostMode);
+      button.disabled = !day.ghostMode && !canActivate;
+      button.title = day.ghostMode
+        ? `Modo fantasma activo para ${formatHumanDate(currentDate)}: este día protege tu racha`
+        : canActivate
+          ? `Activar modo fantasma para ${formatHumanDate(currentDate)} (${2 - uses} uso${2 - uses === 1 ? '' : 's'} disponible${2 - uses === 1 ? '' : 's'})`
+          : `Necesitas 5.000 pasos y quedan ${Math.max(0, 2 - uses)} usos esta semana`;
+      button.setAttribute('aria-pressed', day.ghostMode ? 'true' : 'false');
+      button.setAttribute('aria-label', day.ghostMode
+        ? `Modo fantasma activo para ${formatHumanDate(currentDate)}`
+        : `Modo fantasma, ${uses} de 2 usos semanales`);
+    }
+
+    function toggleGhostMode() {
+      const day = getDayData(currentDate);
+      if (day.ghostMode) return;
+      const uses = getGhostUsesThisWeek();
+      if ((day.steps || 0) < 5000 || uses >= 2) {
+        renderStreakAndGhostMode();
+        return;
+      }
+      day.ghostMode = true;
+      saveToStorage();
+    }
+
+    function moveDockBubbleToActiveTab(tabId) {
+      const dock = document.querySelector('.bottom-dock');
+      const bubble = document.getElementById('ios-floating-bubble');
+      const activeButton = document.getElementById('mtab-' + tabId);
+      if (!dock || !bubble || !activeButton) return;
+      const dockRect = dock.getBoundingClientRect();
+      const buttonRect = activeButton.getBoundingClientRect();
+      bubble.style.width = `${buttonRect.width}px`;
+      bubble.style.left = `${buttonRect.left - dockRect.left}px`;
     }
 
     // =========================================================================
@@ -2824,7 +2949,6 @@
       dock.addEventListener('touchstart', event => {
         isDragging = true;
         dock.classList.add('dock-dragging');
-        bubble.style.display = 'block';
         const touch = event.touches[0];
         if (touch) updateBubblePosition(touch.clientX);
       }, { passive: true });
@@ -2839,7 +2963,6 @@
         if (!isDragging) return;
         isDragging = false;
         dock.classList.remove('dock-dragging');
-        bubble.style.display = 'none';
         if (targetTabMatch) {
           window.switchTab(targetTabMatch);
           targetTabMatch = null;
@@ -2851,6 +2974,7 @@
 
       loadFromStorage();
       refreshCurrentActiveView();
+      moveDockBubbleToActiveTab(currentActiveTab);
     });
   </script>
 </body>
