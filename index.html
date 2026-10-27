@@ -72,12 +72,18 @@
       outline: none;
     }
     .logo-mark {
-      width: 30px;
-      height: 30px;
+      width: 100%;
+      height: 100%;
       max-width: 100%;
       max-height: 100%;
-      object-fit: contain;
+      object-fit: cover;
       object-position: center;
+      transform: scale(1.04);
+    }
+    .logo-shell {
+      background: #020609;
+      border: 1px solid rgba(16, 185, 129, 0.7);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
     }
     .date-picker {
       color-scheme: dark;
@@ -249,7 +255,7 @@
   <aside class="hidden lg:flex lg:w-64 bg-[#0b0f17] border-r border-slate-800/80 flex-col justify-between p-4 lg:fixed lg:h-screen z-30">
     <div>
       <div class="flex items-center gap-2.5 mb-6 px-1">
-        <div class="w-9 h-9 rounded-xl bg-[#071b18] border border-emerald-400/40 flex items-center justify-center shadow-lg shadow-emerald-500/20 overflow-hidden"><img src="img/logo.png" alt="Logo LifeOS" class="logo-mark rounded-lg drop-shadow-[0_0_5px_rgba(45,212,191,0.8)]"></div>
+        <div class="logo-shell w-9 h-9 rounded-xl flex items-center justify-center shadow-lg overflow-hidden"><img src="img/logo.png" alt="Logo LifeOS" class="logo-mark rounded-lg"></div>
         <div>
           <h1 class="text-base font-extrabold text-white leading-none">LifeOS 5.5</h1>
           <span class="text-[10px] text-emerald-400 font-semibold">Performance Studio</span>
@@ -327,7 +333,7 @@
       <!-- Fila 1: Marca + Racha + Botón de Voz -->
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-2 min-w-0">
-          <span class="w-9 h-9 rounded-xl bg-[#071b18] border border-emerald-400/40 flex items-center justify-center text-xs shrink-0 overflow-hidden"><img src="img/logo.png" alt="Logo LifeOS" class="logo-mark rounded-lg drop-shadow-[0_0_4px_rgba(45,212,191,0.8)]"></span>
+          <span class="logo-shell w-9 h-9 rounded-xl flex items-center justify-center text-xs shrink-0 overflow-hidden"><img src="img/logo.png" alt="Logo LifeOS" class="logo-mark rounded-lg"></span>
           <div class="truncate">
             <h2 class="text-sm font-extrabold text-white leading-tight truncate">LifeOS Studio</h2>
             <p id="headerReadableDate" class="text-[11px] text-emerald-400 font-semibold capitalize truncate">Hoy</p>
