@@ -72,12 +72,12 @@
       outline: none;
     }
     .logo-mark {
-      width: 135%;
-      height: 135%;
-      max-width: none;
-      object-fit: cover;
+      width: 30px;
+      height: 30px;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
       object-position: center;
-      transform: scale(1.08);
     }
     .date-picker {
       color-scheme: dark;
@@ -327,7 +327,7 @@
       <!-- Fila 1: Marca + Racha + Botón de Voz -->
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-2 min-w-0">
-          <span class="w-7 h-7 rounded-lg bg-[#071b18] border border-emerald-400/40 flex items-center justify-center text-xs shrink-0 overflow-hidden"><img src="img/logo.png" alt="Logo LifeOS" class="logo-mark rounded-md drop-shadow-[0_0_4px_rgba(45,212,191,0.8)]"></span>
+          <span class="w-9 h-9 rounded-xl bg-[#071b18] border border-emerald-400/40 flex items-center justify-center text-xs shrink-0 overflow-hidden"><img src="img/logo.png" alt="Logo LifeOS" class="logo-mark rounded-lg drop-shadow-[0_0_4px_rgba(45,212,191,0.8)]"></span>
           <div class="truncate">
             <h2 class="text-sm font-extrabold text-white leading-tight truncate">LifeOS Studio</h2>
             <p id="headerReadableDate" class="text-[11px] text-emerald-400 font-semibold capitalize truncate">Hoy</p>
@@ -1198,6 +1198,12 @@
         const sc = el.getAttribute('data-card-scope');
         el.classList.toggle('hidden', !(mode === 'ALL' || sc === 'ALL' || sc === mode));
       });
+      const activeMobileButton = document.getElementById('mtab-' + currentActiveTab);
+      if (activeMobileButton && activeMobileButton.classList.contains('hidden')) {
+        switchTab('home');
+        return;
+      }
+      requestAnimationFrame(() => moveDockBubbleToActiveTab(currentActiveTab));
     }
 
     function switchTab(tabId) {
