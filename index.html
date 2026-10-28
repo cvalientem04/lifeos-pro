@@ -1005,6 +1005,9 @@
 
       <div id="authSignedInPanel" class="hidden space-y-3">
         <p class="text-xs text-slate-300">Sesión iniciada como <b id="authCurrentEmail" class="text-emerald-300 break-all"></b></p>
+        <input type="text" id="profileUsernameInput" autocomplete="username" maxlength="24" placeholder="Usuario único (ej. carlos_2004)" class="w-full studio-input rounded-xl px-3 py-2.5 text-xs">
+        <input type="text" id="profileDisplayNameInput" autocomplete="name" maxlength="60" placeholder="Nombre visible (opcional)" class="w-full studio-input rounded-xl px-3 py-2.5 text-xs">
+        <button onclick="saveUserProfile()" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs">Guardar perfil</button>
         <p id="authSignedInFeedback" class="hidden rounded-xl bg-slate-900 border border-slate-800 p-3 text-xs leading-relaxed"></p>
         <button onclick="signOutFromLifeOS()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold text-xs">Cerrar sesión</button>
       </div>
@@ -1122,14 +1125,18 @@
 
     const SafeStorage = {
       get(k) { try { return localStorage.getItem(k); } catch(e) { return null; } },
-      set(k, v) { try { localStorage.setItem(k, v); } catch(e) {} }
+      set(k, v) { try { localStorage.setItem(k, v); } catch(e) {} },
+      remove(k) { try { localStorage.removeItem(k); } catch(e) {} }
     };
 
     const STORAGE_KEY = 'LIFEOS_PRO_V55_STUDIO';
+    const USER_STORAGE_PREFIX = `${STORAGE_KEY}_USER_`;
     function getTodayISO() { return new Date().toISOString().split('T')[0]; }
     let currentDate = getTodayISO();
     let currentAppMode = 'ALL';
     let currentActiveTab = 'home';
+    let currentAuthSession = null;
+    let dailyLogSaveTimer = null;
 
     let appState = {
       workoutCount: 19,
@@ -1187,8 +1194,12 @@
     }
 
     function saveToStorage() {
-      SafeStorage.set(STORAGE_KEY, JSON.stringify(appState));
+      const storageKey = currentAuthSession?.user
+        ? `${USER_STORAGE_PREFIX}${currentAuthSession.user.id}`
+        : STORAGE_KEY;
+      SafeStorage.set(storageKey, JSON.stringify(appState));
       refreshCurrentActiveView();
+      queueDailyLogSync();
     }
 
     function loadFromStorage() {
@@ -1197,6 +1208,96 @@
         try { appState = Object.assign(appState, JSON.parse(raw)); } catch(e) {}
       }
       if (Object.keys(appState.days).length === 0) loadDemoData();
+    }
+
+    function switchToUserStorage(session) {
+      if (!session?.user) return;
+      const userStorageKey = `${USER_STORAGE_PREFIX}${session.user.id}`;
+      const userRaw = SafeStorage.get(userStorageKey);
+      if (userRaw) {
+        try {
+          appState = Object.assign(appState, JSON.parse(userRaw));
+        } catch (error) {
+          setAuthFeedback(`No se pudieron cargar tus datos locales: ${error.message}`, 'error', true);
+        }
+      } else {
+        const sharedRaw = SafeStorage.get(STORAGE_KEY);
+        if (sharedRaw) {
+          try {
+            SafeStorage.set(userStorageKey, sharedRaw);
+            SafeStorage.remove(STORAGE_KEY);
+          } catch (error) {
+            setAuthFeedback(`No se pudieron migrar tus datos locales: ${error.message}`, 'error', true);
+          }
+        } else {
+          appState.days = {};
+          appState.shoppingList = [];
+          appState.workoutFeed = [];
+          appState.workoutCount = 0;
+        }
+      }
+      SafeStorage.set(userStorageKey, JSON.stringify(appState));
+      refreshCurrentActiveView();
+    }
+
+    function getDailyLogPayload(dateStr = currentDate) {
+      const day = getDayData(dateStr);
+      return {
+        user_id: currentAuthSession.user.id,
+        log_date: dateStr,
+        steps: Math.max(0, Number(day.steps) || 0),
+        study_minutes: Math.max(0, Number(day.studyMinutes) || 0),
+        car_minutes: Math.max(0, Number(day.carMinutes) || 0),
+        mood: day.mood || null,
+        journal: day.journal || '',
+        ghost_mode: !!day.ghostMode
+      };
+    }
+
+    function queueDailyLogSync() {
+      if (!currentAuthSession?.user) return;
+      clearTimeout(dailyLogSaveTimer);
+      dailyLogSaveTimer = setTimeout(() => {
+        saveDailyLogToSupabase(currentDate);
+      }, 400);
+    }
+
+    async function saveDailyLogToSupabase(dateStr) {
+      if (!currentAuthSession?.user) return;
+      const payload = getDailyLogPayload(dateStr);
+      const { error } = await lifeosSupabase
+        .from('daily_logs')
+        .upsert(payload, { onConflict: 'user_id,log_date' });
+
+      if (error) {
+        setAuthFeedback(`No se pudo sincronizar el día: ${error.message}`, 'error', true);
+      }
+    }
+
+    async function loadDailyLogFromSupabase(dateStr = currentDate) {
+      if (!currentAuthSession?.user) return;
+      const { data, error } = await lifeosSupabase
+        .from('daily_logs')
+        .select('log_date, steps, study_minutes, car_minutes, mood, journal, ghost_mode')
+        .eq('user_id', currentAuthSession.user.id)
+        .eq('log_date', dateStr)
+        .maybeSingle();
+
+      if (error) {
+        setAuthFeedback(`No se pudo cargar el día: ${error.message}`, 'error', true);
+        return;
+      }
+      if (!data) return;
+
+      const day = getDayData(dateStr);
+      day.steps = data.steps;
+      day.studyMinutes = data.study_minutes;
+      day.carMinutes = data.car_minutes;
+      day.mood = data.mood || '😄';
+      day.journal = data.journal || '';
+      day.ghostMode = !!data.ghost_mode;
+      SafeStorage.set(STORAGE_KEY, JSON.stringify(appState));
+      refreshCurrentActiveView();
     }
 
     function setAuthFeedback(message, tone = 'info', signedIn = false) {
@@ -1339,16 +1440,104 @@
       if (email) email.textContent = session?.user?.email || '';
     }
 
+    async function syncUserProfile(session) {
+      const user = session?.user;
+      if (!user) return;
+
+      const { data: existingProfile, error: profileError } = await lifeosSupabase
+        .from('profiles')
+        .select('id, username, display_name, weight_kg, height_cm')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (profileError) {
+        setAuthFeedback(`No se pudo cargar tu perfil: ${profileError.message}`, 'error', true);
+        return;
+      }
+
+      let profile = existingProfile;
+      if (!profile) {
+        const { data: createdProfile, error: createError } = await lifeosSupabase
+          .from('profiles')
+          .insert({ id: user.id })
+          .select('id, username, display_name, weight_kg, height_cm')
+          .single();
+
+        if (createError) {
+          setAuthFeedback(`No se pudo crear tu perfil: ${createError.message}`, 'error', true);
+          return;
+        }
+        profile = createdProfile;
+      }
+
+      if (profile.weight_kg !== null) appState.profile.weightKg = Number(profile.weight_kg);
+      if (profile.height_cm !== null) appState.profile.heightCm = Number(profile.height_cm);
+      const usernameInput = document.getElementById('profileUsernameInput');
+      const displayNameInput = document.getElementById('profileDisplayNameInput');
+      if (usernameInput) usernameInput.value = profile.username || '';
+      if (displayNameInput) displayNameInput.value = profile.display_name || '';
+      SafeStorage.set(STORAGE_KEY, JSON.stringify(appState));
+      refreshCurrentActiveView();
+      setAuthFeedback('Perfil sincronizado correctamente.', 'info', true);
+    }
+
+    async function saveUserProfile() {
+      const { data: sessionData, error: sessionError } = await lifeosSupabase.auth.getSession();
+      if (sessionError || !sessionData.session?.user) {
+        setAuthFeedback('Necesitas iniciar sesión para guardar tu perfil.', 'error', true);
+        return;
+      }
+
+      const username = document.getElementById('profileUsernameInput')?.value.trim().toLowerCase() || '';
+      const displayName = document.getElementById('profileDisplayNameInput')?.value.trim() || '';
+      if (!/^[a-z0-9_]{3,24}$/.test(username)) {
+        setAuthFeedback('El usuario debe tener entre 3 y 24 caracteres: letras minúsculas, números o _.', 'error', true);
+        return;
+      }
+
+      const { data: updatedProfile, error } = await lifeosSupabase
+        .from('profiles')
+        .update({ username, display_name: displayName || null })
+        .eq('id', sessionData.session.user.id)
+        .select('id, username, display_name, weight_kg, height_cm')
+        .single();
+
+      if (error) {
+        const message = error.code === '23505'
+          ? 'Ese nombre de usuario ya está ocupado. Elige otro.'
+          : `No se pudo guardar el perfil: ${error.message}`;
+        setAuthFeedback(message, 'error', true);
+        return;
+      }
+
+      if (updatedProfile.weight_kg !== null) appState.profile.weightKg = Number(updatedProfile.weight_kg);
+      if (updatedProfile.height_cm !== null) appState.profile.heightCm = Number(updatedProfile.height_cm);
+      saveToStorage();
+      setAuthFeedback('Perfil guardado correctamente.', 'info', true);
+    }
+
     async function initializeAuth() {
       const { data, error } = await lifeosSupabase.auth.getSession();
       if (error) {
         setAuthFeedback(`No se pudo comprobar la sesión: ${error.message}`, 'error');
       } else {
+        currentAuthSession = data.session;
         renderAuthState(data.session);
+        switchToUserStorage(data.session);
+        await syncUserProfile(data.session);
+        await loadDailyLogFromSupabase(currentDate);
       }
       if (window.location.hash.includes('type=recovery')) openPasswordRecoveryModal();
       lifeosSupabase.auth.onAuthStateChange((event, session) => {
+        currentAuthSession = session;
         renderAuthState(session);
+        if (event === 'SIGNED_IN') {
+          setTimeout(async () => {
+            switchToUserStorage(session);
+            await syncUserProfile(session);
+            await loadDailyLogFromSupabase(currentDate);
+          }, 0);
+        }
         if (event === 'PASSWORD_RECOVERY') openPasswordRecoveryModal();
       });
     }
@@ -1381,6 +1570,7 @@
       if (!val) return;
       currentDate = val;
       refreshCurrentActiveView();
+      loadDailyLogFromSupabase(currentDate);
     }
 
     function changeDay(offset) {
@@ -1388,6 +1578,7 @@
       d.setDate(d.getDate() + offset);
       currentDate = d.toISOString().split('T')[0];
       refreshCurrentActiveView();
+      loadDailyLogFromSupabase(currentDate);
     }
 
     function setAppMode(mode) {
@@ -1524,6 +1715,7 @@
       if (!dock || !bubble || !activeButton) return;
       const dockRect = dock.getBoundingClientRect();
       const buttonRect = activeButton.getBoundingClientRect();
+      if (!buttonRect.width || !buttonRect.height) return;
       bubble.style.width = `${buttonRect.width}px`;
       bubble.style.left = `${buttonRect.left - dockRect.left}px`;
     }
@@ -3188,7 +3380,11 @@
 
       loadFromStorage();
       refreshCurrentActiveView();
-      moveDockBubbleToActiveTab(currentActiveTab);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => moveDockBubbleToActiveTab(currentActiveTab));
+      });
+      window.addEventListener('load', () => moveDockBubbleToActiveTab(currentActiveTab), { once: true });
+      window.addEventListener('resize', () => moveDockBubbleToActiveTab(currentActiveTab));
       initializeAuth();
     });
   </script>
