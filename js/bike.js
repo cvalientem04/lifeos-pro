@@ -190,7 +190,7 @@
       const day = getDayData(currentDate);
       if (!day.bikeRoutes) day.bikeRoutes = [];
 
-      day.bikeRoutes.unshift({
+      const savedRoute = {
         id: Date.now(),
         date: currentDate,
         timeStr: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
@@ -199,13 +199,15 @@
         avgSpeed,
         maxSpeed,
         segments: liveRide.segments
-      });
+      };
+      day.bikeRoutes.unshift(savedRoute);
 
       day.bikeKm = Number(((day.bikeKm || 0) + km).toFixed(2));
       day.bikeMinutes = (day.bikeMinutes || 0) + mins;
 
       document.getElementById('gpsLiveStatusBadge').textContent = `✔ Ruta guardada en ${formatHumanDate(currentDate)}`;
       saveToStorage();
+      syncBikeRouteToSupabase(savedRoute);
       renderSavedBikeRoutesHistory();
     }
 
@@ -227,7 +229,7 @@
       }
 
       box.innerHTML = allSaved.map(r => `
-        <div onclick="replaySavedRouteOnMap(${r.id}, '${r.date}')" class="cursor-pointer bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl p-3 flex items-center justify-between transition">
+        <div onclick="replaySavedRouteOnMap(${JSON.stringify(r.id)}, ${JSON.stringify(r.date)})" class="cursor-pointer bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl p-3 flex items-center justify-between transition">
           <div>
             <div class="flex items-center gap-2">
               <span class="text-xs font-extrabold text-white capitalize">📅 ${formatHumanDate(r.date)}</span>
@@ -267,4 +269,3 @@
       document.getElementById('liveDurationClock').textContent = `${r.mins}m`;
       document.getElementById('gpsLiveStatusBadge').textContent = `🗺️ Viendo ruta del ${formatHumanDate(dateStr)}`;
     }
-

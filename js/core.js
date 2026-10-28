@@ -162,12 +162,15 @@ const EXERCISE_CATALOG = [
     }
 
     function saveToStorage() {
-      const storageKey = currentAuthSession?.user
-        ? `${USER_STORAGE_PREFIX}${currentAuthSession.user.id}`
-        : STORAGE_KEY;
-      SafeStorage.set(storageKey, JSON.stringify(appState));
+      SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
       refreshCurrentActiveView();
       queueDailyLogSync();
+    }
+
+    function getUserStorageKey() {
+      return currentAuthSession?.user
+        ? `${USER_STORAGE_PREFIX}${currentAuthSession.user.id}`
+        : STORAGE_KEY;
     }
 
     function loadFromStorage() {
@@ -264,7 +267,366 @@ const EXERCISE_CATALOG = [
       day.mood = data.mood || '😄';
       day.journal = data.journal || '';
       day.ghostMode = !!data.ghost_mode;
-      SafeStorage.set(STORAGE_KEY, JSON.stringify(appState));
+      SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
+      refreshCurrentActiveView();
+    }
+
+    async function syncWorkoutToSupabase(workout, exercises) {
+      if (!currentAuthSession?.user || workout.supabaseId) return;
+
+      const { data: createdWorkout, error: workoutError } = await lifeosSupabase
+        .from('workouts')
+        .insert({
+          user_id: currentAuthSession.user.id,
+          workout_date: workout.date,
+          title: workout.title,
+          duration_minutes: Number.parseInt(workout.duration, 10) || 0,
+          volume_kg: Number(workout.volumeKg) || 0,
+          sets_count: Number(workout.setsCount) || 0,
+          notes: workout.note || '',
+          photo_url: null
+        })
+        .select('id')
+        .single();
+
+      if (workoutError) {
+        setAuthFeedback(`No se pudo sincronizar el entrenamiento: ${workoutError.message}`, 'error', true);
+        return;
+      }
+
+      const sets = exercises.flatMap(exercise => exercise.sets
+        .filter(set => set.done)
+        .map((set, index) => ({
+          workout_id: createdWorkout.id,
+          exercise_name: exercise.name,
+          muscle: exercise.muscle || null,
+          set_number: index + 1,
+          weight_kg: Math.max(0, Number(set.kg) || 0),
+          reps: Math.max(0, Number(set.reps) || 0),
+          completed: true
+        })));
+
+      if (sets.length > 0) {
+        const { error: setsError } = await lifeosSupabase
+          .from('workout_sets')
+          .insert(sets);
+        if (setsError) {
+          setAuthFeedback(`El entrenamiento se guardó, pero no sus series: ${setsError.message}`, 'error', true);
+          return;
+        }
+      }
+
+      workout.supabaseId = createdWorkout.id;
+      SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
+      setAuthFeedback('Entrenamiento sincronizado correctamente.', 'info', true);
+    }
+
+    async function loadWorkoutsFromSupabase() {
+      if (!currentAuthSession?.user) return;
+
+      const { data, error } = await lifeosSupabase
+        .from('workouts')
+        .select('id, workout_date, title, duration_minutes, volume_kg, sets_count, notes, photo_url, workout_sets(exercise_name, muscle, set_number, weight_kg, reps, completed)')
+        .eq('user_id', currentAuthSession.user.id)
+        .order('workout_date', { ascending: false });
+
+      if (error) {
+        setAuthFeedback(`No se pudo cargar el historial de entrenamientos: ${error.message}`, 'error', true);
+        return;
+      }
+
+      const remoteWorkouts = data.map(workout => ({
+        id: `supabase-${workout.id}`,
+        supabaseId: workout.id,
+        user: 'Tú',
+        date: workout.workout_date,
+        title: workout.title,
+        duration: `${workout.duration_minutes || 0}min`,
+        volumeKg: Number(workout.volume_kg) || 0,
+        setsCount: workout.sets_count || 0,
+        muscles: [...new Set((workout.workout_sets || []).map(set => set.muscle).filter(Boolean))],
+        summaryLines: [...new Set((workout.workout_sets || []).map(set => `${set.exercise_name} (${set.weight_kg}kg x ${set.reps})`))],
+        note: workout.notes || '',
+        photoUrl: workout.photo_url || '',
+        likes: 1
+      }));
+
+      const localRemoteIds = new Set(appState.workoutFeed.map(workout => workout.supabaseId).filter(Boolean));
+      appState.workoutFeed.push(...remoteWorkouts.filter(workout => !localRemoteIds.has(workout.supabaseId)));
+      SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
+      refreshCurrentActiveView();
+    }
+
+    async function syncExpenseToSupabase(expense, dateStr = currentDate) {
+      if (!currentAuthSession?.user || expense.supabaseId) return;
+      const { data, error } = await lifeosSupabase
+        .from('expenses')
+        .insert({
+          user_id: currentAuthSession.user.id,
+          expense_date: dateStr,
+          description: expense.desc,
+          amount: Math.max(0, Number(expense.amount) || 0)
+        })
+        .select('id')
+        .single();
+
+      if (error) {
+        setAuthFeedback(`No se pudo sincronizar el gasto: ${error.message}`, 'error', true);
+        return;
+      }
+      expense.supabaseId = data.id;
+      SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
+    }
+
+    async function loadExpensesFromSupabase() {
+      if (!currentAuthSession?.user) return;
+      const { data, error } = await lifeosSupabase
+        .from('expenses')
+        .select('id, expense_date, description, amount')
+        .eq('user_id', currentAuthSession.user.id)
+        .order('expense_date', { ascending: false });
+
+      if (error) {
+        setAuthFeedback(`No se pudieron cargar los gastos: ${error.message}`, 'error', true);
+        return;
+      }
+
+      const knownIds = new Set(Object.values(appState.days)
+        .flatMap(day => day.expenses || [])
+        .map(expense => expense.supabaseId)
+        .filter(Boolean));
+      data.forEach(expense => {
+        if (knownIds.has(expense.id)) return;
+        const day = getDayData(expense.expense_date);
+        day.expenses.push({
+          id: `supabase-${expense.id}`,
+          supabaseId: expense.id,
+          amount: Number(expense.amount) || 0,
+          desc: expense.description
+        });
+      });
+      SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
+      refreshCurrentActiveView();
+    }
+
+    async function syncShoppingItemToSupabase(item) {
+      if (!currentAuthSession?.user || item.supabaseId) return;
+      const { data, error } = await lifeosSupabase
+        .from('shopping_items')
+        .insert({
+          user_id: currentAuthSession.user.id,
+          text: item.text,
+          done: !!item.done,
+          done_at: item.doneAt ? new Date(item.doneAt).toISOString() : null
+        })
+        .select('id')
+        .single();
+
+      if (error) {
+        setAuthFeedback(`No se pudo sincronizar la compra: ${error.message}`, 'error', true);
+        return;
+      }
+      item.supabaseId = data.id;
+      SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
+    }
+
+    async function updateShoppingItemInSupabase(item) {
+      if (!currentAuthSession?.user || !item.supabaseId) return;
+      const { error } = await lifeosSupabase
+        .from('shopping_items')
+        .update({
+          text: item.text,
+          done: !!item.done,
+          done_at: item.doneAt ? new Date(item.doneAt).toISOString() : null
+        })
+        .eq('id', item.supabaseId);
+      if (error) setAuthFeedback(`No se pudo actualizar la compra: ${error.message}`, 'error', true);
+    }
+
+    async function loadShoppingItemsFromSupabase() {
+      if (!currentAuthSession?.user) return;
+      const { data, error } = await lifeosSupabase
+        .from('shopping_items')
+        .select('id, text, done, done_at')
+        .eq('user_id', currentAuthSession.user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        setAuthFeedback(`No se pudo cargar la lista de la compra: ${error.message}`, 'error', true);
+        return;
+      }
+
+      const knownIds = new Set(appState.shoppingList.map(item => item.supabaseId).filter(Boolean));
+      const remoteItems = data.filter(item => !knownIds.has(item.id)).map(item => ({
+        id: `supabase-${item.id}`,
+        supabaseId: item.id,
+        text: item.text,
+        done: item.done,
+        doneAt: item.done_at ? Date.parse(item.done_at) : 0
+      }));
+      appState.shoppingList.push(...remoteItems);
+      SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
+      refreshCurrentActiveView();
+    }
+
+    async function syncAnimalTasksToSupabase(day, dateStr = currentDate) {
+      if (!currentAuthSession?.user) return;
+      ensureAnimalTasks(day);
+      const rows = ['pavos', 'gatos'].flatMap(animalType =>
+        ['fedMorning', 'waterGiven', 'fedEvening'].map(taskKey => {
+          const completed = !!day.animalTasks[animalType][taskKey];
+          return {
+            user_id: currentAuthSession.user.id,
+            task_date: dateStr,
+            animal_type: animalType,
+            task_key: taskKey,
+            completed,
+            completed_at: completed ? new Date().toISOString() : null
+          };
+        })
+      );
+      const { error } = await lifeosSupabase
+        .from('animal_tasks')
+        .upsert(rows, { onConflict: 'user_id,task_date,animal_type,task_key' });
+      if (error) setAuthFeedback(`No se pudieron sincronizar las tareas: ${error.message}`, 'error', true);
+    }
+
+    async function loadAnimalTasksFromSupabase() {
+      if (!currentAuthSession?.user) return;
+      const { data, error } = await lifeosSupabase
+        .from('animal_tasks')
+        .select('task_date, animal_type, task_key, completed')
+        .eq('user_id', currentAuthSession.user.id);
+
+      if (error) {
+        setAuthFeedback(`No se pudieron cargar las tareas: ${error.message}`, 'error', true);
+        return;
+      }
+      data.forEach(task => {
+        const day = getDayData(task.task_date);
+        ensureAnimalTasks(day);
+        day.animalTasks[task.animal_type][task.task_key] = !!task.completed;
+        if (task.animal_type === 'pavos') syncPavosToTurkeys(day);
+      });
+      SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
+      refreshCurrentActiveView();
+    }
+
+    async function syncBikeRouteToSupabase(route) {
+      if (!currentAuthSession?.user || route.supabaseId) return;
+      const { data, error } = await lifeosSupabase
+        .from('bike_routes')
+        .insert({
+          user_id: currentAuthSession.user.id,
+          route_date: route.date,
+          name: route.name || '',
+          distance_km: Math.max(0, Number(route.km) || 0),
+          duration_minutes: Math.max(0, Number(route.mins) || 0),
+          average_speed_kmh: Math.max(0, Number(route.avgSpeed) || 0),
+          max_speed_kmh: Math.max(0, Number(route.maxSpeed) || 0),
+          segments: Array.isArray(route.segments) ? route.segments : []
+        })
+        .select('id')
+        .single();
+
+      if (error) {
+        setAuthFeedback(`No se pudo sincronizar la ruta: ${error.message}`, 'error', true);
+        return;
+      }
+      route.supabaseId = data.id;
+      SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
+      setAuthFeedback('Ruta sincronizada correctamente.', 'info', true);
+    }
+
+    async function loadBikeRoutesFromSupabase() {
+      if (!currentAuthSession?.user) return;
+      const { data, error } = await lifeosSupabase
+        .from('bike_routes')
+        .select('id, route_date, name, distance_km, duration_minutes, average_speed_kmh, max_speed_kmh, segments')
+        .eq('user_id', currentAuthSession.user.id)
+        .order('route_date', { ascending: false });
+
+      if (error) {
+        setAuthFeedback(`No se pudo cargar el historial de rutas: ${error.message}`, 'error', true);
+        return;
+      }
+
+      const knownIds = new Set(Object.values(appState.days)
+        .flatMap(day => day.bikeRoutes || [])
+        .map(route => route.supabaseId)
+        .filter(Boolean));
+
+      data.forEach(route => {
+        if (knownIds.has(route.id)) return;
+        const day = getDayData(route.route_date);
+        if (!day.bikeRoutes) day.bikeRoutes = [];
+        day.bikeRoutes.push({
+          id: `supabase-${route.id}`,
+          supabaseId: route.id,
+          date: route.route_date,
+          timeStr: '',
+          name: route.name || '',
+          km: Number(route.distance_km) || 0,
+          mins: Number(route.duration_minutes) || 0,
+          avgSpeed: Number(route.average_speed_kmh) || 0,
+          maxSpeed: Number(route.max_speed_kmh) || 0,
+          segments: Array.isArray(route.segments) ? route.segments : []
+        });
+        day.bikeKm = Number(((day.bikeKm || 0) + (Number(route.distance_km) || 0)).toFixed(2));
+        day.bikeMinutes = Number(((day.bikeMinutes || 0) + (Number(route.duration_minutes) || 0)).toFixed(2));
+      });
+
+      SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
+      refreshCurrentActiveView();
+    }
+
+    async function syncMealToSupabase(meal, dateStr = currentDate) {
+      if (!currentAuthSession?.user || meal.supabaseId) return;
+      const { data, error } = await lifeosSupabase
+        .from('meals')
+        .insert({
+          user_id: currentAuthSession.user.id,
+          meal_date: dateStr,
+          description: meal.desc
+        })
+        .select('id')
+        .single();
+
+      if (error) {
+        setAuthFeedback(`No se pudo sincronizar la comida: ${error.message}`, 'error', true);
+        return;
+      }
+      meal.supabaseId = data.id;
+      SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
+    }
+
+    async function loadMealsFromSupabase() {
+      if (!currentAuthSession?.user) return;
+      const { data, error } = await lifeosSupabase
+        .from('meals')
+        .select('id, meal_date, description')
+        .eq('user_id', currentAuthSession.user.id)
+        .order('meal_date', { ascending: false });
+
+      if (error) {
+        setAuthFeedback(`No se pudieron cargar las comidas: ${error.message}`, 'error', true);
+        return;
+      }
+
+      const knownIds = new Set(Object.values(appState.days)
+        .flatMap(day => day.meals || [])
+        .map(meal => meal.supabaseId)
+        .filter(Boolean));
+      data.forEach(meal => {
+        if (knownIds.has(meal.id)) return;
+        const day = getDayData(meal.meal_date);
+        day.meals.push({
+          id: `supabase-${meal.id}`,
+          supabaseId: meal.id,
+          desc: meal.description
+        });
+      });
+      SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
       refreshCurrentActiveView();
     }
 
@@ -444,7 +806,7 @@ const EXERCISE_CATALOG = [
       const displayNameInput = document.getElementById('profileDisplayNameInput');
       if (usernameInput) usernameInput.value = profile.username || '';
       if (displayNameInput) displayNameInput.value = profile.display_name || '';
-      SafeStorage.set(STORAGE_KEY, JSON.stringify(appState));
+      SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
       refreshCurrentActiveView();
       setAuthFeedback('Perfil sincronizado correctamente.', 'info', true);
     }
@@ -494,6 +856,12 @@ const EXERCISE_CATALOG = [
         switchToUserStorage(data.session);
         await syncUserProfile(data.session);
         await loadDailyLogFromSupabase(currentDate);
+        await loadWorkoutsFromSupabase();
+        await loadExpensesFromSupabase();
+        await loadShoppingItemsFromSupabase();
+        await loadAnimalTasksFromSupabase();
+        await loadBikeRoutesFromSupabase();
+        await loadMealsFromSupabase();
       }
       if (window.location.hash.includes('type=recovery')) openPasswordRecoveryModal();
       lifeosSupabase.auth.onAuthStateChange((event, session) => {
@@ -504,6 +872,12 @@ const EXERCISE_CATALOG = [
             switchToUserStorage(session);
             await syncUserProfile(session);
             await loadDailyLogFromSupabase(currentDate);
+            await loadWorkoutsFromSupabase();
+            await loadExpensesFromSupabase();
+            await loadShoppingItemsFromSupabase();
+            await loadAnimalTasksFromSupabase();
+            await loadBikeRoutesFromSupabase();
+            await loadMealsFromSupabase();
           }, 0);
         }
         if (event === 'PASSWORD_RECOVERY') openPasswordRecoveryModal();
@@ -687,4 +1061,3 @@ const EXERCISE_CATALOG = [
       bubble.style.width = `${buttonRect.width}px`;
       bubble.style.left = `${buttonRect.left - dockRect.left}px`;
     }
-

@@ -72,9 +72,11 @@
       const inp = document.getElementById('quickMealInput');
       const desc = inp.value.trim();
       if (!desc) return;
-      getDayData(currentDate).meals.push({ id: Date.now(), desc });
+      const meal = { id: Date.now(), desc };
+      getDayData(currentDate).meals.push(meal);
       inp.value = '';
       saveToStorage();
+      syncMealToSupabase(meal, currentDate);
     }
 
     let activeAnimalType = 'pavos'; // pavos | gatos
@@ -128,6 +130,7 @@
       animalObj[timeKeyMap[field]] = animalObj[field] ? nowStr : '';
       if (activeAnimalType === 'pavos') syncPavosToTurkeys(day);
       saveToStorage();
+      syncAnimalTasksToSupabase(day, currentDate);
     }
 
     function renderHogarView() {
@@ -191,6 +194,7 @@
     function quickAddTurkeyFeedToShop() {
       appState.shoppingList.unshift({ id: Date.now(), text: 'Saco de pienso para los pavos', done: false });
       saveToStorage();
+      syncShoppingItemToSupabase(appState.shoppingList[0]);
     }
 
     function addShoppingItem() {
@@ -200,6 +204,7 @@
       appState.shoppingList.unshift({ id: Date.now(), text, done: false });
       inp.value = '';
       saveToStorage();
+      syncShoppingItemToSupabase(appState.shoppingList[0]);
     }
 
     const SHOP_FADE_AFTER_MS = 6 * 60 * 60 * 1000;
@@ -228,6 +233,7 @@
       it.done = !it.done;
       it.doneAt = it.done ? Date.now() : 0;
       saveToStorage();
+      updateShoppingItemInSupabase(it);
     }
 
     function addExpense() {
@@ -238,6 +244,8 @@
       document.getElementById('expenseAmountInput').value = '';
       document.getElementById('expenseDescInput').value = '';
       saveToStorage();
+      const savedExpense = getDayData(currentDate).expenses[getDayData(currentDate).expenses.length - 1];
+      syncExpenseToSupabase(savedExpense, currentDate);
     }
 
     function renderWeeklyClearAudit() {

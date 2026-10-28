@@ -165,6 +165,7 @@
 
         if (itemText) {
           appState.shoppingList.unshift({ id: Date.now(), text: itemText, done: false });
+          syncShoppingItemToSupabase(appState.shoppingList[0]);
           actionsDone.push(`añadido "${itemText}" a la compra`);
         }
       }
@@ -175,6 +176,7 @@
         const amount = numMatch ? parseFloat(numMatch[0].replace(',', '.')) : 10;
         const concept = rawText.replace(/he gastado|gaste|euros|euro|en|pagado/gi, '').replace(/\d+([.,]\d+)?/g, '').trim() || 'Gasto por voz';
         day.expenses.push({ id: Date.now(), amount, desc: concept });
+        syncExpenseToSupabase(day.expenses[day.expenses.length - 1], currentDate);
         actionsDone.push(`registrado un gasto de ${amount} euros en ${concept}`);
       }
 
@@ -214,7 +216,9 @@
       // 8. COMIDA / DESAYUNO / CENA
       if (t.includes('comido') || t.includes('cenado') || t.includes('desayunado')) {
         const food = rawText.replace(/hoy|he comido|he cenado|he desayunado/gi, '').trim() || rawText;
-        day.meals.push({ id: Date.now(), desc: food });
+        const meal = { id: Date.now(), desc: food };
+        day.meals.push(meal);
+        syncMealToSupabase(meal, currentDate);
         actionsDone.push(`anotada tu comida: ${food}`);
       }
 
@@ -231,6 +235,7 @@
       if (box) box.textContent = `✅ ${finalReply}`;
       speakTextAloud(finalReply);
       saveToStorage();
+      syncAnimalTasksToSupabase(day, currentDate);
     }
 
     // DICTADO EN EL DIARIO (TAMBIÉN SE PONE ROJO AL GRABAR)
@@ -282,4 +287,3 @@
 
       journalRec.start();
     }
-

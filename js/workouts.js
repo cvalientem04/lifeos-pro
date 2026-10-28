@@ -334,6 +334,8 @@
         photoUrl: activeWorkout.photoDataUrl,
         likes: 1
       });
+      const savedWorkout = appState.workoutFeed[0];
+      syncWorkoutToSupabase(savedWorkout, activeWorkout.exercises);
 
       document.getElementById('goodJobCountSubtitle').textContent = `Sesión #${appState.workoutCount} registrada en tu historial`;
       document.getElementById('goodJobCardTitle').textContent = title;
@@ -572,4 +574,3 @@
         </div>
       `;
     }
-
