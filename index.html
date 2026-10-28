@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
   const supabaseUrl = 'https://upguromuvzoueznxpavz.supabase.co';
   const supabaseKey = 'sb_publishable_n1LW5oSdlZ9oRMeaoosCnQ_2T-1f9YA';
-  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+  const lifeosSupabase = window.supabase.createClient(supabaseUrl, supabaseKey);
   </script>
 
   <meta charset="UTF-8">
@@ -349,6 +350,9 @@
           </button>
           <button onclick="openVoiceModal('GLOBAL')" class="header-action px-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-extrabold flex items-center gap-1">
             <span>🎙️</span> <span>Voz</span>
+          </button>
+          <button onclick="openAuthModal()" id="authHeaderButton" class="header-action px-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-extrabold flex items-center gap-1">
+            <span>👤</span> <span>Entrar</span>
           </button>
         </div>
       </div>
@@ -977,6 +981,50 @@
     </div>
   </div>
 
+  <!-- MODAL DE CUENTA SUPABASE -->
+  <div id="authModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="studio-card rounded-2xl p-5 max-w-sm w-full space-y-4 border border-emerald-500/30">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h3 class="text-base font-extrabold text-white">Cuenta LifeOS</h3>
+          <p id="authModalSubtitle" class="text-[11px] text-slate-400 mt-1">Sincroniza tus datos entre dispositivos.</p>
+        </div>
+        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-white" aria-label="Cerrar cuenta">✕</button>
+      </div>
+
+      <div id="authSignedOutForm" class="space-y-3">
+        <input type="email" id="authEmailInput" autocomplete="email" placeholder="Tu email" class="w-full studio-input rounded-xl px-3 py-2.5 text-xs">
+        <input type="password" id="authPasswordInput" autocomplete="current-password" placeholder="Contraseña (mínimo 6 caracteres)" class="w-full studio-input rounded-xl px-3 py-2.5 text-xs">
+        <p id="authFeedback" class="hidden rounded-xl bg-slate-900 border border-slate-800 p-3 text-xs leading-relaxed"></p>
+        <div class="flex gap-2">
+          <button onclick="signInWithEmail()" class="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs">Entrar</button>
+          <button onclick="signUpWithEmail()" class="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold text-xs">Crear cuenta</button>
+        </div>
+        <button onclick="sendPasswordReset()" class="w-full text-[11px] text-emerald-300 hover:text-emerald-200">He olvidado mi contraseña</button>
+      </div>
+
+      <div id="authSignedInPanel" class="hidden space-y-3">
+        <p class="text-xs text-slate-300">Sesión iniciada como <b id="authCurrentEmail" class="text-emerald-300 break-all"></b></p>
+        <p id="authSignedInFeedback" class="hidden rounded-xl bg-slate-900 border border-slate-800 p-3 text-xs leading-relaxed"></p>
+        <button onclick="signOutFromLifeOS()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold text-xs">Cerrar sesión</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL RESTABLECER CONTRASEÑA -->
+  <div id="passwordRecoveryModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="studio-card rounded-2xl p-5 max-w-sm w-full space-y-4 border border-emerald-500/30">
+      <div>
+        <h3 class="text-base font-extrabold text-white">Nueva contraseña</h3>
+        <p class="text-[11px] text-slate-400 mt-1">Elige una contraseña nueva para tu cuenta de LifeOS.</p>
+      </div>
+      <input type="password" id="newPasswordInput" autocomplete="new-password" placeholder="Nueva contraseña (mínimo 6 caracteres)" class="w-full studio-input rounded-xl px-3 py-2.5 text-xs">
+      <input type="password" id="confirmPasswordInput" autocomplete="new-password" placeholder="Repite la nueva contraseña" class="w-full studio-input rounded-xl px-3 py-2.5 text-xs">
+      <p id="passwordRecoveryFeedback" class="hidden rounded-xl p-3 text-xs leading-relaxed"></p>
+      <button onclick="updateRecoveredPassword()" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs">Guardar nueva contraseña</button>
+    </div>
+  </div>
+
   <!-- ================= LÓGICA JAVASCRIPT 5.5 ================= -->
   <script>
     const EXERCISE_CATALOG = [
@@ -1149,6 +1197,160 @@
         try { appState = Object.assign(appState, JSON.parse(raw)); } catch(e) {}
       }
       if (Object.keys(appState.days).length === 0) loadDemoData();
+    }
+
+    function setAuthFeedback(message, tone = 'info', signedIn = false) {
+      const box = document.getElementById(signedIn ? 'authSignedInFeedback' : 'authFeedback');
+      if (!box) return;
+      box.textContent = message;
+      box.className = `rounded-xl border p-3 text-xs leading-relaxed ${
+        tone === 'error'
+          ? 'bg-rose-500/10 border-rose-500/30 text-rose-200'
+          : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'
+      }`;
+    }
+
+    function openAuthModal() {
+      const modal = document.getElementById('authModal');
+      if (modal) modal.classList.replace('hidden', 'flex');
+    }
+
+    function closeAuthModal() {
+      const modal = document.getElementById('authModal');
+      if (modal) modal.classList.replace('flex', 'hidden');
+    }
+
+    function getAuthCredentials() {
+      const email = document.getElementById('authEmailInput')?.value.trim();
+      const password = document.getElementById('authPasswordInput')?.value || '';
+      if (!email || !password) {
+        setAuthFeedback('Introduce tu email y tu contraseña.');
+        return null;
+      }
+      return { email, password };
+    }
+
+    async function signInWithEmail() {
+      const credentials = getAuthCredentials();
+      if (!credentials) return;
+      const { error } = await lifeosSupabase.auth.signInWithPassword(credentials);
+      if (error) {
+        setAuthFeedback(`No se pudo iniciar sesión: ${error.message}`, 'error');
+        return;
+      }
+      setAuthFeedback('Sesión iniciada correctamente.');
+    }
+
+    async function signUpWithEmail() {
+      const credentials = getAuthCredentials();
+      if (!credentials) return;
+      if (credentials.password.length < 6) {
+        setAuthFeedback('La contraseña debe tener al menos 6 caracteres.', 'error');
+        return;
+      }
+      const { data, error } = await lifeosSupabase.auth.signUp(credentials);
+      if (error) {
+        setAuthFeedback(`No se pudo crear la cuenta: ${error.message}`, 'error');
+        return;
+      }
+      setAuthFeedback(data.session
+        ? 'Cuenta creada y sesión iniciada.'
+        : 'Cuenta creada. Revisa tu email para confirmar la dirección.');
+    }
+
+    async function sendPasswordReset() {
+      const email = document.getElementById('authEmailInput')?.value.trim();
+      if (!email) {
+        setAuthFeedback('Escribe tu email para enviarte el enlace de recuperación.', 'error');
+        return;
+      }
+      const resetOptions = window.location.protocol === 'http:' || window.location.protocol === 'https:'
+        ? { redirectTo: window.location.href.split('#')[0] }
+        : undefined;
+      const { error } = await lifeosSupabase.auth.resetPasswordForEmail(email, resetOptions);
+      if (error) {
+        setAuthFeedback(`No se pudo enviar el enlace: ${error.message}`, 'error');
+        return;
+      }
+      setAuthFeedback('Te hemos enviado un enlace para restablecer la contraseña.');
+    }
+
+    async function signOutFromLifeOS() {
+      const { error } = await lifeosSupabase.auth.signOut();
+      if (error) {
+        setAuthFeedback(`No se pudo cerrar sesión: ${error.message}`, 'error', true);
+        return;
+      }
+      closeAuthModal();
+    }
+
+    function showPasswordRecoveryFeedback(message, tone = 'info') {
+      const box = document.getElementById('passwordRecoveryFeedback');
+      if (!box) return;
+      box.textContent = message;
+      box.className = `rounded-xl border p-3 text-xs leading-relaxed ${
+        tone === 'error'
+          ? 'bg-rose-500/10 border-rose-500/30 text-rose-200'
+          : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'
+      }`;
+    }
+
+    function openPasswordRecoveryModal() {
+      const modal = document.getElementById('passwordRecoveryModal');
+      if (modal) modal.classList.replace('hidden', 'flex');
+    }
+
+    async function updateRecoveredPassword() {
+      const password = document.getElementById('newPasswordInput')?.value || '';
+      const confirmation = document.getElementById('confirmPasswordInput')?.value || '';
+      if (password.length < 6) {
+        showPasswordRecoveryFeedback('La contraseña debe tener al menos 6 caracteres.', 'error');
+        return;
+      }
+      if (password !== confirmation) {
+        showPasswordRecoveryFeedback('Las contraseñas no coinciden.', 'error');
+        return;
+      }
+      const { error } = await lifeosSupabase.auth.updateUser({ password });
+      if (error) {
+        showPasswordRecoveryFeedback(`No se pudo actualizar la contraseña: ${error.message}`, 'error');
+        return;
+      }
+      document.getElementById('newPasswordInput').value = '';
+      document.getElementById('confirmPasswordInput').value = '';
+      showPasswordRecoveryFeedback('Contraseña actualizada. Ya puedes entrar con ella.');
+      setTimeout(() => {
+        const modal = document.getElementById('passwordRecoveryModal');
+        if (modal) modal.classList.replace('flex', 'hidden');
+        history.replaceState({}, document.title, window.location.pathname + window.location.search);
+      }, 1200);
+    }
+
+    function renderAuthState(session) {
+      const signedIn = !!session?.user;
+      const button = document.getElementById('authHeaderButton');
+      const signedOutForm = document.getElementById('authSignedOutForm');
+      const signedInPanel = document.getElementById('authSignedInPanel');
+      const email = document.getElementById('authCurrentEmail');
+      if (!button || !signedOutForm || !signedInPanel) return;
+      button.querySelector('span:last-child').textContent = signedIn ? 'Cuenta' : 'Entrar';
+      signedOutForm.classList.toggle('hidden', signedIn);
+      signedInPanel.classList.toggle('hidden', !signedIn);
+      if (email) email.textContent = session?.user?.email || '';
+    }
+
+    async function initializeAuth() {
+      const { data, error } = await lifeosSupabase.auth.getSession();
+      if (error) {
+        setAuthFeedback(`No se pudo comprobar la sesión: ${error.message}`, 'error');
+      } else {
+        renderAuthState(data.session);
+      }
+      if (window.location.hash.includes('type=recovery')) openPasswordRecoveryModal();
+      lifeosSupabase.auth.onAuthStateChange((event, session) => {
+        renderAuthState(session);
+        if (event === 'PASSWORD_RECOVERY') openPasswordRecoveryModal();
+      });
     }
 
     function formatHumanDate(isoStr) {
@@ -2987,6 +3189,7 @@
       loadFromStorage();
       refreshCurrentActiveView();
       moveDockBubbleToActiveTab(currentActiveTab);
+      initializeAuth();
     });
   </script>
 </body>
