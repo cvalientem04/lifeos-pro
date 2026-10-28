@@ -1,0 +1,205 @@
+body {
+      background-color: #070a0f;
+      color: #f8fafc;
+      -webkit-tap-highlight-color: transparent;
+      overflow-x: hidden;
+      overscroll-behavior-y: none;
+    }
+    .ios-spring {
+      display: flex;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+      will-change: transform;
+    }
+    .ios-spring:active {
+      transform: scale(0.90) !important;
+    }
+    .studio-card {
+      background: #111621;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.5);
+    }
+    .studio-input {
+      background: #19202e;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+    }
+    .studio-input:focus {
+      border-color: #10b981;
+      outline: none;
+    }
+    .logo-mark {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      object-position: center;
+      transform: scale(1.04);
+    }
+    .logo-shell {
+      background: #020609;
+      border: 1px solid rgba(16, 185, 129, 0.7);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+    }
+    .date-picker {
+      color-scheme: dark;
+      cursor: pointer;
+    }
+    .date-picker::-webkit-calendar-picker-indicator {
+      display: none;
+      cursor: pointer;
+    }
+    .header-action {
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    }
+    .shop-item {
+      transition: opacity 0.4s ease, transform 0.4s ease, filter 0.4s ease;
+    }
+    .shop-item.is-done {
+      text-decoration: line-through;
+      opacity: 0.72;
+    }
+    .shop-item.is-faded {
+      opacity: 0.3;
+      transform: scale(0.98);
+      filter: grayscale(0.35);
+      text-decoration: line-through;
+    }
+    /* Serie completada con estilo propio esmeralda */
+    .set-row-completed {
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0.08) 100%) !important;
+      border-color: rgba(16, 185, 129, 0.45) !important;
+    }
+    .check-btn-completed {
+      background: #10b981 !important;
+      color: #052e16 !important;
+      border-color: #10b981 !important;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+    }
+    /* ========================================================================= */
+    /* MENÚ INFERIOR MÓVIL: PÍLDORA FLOTANTE ÚNICA ESTILO IOS                     */
+    /* ========================================================================= */
+    .bottom-dock,
+    .dock-btn {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+    .bottom-dock {
+      position: fixed;
+      background: rgba(13, 17, 23, 0.45) !important;
+      backdrop-filter: blur(30px) saturate(200%) !important;
+      -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+      border: 1px solid rgba(255, 255, 255, 0.18) !important;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+      border-radius: 9999px !important;
+      padding: 4px 6px !important;
+      margin-left: 16px;
+      margin-right: 16px;
+      width: auto !important;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      touch-action: none;
+    }
+    .dock-btn {
+      border-radius: 9999px !important;
+      background: transparent !important;
+      border: none !important;
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      text-align: center;
+      transition: color 0.25s ease !important;
+    }
+    .dock-btn.active {
+      color: #a7f3d0 !important;
+      transform: none;
+    }
+    .dock-dragging .dock-btn.active {
+      background: transparent !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      border-color: transparent !important;
+      box-shadow: none !important;
+      transform: scale(1);
+    }
+    #ios-floating-bubble {
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      width: 68px;
+      min-width: 0;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.5) !important;
+      backdrop-filter: blur(15px) !important;
+      -webkit-backdrop-filter: blur(15px) !important;
+      border: 1px solid rgba(52, 211, 153, 0.7) !important;
+      box-shadow: 0 6px 25px rgba(16, 185, 129, 0.6), inset 0 0 12px rgba(16, 185, 129, 0.4) !important;
+      transform: scale(1);
+      transition: transform 0.24s cubic-bezier(0.175, 0.885, 0.32, 1.25), background 0.24s ease, backdrop-filter 0.24s ease, left 0.24s cubic-bezier(0.22, 1, 0.36, 1), width 0.24s ease !important;
+      pointer-events: none;
+      display: block;
+      z-index: 1;
+    }
+    .dock-dragging #ios-floating-bubble {
+      transform: scale(1.12) !important;
+      background: rgba(16, 185, 129, 0.20) !important;
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
+      border-color: rgba(52, 211, 153, 0.4) !important;
+    }
+    .dock-dragging .dock-btn {
+      transform: none !important;
+    }
+    .ghost-mode-ready {
+      background: rgba(16, 185, 129, 0.2) !important;
+      border-color: rgba(52, 211, 153, 0.65) !important;
+      color: #a7f3d0 !important;
+      animation: ghostGlow 2s ease-in-out infinite;
+    }
+    @keyframes ghostGlow {
+      0%, 100% { box-shadow: 0 0 0 rgba(16, 185, 129, 0); }
+      50% { box-shadow: 0 0 18px rgba(16, 185, 129, 0.28); }
+    }
+    .side-nav-btn.active {
+      background: linear-gradient(90deg, #10b981, #059669);
+      color: #052e16;
+      font-weight: 800;
+    }
+    #bike-map {
+      height: 350px;
+      width: 100%;
+      border-radius: 1rem;
+      z-index: 10;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    @keyframes pulseGps {
+      0% { transform: scale(0.85); opacity: 1; }
+      100% { transform: scale(2.3); opacity: 0; }
+    }
+    .gps-live-dot {
+      width: 16px;
+      height: 16px;
+      background: #10b981;
+      border: 3px solid #ffffff;
+      border-radius: 50%;
+      position: relative;
+    }
+    .gps-live-dot::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 2px solid #10b981;
+      animation: pulseGps 1.5s infinite;
+    }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: #070a0f; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
