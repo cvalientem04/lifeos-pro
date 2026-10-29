@@ -383,6 +383,15 @@
       const dockButtons = dock.querySelectorAll('.dock-btn');
       let isDragging = false;
       let targetTabMatch = null;
+      let dockRefreshFrame = 0;
+
+      function scheduleDockBubbleRefresh() {
+        cancelAnimationFrame(dockRefreshFrame);
+        dockRefreshFrame = requestAnimationFrame(() => {
+          requestAnimationFrame(() => moveDockBubbleToActiveTab(currentActiveTab));
+        });
+        window.setTimeout(() => moveDockBubbleToActiveTab(currentActiveTab), 180);
+      }
 
       function updateBubblePosition(clientX) {
         const dockRect = dock.getBoundingClientRect();
@@ -437,6 +446,10 @@
         requestAnimationFrame(() => moveDockBubbleToActiveTab(currentActiveTab));
       });
       window.addEventListener('load', () => moveDockBubbleToActiveTab(currentActiveTab), { once: true });
-      window.addEventListener('resize', () => moveDockBubbleToActiveTab(currentActiveTab));
+      window.addEventListener('resize', scheduleDockBubbleRefresh);
+      window.addEventListener('orientationchange', scheduleDockBubbleRefresh);
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', scheduleDockBubbleRefresh);
+      }
       initializeAuth();
     });
