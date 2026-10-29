@@ -1074,5 +1074,5 @@ const EXERCISE_CATALOG = [
       const buttonRect = activeButton.getBoundingClientRect();
       if (!buttonRect.width || !buttonRect.height) return;
       bubble.style.width = `${buttonRect.width}px`;
-      bubble.style.left = `${buttonRect.left - dockRect.left}px`;
+      bubble.style.setProperty('--dock-bubble-x', `${buttonRect.left - dockRect.left}px`);
     }

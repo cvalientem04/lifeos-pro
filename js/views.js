@@ -384,6 +384,9 @@
       let isDragging = false;
       let targetTabMatch = null;
       let dockRefreshFrame = 0;
+      let dragFrame = 0;
+      let pendingDragX = null;
+      let dragGeometry = null;
 
       function scheduleDockBubbleRefresh() {
         cancelAnimationFrame(dockRefreshFrame);
@@ -394,18 +397,26 @@
       }
 
       function updateBubblePosition(clientX) {
-        const dockRect = dock.getBoundingClientRect();
-        let offsetX = clientX - dockRect.left;
+        if (!dragGeometry) {
+          dragGeometry = {
+            dockRect: dock.getBoundingClientRect(),
+            bubbleWidth: bubble.offsetWidth,
+            buttons: [...dockButtons].map(btn => ({
+              element: btn,
+              rect: btn.getBoundingClientRect()
+            }))
+          };
+        }
+        let offsetX = clientX - dragGeometry.dockRect.left;
         const minX = 6;
-        const maxX = dock.offsetWidth - bubble.offsetWidth - 6;
-        offsetX = Math.max(minX, Math.min(offsetX - (bubble.offsetWidth / 2), maxX));
-        bubble.style.left = `${offsetX}px`;
+        const maxX = dock.offsetWidth - dragGeometry.bubbleWidth - 6;
+        offsetX = Math.max(minX, Math.min(offsetX - (dragGeometry.bubbleWidth / 2), maxX));
+        bubble.style.setProperty('--dock-bubble-x', `${offsetX}px`);
 
-        const bubbleCenter = dockRect.left + offsetX + (bubble.offsetWidth / 2);
-        dockButtons.forEach(btn => {
-          const rect = btn.getBoundingClientRect();
+        const bubbleCenter = dragGeometry.dockRect.left + offsetX + (dragGeometry.bubbleWidth / 2);
+        dragGeometry.buttons.forEach(({ element, rect }) => {
           if (bubbleCenter >= rect.left && bubbleCenter <= rect.right) {
-            const onclickAttr = btn.getAttribute('onclick');
+            const onclickAttr = element.getAttribute('onclick');
             const match = onclickAttr && onclickAttr.match(/switchTab\(['"]([^'"]+)['"]\)/);
             if (match && match[1]) {
               targetTabMatch = match[1];
@@ -416,6 +427,7 @@
 
       dock.addEventListener('touchstart', event => {
         isDragging = true;
+        dragGeometry = null;
         dock.classList.add('dock-dragging');
         const touch = event.touches[0];
         if (touch) updateBubblePosition(touch.clientX);
@@ -424,12 +436,24 @@
       dock.addEventListener('touchmove', event => {
         if (!isDragging) return;
         const touch = event.touches[0];
-        if (touch) updateBubblePosition(touch.clientX);
+        if (!touch) return;
+        pendingDragX = touch.clientX;
+        if (dragFrame) return;
+        dragFrame = requestAnimationFrame(() => {
+          dragFrame = 0;
+          if (pendingDragX !== null) updateBubblePosition(pendingDragX);
+        });
       }, { passive: true });
 
       const endDrag = () => {
         if (!isDragging) return;
         isDragging = false;
+        dragGeometry = null;
+        pendingDragX = null;
+        if (dragFrame) {
+          cancelAnimationFrame(dragFrame);
+          dragFrame = 0;
+        }
         dock.classList.remove('dock-dragging');
         if (targetTabMatch) {
           window.switchTab(targetTabMatch);
