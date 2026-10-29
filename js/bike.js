@@ -16,6 +16,13 @@
       polylines: []
     };
 
+    function isUsableGpsPosition(pos) {
+      const accuracy = Number(pos.coords.accuracy);
+      return Number.isFinite(pos.coords.latitude)
+        && Number.isFinite(pos.coords.longitude)
+        && (!accuracy || accuracy <= 100);
+    }
+
     function initBikeMapIfNeeded() {
       if (bikeMap) return;
       const el = document.getElementById('bike-map');
@@ -116,6 +123,10 @@
 
       gpsWatchId = navigator.geolocation.watchPosition(
         (pos) => {
+          if (!isUsableGpsPosition(pos)) {
+            document.getElementById('gpsLiveStatusBadge').textContent = `⚠️ GPS impreciso (±${Math.round(pos.coords.accuracy || 0)}m)`;
+            return;
+          }
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
           const nowMs = Date.now();
@@ -127,6 +138,12 @@
             const prevPt = L.latLng(prev.lat, prev.lng);
             const distM = prevPt.distanceTo(newPt);
             const dtSec = Math.max(1, (nowMs - prev.timeMs) / 1000);
+            const maxPlausibleDistanceM = Math.max(150, (dtSec * 35) / 3.6);
+
+            if (distM > maxPlausibleDistanceM) {
+              updateLiveRiderDot([lat, lng]);
+              return;
+            }
 
             if (pos.coords.speed !== null && pos.coords.speed >= 0) {
               speedKmh = pos.coords.speed * 3.6;
@@ -135,7 +152,7 @@
             }
             speedKmh = Math.min(75, Math.max(0, speedKmh));
 
-            if (distM >= 2) {
+            if (distM >= 2 && distM <= maxPlausibleDistanceM) {
               liveRide.totalDistKm += distM / 1000;
               liveRide.currentSpeedKmh = speedKmh;
               if (speedKmh > liveRide.maxSpeedKmh) liveRide.maxSpeedKmh = speedKmh;
@@ -163,13 +180,18 @@
           document.getElementById('liveAvgSpeedVal').textContent = avg.toFixed(1);
         },
         (err) => {
-          document.getElementById('gpsLiveStatusBadge').textContent = '⚠️ Permiso de ubicación bloqueado en el móvil';
+          const badge = document.getElementById('gpsLiveStatusBadge');
+          if (err.code === 1) {
+            badge.textContent = '⚠️ Permiso de ubicación bloqueado en el móvil';
+          } else {
+            badge.textContent = '⚠️ Señal GPS perdida; esperando una lectura válida...';
+          }
         },
         { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 }
       );
     }
 
-    function finishAndSaveLiveRide() {
+    async function finishAndSaveLiveRide() {
       if (gpsWatchId !== null && navigator.geolocation) {
         navigator.geolocation.clearWatch(gpsWatchId);
         gpsWatchId = null;
@@ -186,6 +208,12 @@
         ? Number((liveRide.speedSamples.reduce((a, b) => a + b, 0) / liveRide.speedSamples.length).toFixed(1))
         : 0;
       const maxSpeed = Number(liveRide.maxSpeedKmh.toFixed(1));
+      const fallbackPoints = liveRide.points.map(point => [point.lat, point.lng]);
+      const savedSegments = liveRide.segments.length > 0
+        ? liveRide.segments
+        : fallbackPoints.length > 1
+          ? [{ pts: fallbackPoints, color: '#10b981', speed: 0 }]
+          : [];
 
       const day = getDayData(currentDate);
       if (!day.bikeRoutes) day.bikeRoutes = [];
@@ -198,7 +226,8 @@
         mins,
         avgSpeed,
         maxSpeed,
-        segments: liveRide.segments
+        segments: savedSegments,
+        syncPending: true
       };
       day.bikeRoutes.unshift(savedRoute);
 
@@ -207,7 +236,7 @@
 
       document.getElementById('gpsLiveStatusBadge').textContent = `✔ Ruta guardada en ${formatHumanDate(currentDate)}`;
       saveToStorage();
-      syncBikeRouteToSupabase(savedRoute);
+      await syncBikeRouteToSupabase(savedRoute);
       renderSavedBikeRoutesHistory();
     }
 

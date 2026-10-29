@@ -513,7 +513,7 @@ const EXERCISE_CATALOG = [
     }
 
     async function syncBikeRouteToSupabase(route) {
-      if (!currentAuthSession?.user || route.supabaseId) return;
+      if (!currentAuthSession?.user || route.supabaseId) return false;
       const { data, error } = await lifeosSupabase
         .from('bike_routes')
         .insert({
@@ -531,11 +531,24 @@ const EXERCISE_CATALOG = [
 
       if (error) {
         setAuthFeedback(`No se pudo sincronizar la ruta: ${error.message}`, 'error', true);
-        return;
+        return false;
       }
       route.supabaseId = data.id;
+      delete route.syncPending;
       SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
       setAuthFeedback('Ruta sincronizada correctamente.', 'info', true);
+      return true;
+    }
+
+    async function syncPendingBikeRoutesToSupabase() {
+      if (!currentAuthSession?.user) return;
+      const pendingRoutes = Object.values(appState.days)
+        .flatMap(day => day.bikeRoutes || [])
+        .filter(route => route.syncPending && !route.supabaseId);
+
+      for (const route of pendingRoutes) {
+        await syncBikeRouteToSupabase(route);
+      }
     }
 
     async function loadBikeRoutesFromSupabase() {
@@ -861,6 +874,7 @@ const EXERCISE_CATALOG = [
         await loadShoppingItemsFromSupabase();
         await loadAnimalTasksFromSupabase();
         await loadBikeRoutesFromSupabase();
+        await syncPendingBikeRoutesToSupabase();
         await loadMealsFromSupabase();
       }
       if (window.location.hash.includes('type=recovery')) openPasswordRecoveryModal();
@@ -877,6 +891,7 @@ const EXERCISE_CATALOG = [
             await loadShoppingItemsFromSupabase();
             await loadAnimalTasksFromSupabase();
             await loadBikeRoutesFromSupabase();
+            await syncPendingBikeRoutesToSupabase();
             await loadMealsFromSupabase();
           }, 0);
         }
