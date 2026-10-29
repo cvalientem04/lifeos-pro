@@ -27,12 +27,22 @@
       try {
         box.innerHTML = `📡 Buscando dispositivos Bluetooth cercanos...`;
         const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true });
-        box.innerHTML = `🟢 Conectado a <b>${device.name || 'Reloj Inteligente'}</b>. Pasos sincronizados.`;
-        getDayData(currentDate).steps = Math.max(getDayData(currentDate).steps || 0, 8450);
-        document.getElementById('watchSyncStatusPill').textContent = `🟢 ${device.name || 'BLE OK'}`;
-        saveToStorage();
+        if (!device.gatt) {
+          box.innerHTML = `⚠️ Se detectó <b>${device.name || 'Reloj Inteligente'}</b>, pero este navegador no permite abrir su conexión GATT.`;
+          return;
+        }
+        box.innerHTML = `📡 Dispositivo detectado. Abriendo conexión con <b>${device.name || 'Reloj Inteligente'}</b>...`;
+        const server = await device.gatt.connect();
+        device.addEventListener('gattserverdisconnected', () => {
+          document.getElementById('watchSyncStatusPill').textContent = '⚪ Reloj desconectado';
+        });
+        box.innerHTML = `🟢 <b>${device.name || 'Reloj Inteligente'}</b> conectado. El reloj no ha expuesto todavía un servicio de pasos compatible.`;
+        document.getElementById('watchSyncStatusPill').textContent = `🟢 ${device.name || 'BLE conectado'}`;
+        if (!server.connected) {
+          box.innerHTML = `⚠️ El dispositivo fue detectado, pero no se pudo mantener la conexión Bluetooth.`;
+        }
       } catch (e) {
-        box.innerHTML = `ℹ️ Búsqueda Bluetooth cancelada. Puedes usar la importación rápida de abajo.`;
+        box.innerHTML = `⚠️ No se pudo conectar al reloj: ${e.message || 'operación cancelada'}.`;
       }
     }
 
@@ -100,4 +110,3 @@
       };
       r.readAsText(f);
     }
-

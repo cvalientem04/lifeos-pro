@@ -777,7 +777,8 @@ const EXERCISE_CATALOG = [
       const signedInPanel = document.getElementById('authSignedInPanel');
       const email = document.getElementById('authCurrentEmail');
       if (!button || !signedOutForm || !signedInPanel) return;
-      button.querySelector('span:last-child').textContent = signedIn ? 'Cuenta' : 'Entrar';
+      button.setAttribute('aria-label', signedIn ? 'Abrir mi cuenta' : 'Abrir cuenta');
+      button.title = signedIn ? 'Mi cuenta' : 'Cuenta';
       signedOutForm.classList.toggle('hidden', signedIn);
       signedInPanel.classList.toggle('hidden', !signedIn);
       if (email) email.textContent = session?.user?.email || '';

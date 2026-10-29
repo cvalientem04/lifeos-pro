@@ -126,8 +126,8 @@
     <!-- CABECERA MÓVIL Y PC 100% CENTRADA Y SIN DESBORDAMIENTO LATERAL -->
     <header class="studio-card rounded-2xl p-3 space-y-2.5 overflow-hidden">
       <!-- Fila 1: Marca + Racha + Botón de Voz -->
-      <div class="flex items-center justify-between gap-2">
-        <div class="flex items-center gap-2 min-w-0">
+      <div class="lifeos-header-row flex items-center justify-between gap-2">
+        <div class="lifeos-header-brand flex items-center gap-2 min-w-0">
           <span class="logo-shell w-9 h-9 rounded-xl flex items-center justify-center text-xs shrink-0 overflow-hidden"><img src="img/logo.png" alt="Logo LifeOS" class="logo-mark rounded-lg"></span>
           <div class="truncate">
             <h2 class="text-sm font-extrabold text-white leading-tight truncate">LifeOS Studio</h2>
@@ -135,18 +135,18 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-1.5 shrink-0">
-          <button onclick="switchTab('weekly')" class="header-action px-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-extrabold text-amber-400 flex items-center gap-1">
+        <div class="lifeos-header-actions flex items-center justify-end gap-1.5 shrink-0">
+          <button onclick="switchTab('weekly')" class="header-action header-pill px-2.5 bg-slate-900 border border-slate-800 text-xs font-extrabold text-amber-400 flex items-center gap-1">
             🔥 <span id="topStreakNum">14</span>d
           </button>
-          <button onclick="toggleGhostMode()" id="ghostModeButton" aria-label="Modo fantasma" class="header-action w-9 rounded-xl bg-slate-900 border border-slate-800 text-base flex items-center justify-center transition" title="Disponible al llegar a 5.000 pasos">
+          <button onclick="toggleGhostMode()" id="ghostModeButton" aria-label="Modo fantasma" class="header-action header-icon w-9 bg-slate-900 border border-slate-800 text-base flex items-center justify-center transition" title="Disponible al llegar a 5.000 pasos">
             👻
           </button>
-          <button onclick="openVoiceModal('GLOBAL')" class="header-action px-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-extrabold flex items-center gap-1">
-            <span>🎙️</span> <span>Voz</span>
+          <button onclick="openVoiceModal('GLOBAL')" aria-label="Abrir comandos de voz" title="Voz" class="header-action header-icon w-9 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-base font-extrabold flex items-center justify-center">
+            🎙️
           </button>
-          <button onclick="openAuthModal()" id="authHeaderButton" class="header-action px-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-extrabold flex items-center gap-1">
-            <span>👤</span> <span>Entrar</span>
+          <button onclick="openAuthModal()" id="authHeaderButton" aria-label="Abrir cuenta" title="Cuenta" class="header-action header-icon w-9 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-base font-extrabold flex items-center justify-center">
+            👤
           </button>
         </div>
       </div>
@@ -476,8 +476,8 @@
             <p class="text-[11px] text-slate-400">Usa el GPS de tu móvil para pintar tu velocidad real (`km/h`) en cada tramo</p>
           </div>
           <select id="mapLayerStyleSelect" onchange="changeBikeMapStyle(this.value)" class="studio-input rounded-xl px-2.5 py-1.5 text-xs font-bold">
-            <option value="esri_street" selected>🗺️ Callejero</option>
-            <option value="esri_sat">🛰️ Satélite</option>
+            <option value="esri_sat" selected>🛰️ Satélite</option>
+            <option value="esri_street">🗺️ Callejero</option>
           </select>
         </div>
 

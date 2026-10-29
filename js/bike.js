@@ -29,7 +29,7 @@
       if (!el) return;
       bikeMap = L.map('bike-map').setView([39.5696, 2.6502], 14);
       previewRouteLayerGroup = L.layerGroup().addTo(bikeMap);
-      changeBikeMapStyle('esri_street');
+      changeBikeMapStyle('esri_sat');
     }
 
     function changeBikeMapStyle(k) {
@@ -258,19 +258,23 @@
       }
 
       box.innerHTML = allSaved.map(r => `
-        <div onclick="replaySavedRouteOnMap(${JSON.stringify(r.id)}, ${JSON.stringify(r.date)})" class="cursor-pointer bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl p-3 flex items-center justify-between transition">
-          <div>
+        <div onclick="replaySavedRouteOnMap(${JSON.stringify(r.id)}, ${JSON.stringify(r.date)})" class="route-history-card cursor-pointer bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-2xl p-3 flex items-center justify-between gap-3 transition">
+          <div class="min-w-0">
             <div class="flex items-center gap-2">
-              <span class="text-xs font-extrabold text-white capitalize">📅 ${formatHumanDate(r.date)}</span>
-              <span class="text-[10px] font-mono text-slate-400">${r.timeStr || ''}</span>
+              <span class="route-history-date text-xs font-extrabold text-white capitalize">📅 ${formatHumanDate(r.date)}</span>
+              <span class="text-[10px] font-mono text-slate-400">${r.timeStr || 'Ruta GPS'}</span>
             </div>
-            <p class="text-[11px] font-mono text-emerald-400 mt-0.5">
-              ⚡ Media: <b>${r.avgSpeed || 0} km/h</b> • Máx: <b>${r.maxSpeed || 0} km/h</b>
+            <p class="text-[11px] font-mono text-emerald-400 mt-1">
+              <span>⚡ Media <b>${r.avgSpeed || 0}</b></span>
+              <span class="text-slate-500"> km/h</span>
+              <span class="text-slate-600"> • </span>
+              <span class="text-orange-300">Máx <b>${r.maxSpeed || 0}</b></span>
+              <span class="text-slate-500"> km/h</span>
             </p>
           </div>
           <div class="text-right">
-            <span class="text-sm font-extrabold font-mono text-cyan-400 block">${r.km} km</span>
-            <span class="text-[10px] font-mono text-amber-300">${r.mins} min • Ver 🗺️</span>
+            <span class="text-base font-extrabold font-mono text-cyan-300 block">${r.km} <small class="text-[10px]">km</small></span>
+            <span class="text-[10px] font-mono text-amber-300">${r.mins} min <span class="text-slate-500">•</span> Ver 🗺️</span>
           </div>
         </div>
       `).join('');
