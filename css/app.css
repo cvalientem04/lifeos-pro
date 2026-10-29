@@ -70,15 +70,37 @@ body {
     }
     @media (max-width: 430px) {
       .lifeos-header-row {
-        align-items: flex-start;
-        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
       }
       .lifeos-header-brand {
-        flex: 1 1 130px;
+        flex: 1 1 auto;
+        min-width: 0;
       }
       .lifeos-header-actions {
-        flex: 1 1 100%;
-        justify-content: flex-end;
+        flex: 0 0 auto;
+        gap: 4px !important;
+      }
+      .lifeos-header-actions .header-action {
+        height: 32px;
+      }
+      .lifeos-header-actions .header-icon {
+        width: 32px;
+      }
+      .lifeos-header-actions .header-pill {
+        min-width: 48px;
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+      .lifeos-header-brand .logo-shell {
+        width: 34px;
+        height: 34px;
+      }
+      .lifeos-header-brand h2 {
+        font-size: 0.75rem;
+      }
+      .lifeos-header-brand p {
+        font-size: 0.625rem;
       }
     }
     .shop-item {
