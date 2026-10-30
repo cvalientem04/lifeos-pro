@@ -142,6 +142,7 @@ const EXERCISE_CATALOG = [
       return {
         turkeys: { fedMorning: false, morningTime: '', waterGiven: false, waterTime: '', fedEvening: false, eveningTime: '' },
         animalTasks: { pavos: {}, gatos: {} },
+        careProfiles: [],
         studyMinutes: 0,
         carMinutes: 0,
         steps: 0,
@@ -512,6 +513,134 @@ const EXERCISE_CATALOG = [
       refreshCurrentActiveView();
     }
 
+    async function syncCareProfileToSupabase(profile, dateStr = currentDate) {
+      if (!currentAuthSession?.user || !profile) return false;
+      const userId = currentAuthSession.user.id;
+      const profilePayload = {
+        user_id: userId,
+        name: profile.name,
+        emoji: profile.emoji || '🐾',
+        care_type: profile.type || 'other'
+      };
+      let profileId = profile.supabaseId;
+      if (profileId) {
+        const { error } = await lifeosSupabase.from('care_profiles').update(profilePayload).eq('id', profileId);
+        if (error) {
+          setAuthFeedback(`No se pudo actualizar el cuidado: ${error.message}`, 'error', true);
+          return false;
+        }
+      } else {
+        const { data, error } = await lifeosSupabase
+          .from('care_profiles')
+          .insert(profilePayload)
+          .select('id')
+          .single();
+        if (error) {
+          setAuthFeedback(`No se pudo guardar el cuidado: ${error.message}`, 'error', true);
+          return false;
+        }
+        profileId = data.id;
+        profile.supabaseId = profileId;
+      }
+
+      const taskRows = (profile.tasks || []).map(task => ({
+        profile_id: profileId,
+        user_id: userId,
+        task_date: dateStr,
+        label: task.label,
+        completed: !!task.completed,
+        completed_at: task.completed ? (task.completedAt || new Date().toISOString()) : null
+      }));
+      if (taskRows.length > 0) {
+        const { data, error } = await lifeosSupabase
+          .from('care_tasks')
+          .upsert(taskRows, { onConflict: 'profile_id,task_date,label' })
+          .select('id, label');
+        if (error) {
+          setAuthFeedback(`No se pudieron sincronizar las tareas de cuidado: ${error.message}`, 'error', true);
+          return false;
+        }
+        (data || []).forEach(remoteTask => {
+          const localTask = profile.tasks.find(task => task.label === remoteTask.label);
+          if (localTask) localTask.supabaseId = remoteTask.id;
+        });
+      }
+      SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
+      return true;
+    }
+
+    async function loadCareProfilesFromSupabase(dateStr = currentDate) {
+      if (!currentAuthSession?.user) return;
+      const userId = currentAuthSession.user.id;
+      const { data: profiles, error: profilesError } = await lifeosSupabase
+        .from('care_profiles')
+        .select('id, name, emoji, care_type')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: true });
+      if (profilesError) {
+        setAuthFeedback(`No se pudieron cargar los cuidados: ${profilesError.message}`, 'error', true);
+        return;
+      }
+      const profileIds = (profiles || []).map(profile => profile.id);
+      let tasks = [];
+      if (profileIds.length > 0) {
+        const { data, error: tasksError } = await lifeosSupabase
+          .from('care_tasks')
+          .select('id, profile_id, label, completed, completed_at')
+          .eq('user_id', userId)
+          .eq('task_date', dateStr)
+          .in('profile_id', profileIds);
+        if (tasksError) {
+          setAuthFeedback(`No se pudieron cargar las tareas de cuidado: ${tasksError.message}`, 'error', true);
+          return;
+        }
+        tasks = data || [];
+      }
+      const localProfiles = Array.isArray(appState.careProfiles) ? appState.careProfiles : [];
+      const localByRemoteId = new Map(localProfiles.filter(profile => profile.supabaseId).map(profile => [profile.supabaseId, profile]));
+      appState.careProfiles = (profiles || []).map(remoteProfile => {
+        const local = localByRemoteId.get(remoteProfile.id);
+        const remoteTasks = tasks.filter(task => task.profile_id === remoteProfile.id);
+        const localTasks = local?.tasks || [];
+        return {
+          id: local?.id || `care-${remoteProfile.id}`,
+          supabaseId: remoteProfile.id,
+          name: remoteProfile.name,
+          emoji: remoteProfile.emoji,
+          type: remoteProfile.care_type,
+          tasks: remoteTasks.map(remoteTask => {
+            const localTask = localTasks.find(task => task.supabaseId === remoteTask.id || task.label === remoteTask.label);
+            return {
+              id: localTask?.id || `task-${remoteTask.id}`,
+              supabaseId: remoteTask.id,
+              label: remoteTask.label,
+              completed: !!remoteTask.completed,
+              completedAt: remoteTask.completed_at || ''
+            };
+          })
+        };
+      });
+      SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
+      refreshCurrentActiveView();
+    }
+
+    async function syncPendingCareProfilesToSupabase() {
+      if (!currentAuthSession?.user || !Array.isArray(appState.careProfiles)) return;
+      for (const profile of appState.careProfiles) {
+        if (!profile.supabaseId) await syncCareProfileToSupabase(profile);
+      }
+    }
+
+    async function deleteCareProfileFromSupabase(profile) {
+      if (!currentAuthSession?.user || !profile?.supabaseId) return;
+      const { error } = await lifeosSupabase
+        .from('care_profiles')
+        .delete()
+        .eq('id', profile.supabaseId)
+        .eq('user_id', currentAuthSession.user.id);
+      if (error) setAuthFeedback(`No se pudo eliminar el cuidado: ${error.message}`, 'error', true);
+    }
+
     async function syncBikeRouteToSupabase(route) {
       if (!currentAuthSession?.user || route.supabaseId) return false;
       const { data, error } = await lifeosSupabase
@@ -874,6 +1003,8 @@ const EXERCISE_CATALOG = [
         await loadExpensesFromSupabase();
         await loadShoppingItemsFromSupabase();
         await loadAnimalTasksFromSupabase();
+        await syncPendingCareProfilesToSupabase();
+        await loadCareProfilesFromSupabase();
         await loadBikeRoutesFromSupabase();
         await syncPendingBikeRoutesToSupabase();
         await loadMealsFromSupabase();
@@ -891,6 +1022,8 @@ const EXERCISE_CATALOG = [
             await loadExpensesFromSupabase();
             await loadShoppingItemsFromSupabase();
             await loadAnimalTasksFromSupabase();
+            await syncPendingCareProfilesToSupabase();
+            await loadCareProfilesFromSupabase();
             await loadBikeRoutesFromSupabase();
             await syncPendingBikeRoutesToSupabase();
             await loadMealsFromSupabase();

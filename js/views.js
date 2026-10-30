@@ -12,7 +12,7 @@
       document.getElementById('homeBikeSub').textContent = `${(day.bikeKm || 0).toFixed(1)} km bici`;
 
       const tc = (day.turkeys.fedMorning ? 1 : 0) + (day.turkeys.waterGiven ? 1 : 0) + (day.turkeys.fedEvening ? 1 : 0);
-      document.getElementById('homeTurkeysStat').textContent = `${tc}/3 turnos`;
+      document.getElementById('homeTurkeysStat').textContent = `${tc}/3 tareas`;
       const pendingShop = appState.shoppingList.filter(i => !i.done).length;
       document.getElementById('homeShopSub').textContent = `${pendingShop} pendientes`;
 
@@ -81,6 +81,85 @@
 
     let activeAnimalType = 'pavos'; // pavos | gatos
 
+    function openCareProfileModal() {
+      document.getElementById('careProfileModal').classList.replace('hidden', 'flex');
+    }
+
+    function closeCareProfileModal() {
+      document.getElementById('careProfileModal').classList.replace('flex', 'hidden');
+    }
+
+    function ensureCareProfiles() {
+      if (!Array.isArray(appState.careProfiles)) appState.careProfiles = [];
+    }
+
+    function saveCareProfile() {
+      const name = document.getElementById('careProfileNameInput').value.trim();
+      const emoji = document.getElementById('careProfileEmojiInput').value.trim() || '🐾';
+      const tasks = document.getElementById('careProfileTasksInput').value
+        .split(',')
+        .map(task => task.trim())
+        .filter(Boolean);
+      if (!name || tasks.length === 0) return;
+      ensureCareProfiles();
+      appState.careProfiles.push({
+        id: `care-${Date.now()}`,
+        name,
+        emoji,
+        type: document.getElementById('careProfileTypeInput').value,
+        tasks: tasks.map((label, index) => ({ id: `task-${Date.now()}-${index}`, label }))
+      });
+      saveToStorage();
+      syncCareProfileToSupabase(appState.careProfiles[appState.careProfiles.length - 1]);
+      closeCareProfileModal();
+      document.getElementById('careProfileNameInput').value = '';
+      document.getElementById('careProfileTasksInput').value = '';
+      renderHogarView();
+    }
+
+    function toggleCareTask(profileId, taskId) {
+      const profile = (appState.careProfiles || []).find(item => item.id === profileId);
+      const task = profile?.tasks.find(item => item.id === taskId);
+      if (!task) return;
+      task.completed = !task.completed;
+      task.completedAt = task.completed ? new Date().toISOString() : '';
+      saveToStorage();
+      syncCareProfileToSupabase(profile);
+      renderHogarView();
+    }
+
+    function deleteCareProfile(profileId) {
+      const profile = (appState.careProfiles || []).find(item => item.id === profileId);
+      appState.careProfiles = (appState.careProfiles || []).filter(item => item.id !== profileId);
+      saveToStorage();
+      deleteCareProfileFromSupabase(profile);
+      renderHogarView();
+    }
+
+    function renderCareProfiles() {
+      ensureCareProfiles();
+      const box = document.getElementById('careProfilesContainer');
+      const empty = document.getElementById('careProfilesEmpty');
+      if (!box || !empty) return;
+      empty.classList.toggle('hidden', appState.careProfiles.length > 0);
+      box.innerHTML = appState.careProfiles.map(profile => `
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-extrabold text-white">${profile.emoji} ${profile.name}</span>
+            <button onclick="deleteCareProfile('${profile.id}')" class="text-[10px] text-slate-500 hover:text-rose-300">Eliminar</button>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            ${profile.tasks.map(task => `
+              <button onclick="toggleCareTask('${profile.id}', '${task.id}')" class="p-2 rounded-xl border ${task.completed ? 'border-emerald-500 bg-emerald-500/15' : 'border-slate-800 bg-slate-950'} text-left transition">
+                <span class="text-xs font-bold ${task.completed ? 'text-emerald-300' : 'text-white'}">${task.completed ? '✓ ' : ''}${task.label}</span>
+                <span class="block text-[10px] text-slate-500">${task.completedAt ? new Date(task.completedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'Pendiente'}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
     function ensureAnimalTasks(day) {
       if (!day.animalTasks) day.animalTasks = { pavos: {}, gatos: {} };
       if (!day.animalTasks.pavos) day.animalTasks.pavos = {};
@@ -136,10 +215,16 @@
     function renderHogarView() {
       const day = getDayData(currentDate);
       ensureAnimalTasks(day);
+      renderCareProfiles();
       const currentObj = day.animalTasks[activeAnimalType] || {};
 
       const titleEl = document.getElementById('hogarCardTitleText');
-      if (titleEl) titleEl.textContent = activeAnimalType === 'pavos' ? '🦃 Cuidado de los Pavos' : '🐈 Cuidado de los Gatos';
+      if (titleEl) titleEl.textContent = activeAnimalType === 'pavos' ? '🦃 Cuidados de pavos' : '🐈 Cuidados de gatos';
+      const feedButton = document.getElementById('careFeedButton');
+      if (feedButton) {
+        feedButton.classList.toggle('hidden', activeAnimalType !== 'pavos');
+        feedButton.textContent = activeAnimalType === 'pavos' ? '+ Pienso' : '';
+      }
 
       const tabPavos = document.getElementById('tab-animal-pavos');
       const tabGatos = document.getElementById('tab-animal-gatos');

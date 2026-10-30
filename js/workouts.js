@@ -552,10 +552,16 @@
       const bodyWeightKg = appState.profile?.weightKg || 76.5;
       const relStrength = (currentKg / bodyWeightKg).toFixed(2);
       const level = relStrength >= 1.5 ? '🏆 Élite' : relStrength >= 1.0 ? '💪 Avanzado' : relStrength >= 0.75 ? '📈 Intermedio' : '🌱 Iniciando';
+      const progressPercent = Math.min(100, Math.max(8, (currentKg / Math.max(startKg, currentKg)) * 100));
 
       document.getElementById('clearProgressSummaryBanner').innerHTML = `
-        <p>🚀 <b>${ex.name}</b>: empezaste con <b>${startKg} kg</b> y tu marca actual es <b>${currentKg} kg × ${ex.defaultReps} reps</b> (<span class="text-emerald-300 font-mono">+${diff} kg de mejora</span>).</p>
-        <p class="mt-1.5">⚡ Fuerza relativa: <b class="text-amber-300">${relStrength}x tu peso corporal</b> — Nivel: <b>${level}</b></p>
+        <div class="flex items-center justify-between gap-2">
+          <span class="font-extrabold">${ex.name}</span>
+          <span class="text-emerald-300 font-mono font-extrabold">${currentKg} kg</span>
+        </div>
+        <p class="mt-1 text-[11px]">Desde ${startKg} kg · <span class="text-emerald-300 font-mono">${diff >= 0 ? '+' : ''}${diff} kg</span> · ${ex.defaultReps} reps</p>
+        <div class="mt-2 h-1.5 rounded-full bg-slate-900 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400" style="width:${progressPercent}%"></div></div>
+        <p class="mt-1.5 text-[11px]">⚡ Fuerza relativa: <b class="text-amber-300">${relStrength}x tu peso</b> · <b>${level}</b></p>
       `;
 
       const histRows = histSessions.length > 0

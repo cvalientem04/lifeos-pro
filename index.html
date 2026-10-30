@@ -77,7 +77,7 @@
           <span>🚴</span> <span>GPS Bici & Reloj</span>
         </button>
         <button onclick="switchTab('hogar')" id="dtab-hogar" data-scope="HOME" class="side-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-900 transition">
-          <span>🛒</span> <span>Hogar, Pavos y Gastos</span>
+          <span>🛒</span> <span>Cuidados y Gastos</span>
         </button>
         <button onclick="switchTab('weekly')" id="dtab-weekly" data-scope="ALL" class="side-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:bg-slate-900 transition">
           <span>📊</span> <span>Balance Semanal</span>
@@ -196,8 +196,8 @@
         </div>
 
         <div onclick="switchTab('hogar')" data-card-scope="HOME" class="studio-card rounded-2xl p-3 cursor-pointer hover:border-amber-500/40 transition">
-          <span class="text-[10px] font-bold uppercase text-amber-400 block">🦃 Pavos / Hogar</span>
-          <span id="homeTurkeysStat" class="text-sm sm:text-base font-extrabold text-white block mt-0.5">0/3 turnos</span>
+          <span class="text-[10px] font-bold uppercase text-amber-400 block">🧡 Cuidados</span>
+          <span id="homeTurkeysStat" class="text-sm sm:text-base font-extrabold text-white block mt-0.5">0/3 tareas</span>
           <span id="homeShopSub" class="text-[10px] text-slate-500">Ver lista ➔</span>
         </div>
 
@@ -250,7 +250,7 @@
       <div class="space-y-3" data-card-scope="CLUB">
         <div class="flex items-center justify-between px-1">
           <h3 class="text-sm font-extrabold text-white">🏆 Sesiones de Entrenamiento (Tú y Amigos)</h3>
-          <button onclick="switchTab('gym')" class="text-xs font-bold text-emerald-400">Ir a Fuerza ➔</button>
+          <button onclick="switchTab('gym')" class="text-xs font-bold text-emerald-400">Ver entrenamientos ➔</button>
         </div>
         <div id="socialWorkoutFeedList" class="space-y-3"></div>
       </div>
@@ -278,10 +278,10 @@
 
         <div class="grid grid-cols-2 gap-2.5">
           <button onclick="openCreateRoutineModal()" class="studio-card hover:bg-slate-900 py-3 px-4 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2">
-            <span>➕</span> <span>Crear Nuevo Día</span>
+            <span>➕</span> <span>Crear plantilla</span>
           </button>
           <button onclick="openExercisePickerModal('ROUTINE')" class="studio-card hover:bg-slate-900 py-3 px-4 rounded-xl text-xs font-bold text-emerald-400 flex items-center justify-center gap-2">
-            <span>☑️</span> <span>Catálogo Multi-Selección</span>
+            <span>☑️</span> <span>Añadir ejercicios</span>
           </button>
         </div>
 
@@ -292,8 +292,8 @@
         <div class="studio-card rounded-2xl p-4 space-y-3">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h3 class="text-sm font-extrabold text-white">📈 Evolución de tus Cargas</h3>
-              <p class="text-[11px] text-slate-400">Compara cómo empezaste frente a tu récord actual</p>
+              <h3 class="text-sm font-extrabold text-white">📈 Progreso de fuerza</h3>
+              <p class="text-[11px] text-slate-400">Mira cómo avanzan tus marcas por ejercicio</p>
             </div>
             <select id="clearProgressExerciseSelect" onchange="renderClearStrengthProgress()" class="studio-input rounded-xl px-3 py-1.5 text-xs font-bold"></select>
           </div>
@@ -543,39 +543,16 @@
     <!-- PESTAÑA 4: HOGAR (PAVOS, COMPRA Y GASTOS)                                 -->
     <!-- ========================================================================= -->
     <section id="view-hogar" class="hidden space-y-4">
-      <!-- Cuidado de Animales (Pavos y Gatos separados) -->
       <div class="studio-card rounded-2xl p-4 space-y-3">
         <div class="flex items-center justify-between mb-2">
           <div>
-            <h3 class="text-base font-extrabold text-white" id="hogarCardTitleText">🦃 Cuidado de los Pavos</h3>
-            <p class="text-[11px] text-slate-400">Toca para registrar la hora exacta</p>
+            <h3 class="text-base font-extrabold text-white" id="hogarCardTitleText">🧡 Cuidados</h3>
+            <p class="text-[11px] text-slate-400">Mascotas, plantas, medicación o cualquier cuidado diario</p>
           </div>
-          <button onclick="quickAddTurkeyFeedToShop()" class="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold">+ Pienso</button>
+          <button onclick="openCareProfileModal()" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold">+ Añadir</button>
         </div>
-
-        <!-- Pestañas para cambiar entre Pavos y Gatos -->
-        <div class="flex gap-2 mb-2">
-          <button onclick="selectAnimalType('pavos')" id="tab-animal-pavos" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950 transition">🦃 Pavos</button>
-          <button onclick="selectAnimalType('gatos')" id="tab-animal-gatos" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-slate-400 border border-slate-800 transition">🐈 Gatos</button>
-        </div>
-
-        <div class="grid grid-cols-3 gap-2">
-          <button onclick="toggleTurkeyTask('fedMorning')" id="btn-turkey-morning" class="p-3 rounded-xl border border-slate-800 bg-slate-900 flex flex-col items-center text-center transition">
-            <span class="text-xl">🌾</span>
-            <span class="text-xs font-bold text-white mt-1">Mañana</span>
-            <span id="time-turkey-morning" class="text-[10px] font-mono text-slate-500 mt-0.5">Pendiente</span>
-          </button>
-          <button onclick="toggleTurkeyTask('waterGiven')" id="btn-turkey-water" class="p-3 rounded-xl border border-slate-800 bg-slate-900 flex flex-col items-center text-center transition">
-            <span class="text-xl">💧</span>
-            <span class="text-xs font-bold text-white mt-1">Agua</span>
-            <span id="time-turkey-water" class="text-[10px] font-mono text-slate-500 mt-0.5">Pendiente</span>
-          </button>
-          <button onclick="toggleTurkeyTask('fedEvening')" id="btn-turkey-evening" class="p-3 rounded-xl border border-slate-800 bg-slate-900 flex flex-col items-center text-center transition">
-            <span class="text-xl">🌽</span>
-            <span class="text-xs font-bold text-white mt-1">Tarde</span>
-            <span id="time-turkey-evening" class="text-[10px] font-mono text-slate-500 mt-0.5">Pendiente</span>
-          </button>
-        </div>
+        <div id="careProfilesContainer" class="space-y-3"></div>
+        <p id="careProfilesEmpty" class="hidden text-xs text-slate-500 italic">No tienes cuidados configurados. Añade una mascota, planta o tarea personalizada.</p>
       </div>
 
       <div class="studio-card rounded-2xl p-4 space-y-3">
@@ -688,6 +665,28 @@
         <div class="flex items-center gap-2">
           <span class="text-xl">⌚</span>
           <h3 class="text-base font-extrabold text-white">Conectar Reloj / Salud</h3>
+        </div>
+
+        <div id="careProfileModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+          <div class="studio-card rounded-2xl p-5 max-w-md w-full space-y-4 border border-emerald-500/40">
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-extrabold text-white">Añadir cuidado</h3>
+              <button onclick="closeCareProfileModal()" class="text-slate-400">✕</button>
+            </div>
+            <div class="grid grid-cols-[56px_1fr] gap-2">
+              <input id="careProfileEmojiInput" class="studio-input rounded-xl px-3 py-2 text-center text-lg" value="🐾" maxlength="2" aria-label="Emoji del cuidado">
+              <input id="careProfileNameInput" class="studio-input rounded-xl px-3 py-2 text-xs" placeholder="Nombre (ej. Luna, Plantas, Medicación)">
+            </div>
+            <select id="careProfileTypeInput" class="studio-input rounded-xl px-3 py-2 text-xs w-full">
+              <option value="pet">Mascota</option>
+              <option value="plant">Plantas</option>
+              <option value="health">Salud / medicación</option>
+              <option value="home">Casa</option>
+              <option value="other">Otro</option>
+            </select>
+            <input id="careProfileTasksInput" class="studio-input rounded-xl px-3 py-2 text-xs w-full" placeholder="Tareas separadas por comas (ej. Comida, Agua, Paseo)">
+            <button onclick="saveCareProfile()" class="w-full py-2.5 rounded-xl bg-emerald-500 text-slate-950 text-xs font-extrabold">Guardar cuidado</button>
+          </div>
         </div>
         <button onclick="closeWatchSyncModal()" class="text-slate-400">✕</button>
       </div>
