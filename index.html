@@ -250,7 +250,7 @@
       <div class="space-y-3" data-card-scope="CLUB">
         <div class="flex items-center justify-between px-1">
           <h3 class="text-sm font-extrabold text-white">🏆 Sesiones de Entrenamiento (Tú y Amigos)</h3>
-          <button onclick="switchTab('gym')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-xs font-extrabold text-emerald-300 hover:bg-emerald-500/25 transition">
+          <button onclick="switchTab('gym')" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/35 text-[10px] font-extrabold text-emerald-300 hover:bg-emerald-500/25 transition">
             Ver entrenamientos <span aria-hidden="true">➔</span>
           </button>
         </div>
@@ -551,7 +551,7 @@
             <h3 class="text-base font-extrabold text-white" id="hogarCardTitleText">🧡 Cuidados</h3>
             <p class="text-[11px] text-slate-400">Mascotas, plantas, medicación o cualquier cuidado diario</p>
           </div>
-          <button onclick="openCareProfileModal()" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold">+ Añadir</button>
+          <button onclick="openCareProfileModal()" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">+ Añadir</button>
         </div>
         <div id="careProfilesContainer" class="space-y-3"></div>
         <p id="careProfilesEmpty" class="hidden text-xs text-slate-500 italic">No tienes cuidados configurados. Añade una mascota, planta o tarea personalizada.</p>
@@ -561,7 +561,7 @@
         <h3 class="text-base font-extrabold text-white">🛒 Lista de la Compra</h3>
         <div class="flex gap-2">
           <input type="text" id="shopItemInput" onkeydown="if(event.key==='Enter') addShoppingItem()" placeholder="Añadir producto (ej. Leche, Huevos, Pienso)..." class="flex-1 studio-input rounded-xl px-3 py-2 text-xs">
-          <button onclick="addShoppingItem()" class="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs">+ Añadir</button>
+          <button onclick="addShoppingItem()" class="px-2.5 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-extrabold text-[10px]">+ Añadir</button>
         </div>
         <div id="shoppingListContainer" class="space-y-1.5"></div>
       </div>
@@ -574,7 +574,7 @@
         <div class="flex gap-2">
           <input type="number" step="0.01" id="expenseAmountInput" placeholder="€" class="w-24 studio-input rounded-xl px-3 py-2 text-xs font-mono">
           <input type="text" id="expenseDescInput" placeholder="Concepto (ej. Mercadona, Gasolina)..." class="flex-1 studio-input rounded-xl px-3 py-2 text-xs">
-          <button onclick="addExpense()" class="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs">+ Gasto</button>
+          <button onclick="addExpense()" class="px-2.5 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-extrabold text-[10px]">+ Gasto</button>
         </div>
         <div id="expensesListContainer" class="space-y-1.5"></div>
       </div>
@@ -709,7 +709,7 @@
   <div id="careProfileModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="studio-card rounded-2xl p-5 max-w-md w-full space-y-4 border border-emerald-500/40">
       <div class="flex items-center justify-between">
-        <h3 class="text-base font-extrabold text-white">Añadir cuidado</h3>
+        <h3 id="careProfileModalTitle" class="text-base font-extrabold text-white">Añadir cuidado</h3>
         <button onclick="closeCareProfileModal()" class="text-slate-400" aria-label="Cerrar">✕</button>
       </div>
       <div class="grid grid-cols-[56px_1fr] gap-2">

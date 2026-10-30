@@ -85,11 +85,25 @@
 
     let activeAnimalType = 'pavos'; // pavos | gatos
 
-    function openCareProfileModal() {
+    let activeCareProfileId = null;
+
+    function openCareProfileModal(profileId = null) {
+      activeCareProfileId = profileId;
+      const profile = (appState.careProfiles || []).find(item => item.id === profileId);
+      document.getElementById('careProfileModalTitle').textContent = profile ? 'Añadir tarea' : 'Añadir cuidado';
+      document.getElementById('careProfileEmojiInput').closest('.grid').classList.toggle('hidden', !!profile);
+      document.getElementById('careProfileTypeInput').classList.toggle('hidden', !!profile);
+      document.getElementById('careProfileNameInput').classList.toggle('hidden', !!profile);
+      document.getElementById('careProfileNameInput').value = profile?.name || '';
+      document.getElementById('careProfileTasksInput').value = '';
+      document.getElementById('careProfileTasksInput').placeholder = profile
+        ? 'Nuevas tareas separadas por comas (ej. Paseo, Medicación)'
+        : 'Tareas separadas por comas (ej. Comida, Agua, Paseo)';
       document.getElementById('careProfileModal').classList.replace('hidden', 'flex');
     }
 
     function closeCareProfileModal() {
+      activeCareProfileId = null;
       document.getElementById('careProfileModal').classList.replace('flex', 'hidden');
     }
 
@@ -104,8 +118,23 @@
         .split(',')
         .map(task => task.trim())
         .filter(Boolean);
-      if (!name || tasks.length === 0) return;
       ensureCareProfiles();
+      if (activeCareProfileId) {
+        const profile = appState.careProfiles.find(item => item.id === activeCareProfileId);
+        if (!profile || tasks.length === 0) return;
+        const existingLabels = new Set((profile.tasks || []).map(task => task.label.toLowerCase()));
+        const newTasks = tasks
+          .filter(label => !existingLabels.has(label.toLowerCase()))
+          .map((label, index) => ({ id: `task-${Date.now()}-${index}`, label }));
+        if (newTasks.length === 0) return;
+        profile.tasks = [...(profile.tasks || []), ...newTasks];
+        saveToStorage();
+        syncCareProfileToSupabase(profile);
+        closeCareProfileModal();
+        renderHogarView();
+        return;
+      }
+      if (!name || tasks.length === 0) return;
       appState.careProfiles.push({
         id: `care-${Date.now()}`,
         name,
@@ -150,7 +179,10 @@
         <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3">
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm font-extrabold text-white">${profile.emoji} ${profile.name}</span>
-            <button onclick="deleteCareProfile('${profile.id}')" class="text-[10px] text-slate-500 hover:text-rose-300">Eliminar</button>
+            <div class="flex items-center gap-2">
+              <button onclick="openCareProfileModal('${profile.id}')" class="text-[10px] text-emerald-300 hover:text-emerald-200">+ Tarea</button>
+              <button onclick="deleteCareProfile('${profile.id}')" class="text-[10px] text-slate-500 hover:text-rose-300">Eliminar</button>
+            </div>
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
             ${profile.tasks.map(task => `
