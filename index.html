@@ -250,7 +250,9 @@
       <div class="space-y-3" data-card-scope="CLUB">
         <div class="flex items-center justify-between px-1">
           <h3 class="text-sm font-extrabold text-white">🏆 Sesiones de Entrenamiento (Tú y Amigos)</h3>
-          <button onclick="switchTab('gym')" class="text-xs font-bold text-emerald-400">Ver entrenamientos ➔</button>
+          <button onclick="switchTab('gym')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-xs font-extrabold text-emerald-300 hover:bg-emerald-500/25 transition">
+            Ver entrenamientos <span aria-hidden="true">➔</span>
+          </button>
         </div>
         <div id="socialWorkoutFeedList" class="space-y-3"></div>
       </div>
@@ -667,27 +669,6 @@
           <h3 class="text-base font-extrabold text-white">Conectar Reloj / Salud</h3>
         </div>
 
-        <div id="careProfileModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-          <div class="studio-card rounded-2xl p-5 max-w-md w-full space-y-4 border border-emerald-500/40">
-            <div class="flex items-center justify-between">
-              <h3 class="text-base font-extrabold text-white">Añadir cuidado</h3>
-              <button onclick="closeCareProfileModal()" class="text-slate-400">✕</button>
-            </div>
-            <div class="grid grid-cols-[56px_1fr] gap-2">
-              <input id="careProfileEmojiInput" class="studio-input rounded-xl px-3 py-2 text-center text-lg" value="🐾" maxlength="2" aria-label="Emoji del cuidado">
-              <input id="careProfileNameInput" class="studio-input rounded-xl px-3 py-2 text-xs" placeholder="Nombre (ej. Luna, Plantas, Medicación)">
-            </div>
-            <select id="careProfileTypeInput" class="studio-input rounded-xl px-3 py-2 text-xs w-full">
-              <option value="pet">Mascota</option>
-              <option value="plant">Plantas</option>
-              <option value="health">Salud / medicación</option>
-              <option value="home">Casa</option>
-              <option value="other">Otro</option>
-            </select>
-            <input id="careProfileTasksInput" class="studio-input rounded-xl px-3 py-2 text-xs w-full" placeholder="Tareas separadas por comas (ej. Comida, Agua, Paseo)">
-            <button onclick="saveCareProfile()" class="w-full py-2.5 rounded-xl bg-emerald-500 text-slate-950 text-xs font-extrabold">Guardar cuidado</button>
-          </div>
-        </div>
         <button onclick="closeWatchSyncModal()" class="text-slate-400">✕</button>
       </div>
 
@@ -721,6 +702,29 @@
           <input type="file" accept=".csv,.json" onchange="importMiFitFile(event)" class="hidden">
         </label>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL PARA CREAR UN CUIDADO PERSONALIZADO -->
+  <div id="careProfileModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="studio-card rounded-2xl p-5 max-w-md w-full space-y-4 border border-emerald-500/40">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-white">Añadir cuidado</h3>
+        <button onclick="closeCareProfileModal()" class="text-slate-400" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="grid grid-cols-[56px_1fr] gap-2">
+        <input id="careProfileEmojiInput" class="studio-input rounded-xl px-3 py-2 text-center text-lg" value="🐾" maxlength="2" aria-label="Emoji del cuidado">
+        <input id="careProfileNameInput" class="studio-input rounded-xl px-3 py-2 text-xs" placeholder="Nombre (ej. Luna, Plantas, Medicación)">
+      </div>
+      <select id="careProfileTypeInput" class="studio-input rounded-xl px-3 py-2 text-xs w-full">
+        <option value="pet">Mascota</option>
+        <option value="plant">Plantas</option>
+        <option value="health">Salud / medicación</option>
+        <option value="home">Casa</option>
+        <option value="other">Otro</option>
+      </select>
+      <input id="careProfileTasksInput" class="studio-input rounded-xl px-3 py-2 text-xs w-full" placeholder="Tareas separadas por comas (ej. Comida, Agua, Paseo)">
+      <button onclick="saveCareProfile()" class="w-full py-2.5 rounded-xl bg-emerald-500 text-slate-950 text-xs font-extrabold">Guardar cuidado</button>
     </div>
   </div>
 

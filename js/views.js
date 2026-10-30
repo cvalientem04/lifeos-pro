@@ -11,8 +11,12 @@
       document.getElementById('homeStepsStat').textContent = `${(day.steps || 0).toLocaleString()} pasos`;
       document.getElementById('homeBikeSub').textContent = `${(day.bikeKm || 0).toFixed(1)} km bici`;
 
-      const tc = (day.turkeys.fedMorning ? 1 : 0) + (day.turkeys.waterGiven ? 1 : 0) + (day.turkeys.fedEvening ? 1 : 0);
-      document.getElementById('homeTurkeysStat').textContent = `${tc}/3 tareas`;
+      const careProfiles = Array.isArray(appState.careProfiles) ? appState.careProfiles : [];
+      const careTasks = careProfiles.flatMap(profile => profile.tasks || []);
+      const completedCareTasks = careTasks.filter(task => task.completed).length;
+      document.getElementById('homeTurkeysStat').textContent = careTasks.length
+        ? `${completedCareTasks}/${careTasks.length} tareas`
+        : 'Configura tus cuidados';
       const pendingShop = appState.shoppingList.filter(i => !i.done).length;
       document.getElementById('homeShopSub').textContent = `${pendingShop} pendientes`;
 
@@ -219,7 +223,7 @@
       const currentObj = day.animalTasks[activeAnimalType] || {};
 
       const titleEl = document.getElementById('hogarCardTitleText');
-      if (titleEl) titleEl.textContent = activeAnimalType === 'pavos' ? '🦃 Cuidados de pavos' : '🐈 Cuidados de gatos';
+      if (titleEl) titleEl.textContent = '🧡 Cuidados';
       const feedButton = document.getElementById('careFeedButton');
       if (feedButton) {
         feedButton.classList.toggle('hidden', activeAnimalType !== 'pavos');
