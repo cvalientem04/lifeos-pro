@@ -263,9 +263,9 @@
       }
 
       box.innerHTML = allSaved.map(r => `
-        <div onclick="replaySavedRouteOnMap(${JSON.stringify(r.id)}, ${JSON.stringify(r.date)})" class="route-history-card cursor-pointer bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-2xl p-3 flex items-center justify-between gap-3 transition">
+        <div class="route-history-card bg-slate-900 border border-slate-800 rounded-2xl p-3 flex items-center justify-between gap-3 transition">
           <div class="min-w-0">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 pr-2">
               <span class="route-history-date text-xs font-extrabold text-white capitalize">📅 ${formatHumanDate(r.date)}</span>
               <span class="text-[10px] font-mono text-slate-400">${r.timeStr || 'Ruta GPS'}</span>
             </div>
@@ -279,7 +279,9 @@
           </div>
           <div class="text-right">
             <span class="text-base font-extrabold font-mono text-cyan-300 block">${r.km} <small class="text-[10px]">km</small></span>
-            <span class="text-[10px] font-mono text-amber-300">${r.mins} min <span class="text-slate-500">•</span> Ver 🗺️</span>
+            <button type="button" onclick="replaySavedRouteOnMap(${JSON.stringify(r.id)}, ${JSON.stringify(r.date)})" class="route-view-button mt-1 inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-cyan-400/10 border border-cyan-400/30 text-[10px] font-extrabold text-cyan-300 hover:bg-cyan-400/20">
+              ${r.mins} min <span class="text-slate-500">•</span> Ver 🗺️
+            </button>
           </div>
         </div>
       `).join('');
@@ -288,7 +290,19 @@
     function replaySavedRouteOnMap(routeId, dateStr) {
       initBikeMapIfNeeded();
       const day = getDayData(dateStr);
-      const r = (day.bikeRoutes || []).find(x => String(x.id) === String(routeId) || String(x.supabaseId) === String(routeId));
+      let r = (day.bikeRoutes || []).find(x => String(x.id) === String(routeId) || String(x.supabaseId) === String(routeId));
+      if (!r) {
+        for (const [storedDate, storedDay] of Object.entries(appState.days)) {
+          const candidate = (storedDay.bikeRoutes || []).find(x =>
+            String(x.id) === String(routeId) || String(x.supabaseId) === String(routeId)
+          );
+          if (candidate) {
+            r = candidate;
+            dateStr = storedDate;
+            break;
+          }
+        }
+      }
       if (!r) return;
 
       if (previewRouteLayerGroup) previewRouteLayerGroup.clearLayers();
@@ -304,6 +318,8 @@
         bikeMap.invalidateSize({ animate: false });
         bikeMap.fitBounds(boundsPts, { padding: [25, 25] });
         document.getElementById('bike-map')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        document.getElementById('gpsLiveStatusBadge').textContent = '⚠️ Esta ruta no tiene trazado GPS guardado';
       }
       document.getElementById('liveDistKmVal').textContent = r.km;
       document.getElementById('liveAvgSpeedVal').textContent = r.avgSpeed || 0;
