@@ -236,7 +236,12 @@
 
       document.getElementById('gpsLiveStatusBadge').textContent = `✔ Ruta guardada en ${formatHumanDate(currentDate)}`;
       saveToStorage();
-      await syncBikeRouteToSupabase(savedRoute);
+      try {
+        await syncBikeRouteToSupabase(savedRoute);
+      } catch (error) {
+        savedRoute.syncPending = true;
+        SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
+      }
       renderSavedBikeRoutesHistory();
     }
 
@@ -283,22 +288,53 @@
     function replaySavedRouteOnMap(routeId, dateStr) {
       initBikeMapIfNeeded();
       const day = getDayData(dateStr);
-      const r = (day.bikeRoutes || []).find(x => x.id === routeId);
+      const r = (day.bikeRoutes || []).find(x => String(x.id) === String(routeId) || String(x.supabaseId) === String(routeId));
       if (!r) return;
 
       if (previewRouteLayerGroup) previewRouteLayerGroup.clearLayers();
       const boundsPts = [];
+      const segments = normalizeBikeRouteSegments(r);
 
-      (r.segments || []).forEach(seg => {
-        L.polyline(seg.pts, { color: seg.color || '#10b981', weight: 6 }).addTo(previewRouteLayerGroup);
+      segments.forEach(seg => {
+        L.polyline(seg.pts, { color: seg.color || '#10b981', weight: 6, opacity: 0.95 }).addTo(previewRouteLayerGroup);
         seg.pts.forEach(p => boundsPts.push(p));
       });
 
       if (boundsPts.length > 0) {
+        bikeMap.invalidateSize({ animate: false });
         bikeMap.fitBounds(boundsPts, { padding: [25, 25] });
+        document.getElementById('bike-map')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
       document.getElementById('liveDistKmVal').textContent = r.km;
       document.getElementById('liveAvgSpeedVal').textContent = r.avgSpeed || 0;
       document.getElementById('liveDurationClock').textContent = `${r.mins}m`;
       document.getElementById('gpsLiveStatusBadge').textContent = `🗺️ Viendo ruta del ${formatHumanDate(dateStr)}`;
+    }
+
+    function normalizeBikeRouteSegments(route) {
+      let rawSegments = route?.segments;
+      if (typeof rawSegments === 'string') {
+        try {
+          rawSegments = JSON.parse(rawSegments);
+        } catch (error) {
+          rawSegments = [];
+        }
+      }
+      if (!Array.isArray(rawSegments)) rawSegments = [];
+      const validSegments = rawSegments
+        .map(segment => ({
+          ...segment,
+          pts: Array.isArray(segment?.pts)
+            ? segment.pts.filter(point => Array.isArray(point) && point.length >= 2)
+            : []
+        }))
+        .filter(segment => segment.pts.length >= 2);
+      if (validSegments.length > 0) return validSegments;
+
+      const fallbackPoints = Array.isArray(route?.points)
+        ? route.points
+        : [];
+      return fallbackPoints.length >= 2
+        ? [{ pts: fallbackPoints, color: '#10b981', speed: 0 }]
+        : [];
     }

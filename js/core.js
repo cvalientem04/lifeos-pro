@@ -643,20 +643,26 @@ const EXERCISE_CATALOG = [
 
     async function syncBikeRouteToSupabase(route) {
       if (!currentAuthSession?.user || route.supabaseId) return false;
-      const { data, error } = await lifeosSupabase
-        .from('bike_routes')
-        .insert({
-          user_id: currentAuthSession.user.id,
-          route_date: route.date,
-          name: route.name || '',
-          distance_km: Math.max(0, Number(route.km) || 0),
-          duration_minutes: Math.max(0, Number(route.mins) || 0),
-          average_speed_kmh: Math.max(0, Number(route.avgSpeed) || 0),
-          max_speed_kmh: Math.max(0, Number(route.maxSpeed) || 0),
-          segments: Array.isArray(route.segments) ? route.segments : []
-        })
-        .select('id')
-        .single();
+      let data;
+      let error;
+      try {
+        ({ data, error } = await lifeosSupabase
+          .from('bike_routes')
+          .insert({
+            user_id: currentAuthSession.user.id,
+            route_date: route.date,
+            name: route.name || '',
+            distance_km: Math.max(0, Number(route.km) || 0),
+            duration_minutes: Math.max(0, Number(route.mins) || 0),
+            average_speed_kmh: Math.max(0, Number(route.avgSpeed) || 0),
+            segments: Array.isArray(route.segments) ? route.segments : []
+          })
+          .select('id')
+          .single());
+      } catch (networkError) {
+        route.syncPending = true;
+        return false;
+      }
 
       if (error) {
         setAuthFeedback(`No se pudo sincronizar la ruta: ${error.message}`, 'error', true);
@@ -676,8 +682,13 @@ const EXERCISE_CATALOG = [
         .filter(route => route.syncPending && !route.supabaseId);
 
       for (const route of pendingRoutes) {
-        await syncBikeRouteToSupabase(route);
+        try {
+          await syncBikeRouteToSupabase(route);
+        } catch (error) {
+          route.syncPending = true;
+        }
       }
+      SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
     }
 
     async function loadBikeRoutesFromSupabase() {
@@ -712,7 +723,8 @@ const EXERCISE_CATALOG = [
           mins: Number(route.duration_minutes) || 0,
           avgSpeed: Number(route.average_speed_kmh) || 0,
           maxSpeed: Number(route.max_speed_kmh) || 0,
-          segments: Array.isArray(route.segments) ? route.segments : []
+          segments: Array.isArray(route.segments) ? route.segments : [],
+          points: Array.isArray(route.points) ? route.points : []
         });
         day.bikeKm = Number(((day.bikeKm || 0) + (Number(route.distance_km) || 0)).toFixed(2));
         day.bikeMinutes = Number(((day.bikeMinutes || 0) + (Number(route.duration_minutes) || 0)).toFixed(2));
@@ -1030,6 +1042,11 @@ const EXERCISE_CATALOG = [
           }, 0);
         }
         if (event === 'PASSWORD_RECOVERY') openPasswordRecoveryModal();
+      });
+      window.addEventListener('online', async () => {
+        if (!currentAuthSession?.user) return;
+        await syncPendingBikeRoutesToSupabase();
+        await loadBikeRoutesFromSupabase();
       });
     }
 
