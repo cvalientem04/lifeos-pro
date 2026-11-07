@@ -586,9 +586,8 @@ const EXERCISE_CATALOG = [
       if (profileIds.length > 0) {
         const { data, error: tasksError } = await lifeosSupabase
           .from('care_tasks')
-          .select('id, profile_id, label, completed, completed_at')
+          .select('id, profile_id, task_date, label, completed, completed_at, created_at')
           .eq('user_id', userId)
-          .eq('task_date', dateStr)
           .in('profile_id', profileIds);
         if (tasksError) {
           setAuthFeedback(`No se pudieron cargar las tareas de cuidado: ${tasksError.message}`, 'error', true);
@@ -600,7 +599,18 @@ const EXERCISE_CATALOG = [
       const localByRemoteId = new Map(localProfiles.filter(profile => profile.supabaseId).map(profile => [profile.supabaseId, profile]));
       appState.careProfiles = (profiles || []).map(remoteProfile => {
         const local = localByRemoteId.get(remoteProfile.id);
-        const remoteTasks = tasks.filter(task => task.profile_id === remoteProfile.id);
+        const remoteTasksByLabel = new Map();
+        tasks
+          .filter(task => task.profile_id === remoteProfile.id)
+          .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')))
+          .forEach(task => {
+            const key = task.label.trim().toLowerCase();
+            const existing = remoteTasksByLabel.get(key);
+            if (!existing || task.task_date === dateStr || task.created_at >= existing.created_at) {
+              remoteTasksByLabel.set(key, task);
+            }
+          });
+        const remoteTasks = [...remoteTasksByLabel.values()];
         const localTasks = local?.tasks || [];
         return {
           id: local?.id || `care-${remoteProfile.id}`,
@@ -610,12 +620,17 @@ const EXERCISE_CATALOG = [
           type: remoteProfile.care_type,
           tasks: remoteTasks.map(remoteTask => {
             const localTask = localTasks.find(task => task.supabaseId === remoteTask.id || task.label === remoteTask.label);
+            const todayTask = tasks.find(task =>
+              task.profile_id === remoteProfile.id
+              && task.task_date === dateStr
+              && task.label.trim().toLowerCase() === remoteTask.label.trim().toLowerCase()
+            );
             return {
               id: localTask?.id || `task-${remoteTask.id}`,
-              supabaseId: remoteTask.id,
+              supabaseId: todayTask?.id || remoteTask.id,
               label: remoteTask.label,
-              completed: !!remoteTask.completed,
-              completedAt: remoteTask.completed_at || ''
+              completed: !!todayTask?.completed,
+              completedAt: todayTask?.completed_at || ''
             };
           })
         };

@@ -310,16 +310,22 @@
       const segments = normalizeBikeRouteSegments(r);
 
       segments.forEach(seg => {
-        L.polyline(seg.pts, { color: seg.color || '#10b981', weight: 6, opacity: 0.95 }).addTo(previewRouteLayerGroup);
+        L.polyline(seg.pts, { color: seg.color || '#10b981', weight: 7, opacity: 0.98 }).addTo(previewRouteLayerGroup);
         seg.pts.forEach(p => boundsPts.push(p));
       });
 
       if (boundsPts.length > 0) {
-        bikeMap.invalidateSize({ animate: false });
-        bikeMap.fitBounds(boundsPts, { padding: [25, 25] });
         document.getElementById('bike-map')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        window.setTimeout(() => {
+          bikeMap.invalidateSize({ animate: false });
+          bikeMap.fitBounds(boundsPts, { padding: [25, 25], animate: false });
+        }, 180);
       } else {
         document.getElementById('gpsLiveStatusBadge').textContent = '⚠️ Esta ruta no tiene trazado GPS guardado';
+        document.getElementById('liveDistKmVal').textContent = r.km;
+        document.getElementById('liveAvgSpeedVal').textContent = r.avgSpeed || 0;
+        document.getElementById('liveDurationClock').textContent = `${r.mins}m`;
+        return;
       }
       document.getElementById('liveDistKmVal').textContent = r.km;
       document.getElementById('liveAvgSpeedVal').textContent = r.avgSpeed || 0;
