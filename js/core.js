@@ -105,6 +105,7 @@ const EXERCISE_CATALOG = [
     let currentActiveTab = 'home';
     let currentAuthSession = null;
     let dailyLogSaveTimer = null;
+    let familyState = { household: null, members: [], preferences: null };
 
     let appState = {
       workoutCount: 19,
@@ -166,6 +167,173 @@ const EXERCISE_CATALOG = [
       SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
       refreshCurrentActiveView();
       queueDailyLogSync();
+    }
+
+    const FAMILY_SHARING_OPTIONS = [
+      ['workouts', 'Entrenamientos'],
+      ['streaks', 'Rachas'],
+      ['steps', 'Pasos'],
+      ['challenges', 'Retos familiares'],
+      ['bike_routes', 'Rutas GPS'],
+      ['strength_progress', 'Progreso de fuerza'],
+      ['care', 'Cuidados'],
+      ['journal', 'Diario'],
+      ['expenses', 'Gastos']
+    ];
+
+    function showFamilyFeedback(message, tone = 'info') {
+      const box = document.getElementById('familyFeedback');
+      if (!box) return;
+      box.textContent = message;
+      box.className = `rounded-xl p-3 text-xs leading-relaxed ${
+        tone === 'error'
+          ? 'bg-rose-500/10 border border-rose-500/30 text-rose-200'
+          : 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-200'
+      }`;
+    }
+
+    function openFamilyModal() {
+      if (!currentAuthSession?.user) {
+        openAuthModal();
+        return;
+      }
+      document.getElementById('familyModal')?.classList.replace('hidden', 'flex');
+      loadFamilyState();
+    }
+
+    function closeFamilyModal() {
+      document.getElementById('familyModal')?.classList.replace('flex', 'hidden');
+    }
+
+    function renderHomeFamilySummary() {
+      const status = document.getElementById('homeFamilyStatus');
+      const sub = document.getElementById('homeFamilySub');
+      if (!status || !sub) return;
+      if (!familyState.household) {
+        status.textContent = 'Configura tu hogar';
+        sub.textContent = 'Comparte solo lo que tú decidas';
+        return;
+      }
+      status.textContent = `${familyState.household.name} · ${familyState.members.length} miembro${familyState.members.length === 1 ? '' : 's'}`;
+      sub.textContent = 'Privacidad configurada por ti';
+    }
+
+    function renderFamilyOptions() {
+      const box = document.getElementById('familySharingOptions');
+      if (!box) return;
+      const preferences = familyState.preferences || {};
+      box.innerHTML = FAMILY_SHARING_OPTIONS.map(([key, label]) => `
+        <label class="flex items-center justify-between gap-2 rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 cursor-pointer">
+          <span class="text-[11px] text-slate-200">${label}</span>
+          <input type="checkbox" ${preferences[key] ? 'checked' : ''} onchange="updateFamilyPreference('${key}', this.checked)" class="accent-cyan-400">
+        </label>
+      `).join('');
+    }
+
+    async function loadFamilyState() {
+      if (!currentAuthSession?.user) return;
+      const userId = currentAuthSession.user.id;
+      const { data: membership, error: membershipError } = await lifeosSupabase
+        .from('household_members')
+        .select('household_id, role')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (membershipError) {
+        showFamilyFeedback(`No se pudo cargar el hogar: ${membershipError.message}`, 'error');
+        return;
+      }
+      if (!membership) {
+        familyState = { household: null, members: [], preferences: null };
+        document.getElementById('familySetupPanel')?.classList.remove('hidden');
+        document.getElementById('familyDetailsPanel')?.classList.add('hidden');
+        renderHomeFamilySummary();
+        return;
+      }
+      const [{ data: household, error: householdError }, { data: members, error: membersError }, { data: preferences, error: preferencesError }] = await Promise.all([
+        lifeosSupabase.from('households').select('id, name, invite_code, owner_id').eq('id', membership.household_id).single(),
+        lifeosSupabase.from('household_members').select('user_id, role, joined_at').eq('household_id', membership.household_id).order('joined_at'),
+        lifeosSupabase.from('sharing_preferences').select('*').eq('user_id', userId).maybeSingle()
+      ]);
+      const error = householdError || membersError || preferencesError;
+      if (error) {
+        showFamilyFeedback(`No se pudo cargar la configuración familiar: ${error.message}`, 'error');
+        return;
+      }
+      familyState = { household, members: members || [], preferences: preferences || {} };
+      document.getElementById('familySetupPanel')?.classList.add('hidden');
+      document.getElementById('familyDetailsPanel')?.classList.remove('hidden');
+      document.getElementById('familyInviteCode').textContent = household.invite_code;
+      document.getElementById('familyMembersList').innerHTML = (members || []).map(member =>
+        `<div class="flex items-center justify-between rounded-lg bg-slate-900 px-3 py-2 text-[11px]"><span class="font-mono text-slate-300">${member.user_id === userId ? 'Tú' : `Miembro ${member.user_id.slice(0, 8)}`}</span><span class="text-cyan-300">${member.role === 'owner' ? 'Propietario' : 'Miembro'}</span></div>`
+      ).join('');
+      renderFamilyOptions();
+      renderHomeFamilySummary();
+    }
+
+    async function createFamilyHousehold() {
+      const name = document.getElementById('familyNameInput')?.value.trim() || 'Mi hogar';
+      const { data, error } = await lifeosSupabase.rpc('create_household', { household_name: name });
+      if (error) {
+        showFamilyFeedback(`No se pudo crear el hogar: ${error.message}`, 'error');
+        return;
+      }
+      showFamilyFeedback('Hogar creado. Comparte el código con tu familia.');
+      await loadFamilyState();
+    }
+
+    async function joinFamilyHousehold() {
+      const code = document.getElementById('familyCodeInput')?.value.trim().toUpperCase();
+      if (!/^FAM-[A-Z0-9]{6}$/.test(code)) {
+        showFamilyFeedback('Escribe un código válido con formato FAM-XXXXXX.', 'error');
+        return;
+      }
+      const { error } = await lifeosSupabase.rpc('join_household_by_code', { input_code: code });
+      if (error) {
+        showFamilyFeedback(`No se pudo unir al hogar: ${error.message}`, 'error');
+        return;
+      }
+      showFamilyFeedback('Te has unido al hogar correctamente.');
+      await loadFamilyState();
+    }
+
+    async function updateFamilyPreference(key, value) {
+      if (!currentAuthSession?.user || !familyState.household) return;
+      familyState.preferences = { ...(familyState.preferences || {}), [key]: value };
+      const { error } = await lifeosSupabase
+        .from('sharing_preferences')
+        .upsert({ user_id: currentAuthSession.user.id, household_id: familyState.household.id, [key]: value }, { onConflict: 'user_id' });
+      if (error) {
+        familyState.preferences[key] = !value;
+        renderFamilyOptions();
+        showFamilyFeedback(`No se pudo guardar la privacidad: ${error.message}`, 'error');
+      }
+    }
+
+    async function copyFamilyCode() {
+      const code = familyState.household?.invite_code;
+      if (!code) return;
+      try {
+        await navigator.clipboard.writeText(code);
+        showFamilyFeedback('Código copiado.');
+      } catch (error) {
+        showFamilyFeedback(`No se pudo copiar el código: ${error.message}`, 'error');
+      }
+    }
+
+    async function leaveFamilyHousehold() {
+      if (!currentAuthSession?.user || !familyState.household) return;
+      const { error } = await lifeosSupabase
+        .from('household_members')
+        .delete()
+        .eq('household_id', familyState.household.id)
+        .eq('user_id', currentAuthSession.user.id);
+      if (error) {
+        showFamilyFeedback(`No se pudo salir del hogar: ${error.message}`, 'error');
+        return;
+      }
+      familyState = { household: null, members: [], preferences: null };
+      await loadFamilyState();
+      renderHomeFamilySummary();
     }
 
     function getUserStorageKey() {
@@ -1032,6 +1200,7 @@ const EXERCISE_CATALOG = [
         await loadAnimalTasksFromSupabase();
         await syncPendingCareProfilesToSupabase();
         await loadCareProfilesFromSupabase();
+        await loadFamilyState();
         await loadBikeRoutesFromSupabase();
         await syncPendingBikeRoutesToSupabase();
         await loadMealsFromSupabase();
@@ -1051,6 +1220,7 @@ const EXERCISE_CATALOG = [
             await loadAnimalTasksFromSupabase();
             await syncPendingCareProfilesToSupabase();
             await loadCareProfilesFromSupabase();
+            await loadFamilyState();
             await loadBikeRoutesFromSupabase();
             await syncPendingBikeRoutesToSupabase();
             await loadMealsFromSupabase();

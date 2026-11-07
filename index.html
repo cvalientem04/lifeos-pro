@@ -189,6 +189,17 @@
           <span class="text-[10px] text-slate-500">Abrir Estudio ➔</span>
         </div>
 
+        <div class="studio-card rounded-2xl p-4 border border-cyan-500/25 bg-gradient-to-br from-cyan-500/10 to-slate-900">
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <span class="text-[10px] font-bold uppercase text-cyan-300 block">👨‍👩‍👧‍👦 Familia y Hogar</span>
+              <strong id="homeFamilyStatus" class="text-sm font-extrabold text-white block mt-1">Configura tu hogar</strong>
+              <span id="homeFamilySub" class="text-[10px] text-slate-400">Comparte solo lo que tú decidas</span>
+            </div>
+            <button onclick="openFamilyModal()" class="shrink-0 px-2.5 py-1.5 rounded-lg bg-cyan-400/15 border border-cyan-400/30 text-[10px] font-extrabold text-cyan-200 hover:bg-cyan-400/25">Abrir</button>
+          </div>
+        </div>
+
         <div onclick="switchTab('bikemap')" data-card-scope="CLUB" class="studio-card rounded-2xl p-3 cursor-pointer hover:border-cyan-500/40 transition">
           <span class="text-[10px] font-bold uppercase text-cyan-400 block">👣 Pasos & Bici</span>
           <span id="homeStepsStat" class="text-sm sm:text-base font-extrabold text-white block mt-0.5">0 pasos</span>
@@ -805,9 +816,52 @@
         <input type="text" id="profileUsernameInput" autocomplete="username" maxlength="24" placeholder="Usuario único (ej. carlos_2004)" class="w-full studio-input rounded-xl px-3 py-2.5 text-xs">
         <input type="text" id="profileDisplayNameInput" autocomplete="name" maxlength="60" placeholder="Nombre visible (opcional)" class="w-full studio-input rounded-xl px-3 py-2.5 text-xs">
         <button onclick="saveUserProfile()" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs">Guardar perfil</button>
+        <button onclick="openFamilyModal()" class="w-full py-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/30 text-cyan-200 font-extrabold text-xs">👨‍👩‍👧‍👦 Familia y privacidad</button>
         <p id="authSignedInFeedback" class="hidden rounded-xl bg-slate-900 border border-slate-800 p-3 text-xs leading-relaxed"></p>
         <button onclick="signOutFromLifeOS()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold text-xs">Cerrar sesión</button>
       </div>
+
+    </div>
+  </div>
+
+  <div id="familyModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="studio-card rounded-2xl p-5 max-w-md w-full max-h-[88vh] overflow-y-auto space-y-4 border border-cyan-400/30">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h3 class="text-base font-extrabold text-white">👨‍👩‍👧‍👦 Familia y privacidad</h3>
+          <p class="text-[11px] text-slate-400 mt-1">Únete a un hogar y controla exactamente qué compartes.</p>
+        </div>
+        <button onclick="closeFamilyModal()" class="text-slate-400 hover:text-white" aria-label="Cerrar familia">✕</button>
+      </div>
+      <div id="familySetupPanel" class="space-y-3">
+        <input id="familyNameInput" maxlength="60" placeholder="Nombre del hogar (ej. Familia García)" class="w-full studio-input rounded-xl px-3 py-2.5 text-xs">
+        <button onclick="createFamilyHousehold()" class="w-full py-2.5 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs">Crear hogar</button>
+        <div class="flex items-center gap-2 text-[10px] text-slate-500"><span class="h-px bg-slate-800 flex-1"></span>o únete con código<span class="h-px bg-slate-800 flex-1"></span></div>
+        <div class="flex gap-2">
+          <input id="familyCodeInput" maxlength="10" placeholder="FAM-1A2B3C" class="flex-1 studio-input rounded-xl px-3 py-2.5 text-xs uppercase">
+          <button onclick="joinFamilyHousehold()" class="px-3 rounded-xl bg-slate-800 border border-slate-700 text-cyan-200 text-xs font-extrabold">Unirse</button>
+        </div>
+      </div>
+      <div id="familyDetailsPanel" class="hidden space-y-4">
+        <div class="rounded-xl bg-slate-900 border border-cyan-400/20 p-3">
+          <span class="text-[10px] uppercase font-bold text-slate-500">Tu código de hogar</span>
+          <div class="flex items-center justify-between gap-2 mt-1">
+            <strong id="familyInviteCode" class="font-mono text-lg text-cyan-300 tracking-wider"></strong>
+            <button onclick="copyFamilyCode()" class="px-2 py-1 rounded-lg bg-cyan-400/15 text-[10px] font-bold text-cyan-200">Copiar</button>
+          </div>
+        </div>
+        <div>
+          <h4 class="text-xs font-extrabold text-white mb-2">Miembros</h4>
+          <div id="familyMembersList" class="space-y-1.5"></div>
+        </div>
+        <div>
+          <h4 class="text-xs font-extrabold text-white mb-1">Lo que comparto</h4>
+          <p class="text-[10px] text-slate-500 mb-2">Todo empieza desactivado. Puedes cambiarlo cuando quieras.</p>
+          <div id="familySharingOptions" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5"></div>
+        </div>
+        <button onclick="leaveFamilyHousehold()" class="w-full py-2 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-300 text-xs font-bold">Salir del hogar</button>
+      </div>
+      <p id="familyFeedback" class="hidden rounded-xl p-3 text-xs leading-relaxed"></p>
     </div>
   </div>
 
