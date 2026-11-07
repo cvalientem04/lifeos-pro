@@ -106,6 +106,7 @@ const EXERCISE_CATALOG = [
     let currentAuthSession = null;
     let dailyLogSaveTimer = null;
     let familyState = { household: null, members: [], preferences: null };
+    let familyActivityFeed = [];
 
     let appState = {
       workoutCount: 19,
@@ -218,6 +219,51 @@ const EXERCISE_CATALOG = [
       sub.textContent = 'Privacidad configurada por ti';
     }
 
+    function renderFamilyActivityFeed() {
+      const box = document.getElementById('familyActivityFeed');
+      if (!box) return;
+      if (!familyState.household) {
+        box.innerHTML = '<p class="text-xs text-slate-500 italic">Crea o únete a un hogar para ver actividad familiar.</p>';
+        return;
+      }
+      if (familyActivityFeed.length === 0) {
+        box.innerHTML = '<p class="text-xs text-slate-500 italic">Todavía no hay actividad compartida por tu familia.</p>';
+        return;
+      }
+      box.innerHTML = familyActivityFeed.map(activity => {
+        const isWorkout = activity.activity_type === 'workout';
+        const detail = activity.details || {};
+        return `
+          <div class="studio-card rounded-2xl p-3 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <span class="text-[10px] font-bold uppercase ${isWorkout ? 'text-emerald-300' : 'text-cyan-300'}">${isWorkout ? '🏋️ Entrenamiento' : '🚴 Ruta en bici'}</span>
+              <h4 class="text-xs font-extrabold text-white truncate">${activity.title}</h4>
+              <p class="text-[10px] text-slate-400">${activity.display_name} · ${formatHumanDate(activity.activity_date)}</p>
+            </div>
+            <div class="text-right shrink-0">
+              <strong class="block text-sm font-mono ${isWorkout ? 'text-emerald-300' : 'text-cyan-300'}">${isWorkout ? `${Number(activity.metric || 0).toLocaleString()} kg` : `${Number(activity.metric || 0).toFixed(1)} km`}</strong>
+              <span class="text-[10px] text-slate-500">${Number(activity.duration_minutes || 0)} min${isWorkout && detail.sets_count ? ` · ${detail.sets_count} series` : ''}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadFamilyActivityFeed() {
+      if (!currentAuthSession?.user || !familyState.household) {
+        familyActivityFeed = [];
+        renderFamilyActivityFeed();
+        return;
+      }
+      const { data, error } = await lifeosSupabase.rpc('get_household_activity_feed', { limit_count: 30 });
+      if (error) {
+        setAuthFeedback(`No se pudo cargar la actividad familiar: ${error.message}`, 'error', true);
+        return;
+      }
+      familyActivityFeed = data || [];
+      renderFamilyActivityFeed();
+    }
+
     function renderFamilyOptions() {
       const box = document.getElementById('familySharingOptions');
       if (!box) return;
@@ -247,6 +293,7 @@ const EXERCISE_CATALOG = [
         document.getElementById('familySetupPanel')?.classList.remove('hidden');
         document.getElementById('familyDetailsPanel')?.classList.add('hidden');
         renderHomeFamilySummary();
+        renderFamilyActivityFeed();
         return;
       }
       const [{ data: household, error: householdError }, { data: members, error: membersError }, { data: preferences, error: preferencesError }] = await Promise.all([
@@ -268,6 +315,7 @@ const EXERCISE_CATALOG = [
       ).join('');
       renderFamilyOptions();
       renderHomeFamilySummary();
+      await loadFamilyActivityFeed();
     }
 
     async function createFamilyHousehold() {
@@ -279,6 +327,7 @@ const EXERCISE_CATALOG = [
       }
       showFamilyFeedback('Hogar creado. Comparte el código con tu familia.');
       await loadFamilyState();
+      await loadFamilyActivityFeed();
     }
 
     async function joinFamilyHousehold() {
@@ -294,6 +343,7 @@ const EXERCISE_CATALOG = [
       }
       showFamilyFeedback('Te has unido al hogar correctamente.');
       await loadFamilyState();
+      await loadFamilyActivityFeed();
     }
 
     async function updateFamilyPreference(key, value) {
@@ -333,6 +383,7 @@ const EXERCISE_CATALOG = [
       }
       familyState = { household: null, members: [], preferences: null };
       await loadFamilyState();
+      await loadFamilyActivityFeed();
       renderHomeFamilySummary();
     }
 
@@ -1201,6 +1252,7 @@ const EXERCISE_CATALOG = [
         await syncPendingCareProfilesToSupabase();
         await loadCareProfilesFromSupabase();
         await loadFamilyState();
+        await loadFamilyActivityFeed();
         await loadBikeRoutesFromSupabase();
         await syncPendingBikeRoutesToSupabase();
         await loadMealsFromSupabase();
@@ -1221,6 +1273,7 @@ const EXERCISE_CATALOG = [
             await syncPendingCareProfilesToSupabase();
             await loadCareProfilesFromSupabase();
             await loadFamilyState();
+            await loadFamilyActivityFeed();
             await loadBikeRoutesFromSupabase();
             await syncPendingBikeRoutesToSupabase();
             await loadMealsFromSupabase();

@@ -20,6 +20,7 @@
       const pendingShop = appState.shoppingList.filter(i => !i.done).length;
       document.getElementById('homeShopSub').textContent = `${pendingShop} pendientes`;
       renderHomeFamilySummary();
+      renderFamilyActivityFeed();
 
       document.getElementById('homeStudyStat').textContent = `${day.studyMinutes || 0} min`;
       document.getElementById('homeCarSub').textContent = `${day.carMinutes || 0} min coche`;
