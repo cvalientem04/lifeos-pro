@@ -505,12 +505,14 @@
       const header = document.querySelector('header');
       const floatingHeaderActions = document.querySelector('.header-floating-actions');
       const floatingHeaderStreak = document.querySelector('.header-floating-streak');
+      const headerScrollShade = document.getElementById('headerScrollShade');
       const updateFloatingHeaderActions = () => {
         if (!floatingHeaderActions || !header) return;
         const isScrolled = window.scrollY > 24;
         header.classList.toggle('is-scrolled', isScrolled);
         floatingHeaderActions.classList.toggle('is-floating', isScrolled);
         floatingHeaderStreak?.classList.toggle('is-floating', isScrolled);
+        headerScrollShade?.classList.toggle('is-visible', isScrolled);
       };
       window.addEventListener('scroll', updateFloatingHeaderActions, { passive: true });
       updateFloatingHeaderActions();

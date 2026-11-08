@@ -80,13 +80,7 @@ body {
       top: max(12px, env(safe-area-inset-top));
       right: max(12px, env(safe-area-inset-right));
       z-index: 45;
-      padding: 4px;
-      border-radius: 9999px;
-      background: rgba(13, 17, 23, 0.42);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      backdrop-filter: blur(24px) saturate(200%);
-      -webkit-backdrop-filter: blur(24px) saturate(200%);
-      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+      gap: 8px !important;
       transform: translate3d(0, 0, 0);
       animation: headerFloatIn 0.28s ease both;
     }
@@ -95,14 +89,35 @@ body {
       top: max(12px, env(safe-area-inset-top));
       left: max(12px, env(safe-area-inset-left));
       z-index: 45;
-      padding: 4px;
-      border-radius: 9999px;
-      background: rgba(13, 17, 23, 0.42);
-      border: 1px solid rgba(255, 255, 255, 0.18);
+      gap: 8px !important;
+      animation: headerFloatIn 0.28s ease both;
+    }
+    .header-floating-actions.is-floating > .header-action,
+    .header-floating-streak.is-floating > .header-action {
+      background: rgba(13, 17, 23, 0.42) !important;
+      border: 1px solid rgba(255, 255, 255, 0.18) !important;
       backdrop-filter: blur(24px) saturate(200%);
       -webkit-backdrop-filter: blur(24px) saturate(200%);
-      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-      animation: headerFloatIn 0.28s ease both;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    }
+    .header-scroll-shade {
+      position: fixed;
+      inset: 0 0 auto;
+      height: 112px;
+      z-index: 40;
+      pointer-events: none;
+      opacity: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(7, 10, 15, 0.96) 0%,
+        rgba(7, 10, 15, 0.78) 28%,
+        rgba(7, 10, 15, 0.34) 68%,
+        rgba(7, 10, 15, 0) 100%
+      );
+      transition: opacity 0.32s ease;
+    }
+    .header-scroll-shade.is-visible {
+      opacity: 1;
     }
     .lifeos-header-row {
       position: relative;
@@ -188,6 +203,10 @@ body {
       }
       .header-floating-actions.is-floating {
         right: max(8px, env(safe-area-inset-right));
+      }
+      .header-floating-actions.is-floating,
+      .header-floating-streak.is-floating {
+        gap: 6px !important;
       }
       .lifeos-header-brand .logo-shell {
         width: 34px;
