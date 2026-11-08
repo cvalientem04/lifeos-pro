@@ -108,7 +108,7 @@
     </button>
     <button onclick="switchTab('bikemap')" id="mtab-bikemap" data-scope="CLUB" class="dock-btn ios-spring flex-1 py-2 rounded-2xl flex flex-col items-center justify-center border border-transparent text-slate-400 transition">
       <span class="text-base leading-none">🚴</span>
-      <span class="text-[10px] font-bold mt-1">Bici/Pasos</span>
+      <span class="text-[10px] font-bold mt-1">Bici</span>
     </button>
     <button onclick="switchTab('hogar')" id="mtab-hogar" data-scope="HOME" class="dock-btn ios-spring flex-1 py-2 rounded-2xl flex flex-col items-center justify-center border border-transparent text-slate-400 transition">
       <span class="text-base leading-none">🛒</span>
@@ -135,17 +135,19 @@
           </div>
         </div>
 
-        <div class="lifeos-header-actions flex items-center justify-end gap-1.5 shrink-0">
+        <div class="lifeos-header-streak flex items-center justify-end gap-1.5 shrink-0">
           <button onclick="switchTab('weekly')" class="header-action header-pill px-2.5 bg-slate-900 border border-slate-800 text-xs font-extrabold text-amber-400 flex items-center gap-1">
             🔥 <span id="topStreakNum">14</span>d
           </button>
+        </div>
+        <div class="lifeos-header-actions header-floating-actions flex items-center justify-end gap-1.5 shrink-0">
           <button onclick="toggleGhostMode()" id="ghostModeButton" aria-label="Modo fantasma" class="header-action header-icon w-9 bg-slate-900 border border-slate-800 text-base flex items-center justify-center transition" title="Disponible al llegar a 5.000 pasos">
             👻
           </button>
-          <button onclick="openVoiceModal('GLOBAL')" aria-label="Abrir comandos de voz" title="Voz" class="header-action header-icon w-9 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-base font-extrabold flex items-center justify-center">
+          <button onclick="openVoiceModal('GLOBAL')" aria-label="Abrir comandos de voz" title="Voz" class="header-action header-icon header-float w-9 text-emerald-300 text-base font-extrabold flex items-center justify-center">
             🎙️
           </button>
-          <button onclick="openAuthModal()" id="authHeaderButton" aria-label="Abrir cuenta" title="Cuenta" class="header-action header-icon w-9 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-base font-extrabold flex items-center justify-center">
+          <button onclick="openAuthModal()" id="authHeaderButton" aria-label="Abrir cuenta" title="Cuenta" class="header-action header-icon header-float w-9 text-slate-300 text-base font-extrabold flex items-center justify-center">
             👤
           </button>
         </div>
@@ -590,7 +592,7 @@
           <h3 class="text-base font-extrabold text-white">💶 Gastos del Día (€)</h3>
           <span id="todaySpentTotalLabel" class="text-sm font-extrabold font-mono text-emerald-400">0.00 €</span>
         </div>
-        <div class="flex gap-2">
+        <div class="expense-entry-row flex gap-2">
           <input type="number" step="0.01" id="expenseAmountInput" placeholder="€" class="w-24 studio-input rounded-xl px-3 py-2 text-xs font-mono">
           <input type="text" id="expenseDescInput" placeholder="Concepto (ej. Mercadona, Gasolina)..." class="flex-1 studio-input rounded-xl px-3 py-2 text-xs">
           <button onclick="addExpense()" class="px-2.5 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-extrabold text-[10px]">+ Gasto</button>

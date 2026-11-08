@@ -109,33 +109,15 @@ const EXERCISE_CATALOG = [
     let familyActivityFeed = [];
 
     let appState = {
-      workoutCount: 19,
+      workoutCount: 0,
       profile: { weightKg: 76.5, heightCm: 178 },
       routines: [
         { id: 'pecho_esp', title: '🔥 Día de Pecho y Espalda', exerciseIds: ['incline_db', 'seated_row', 'lat_pull', 'chest_fly', 'rear_delt'] },
         { id: 'arm_day', title: '💪 Día de Brazo y Hombro', exerciseIds: ['hammer_curl', 'tricep_rope', 'shoulder_press', 'bicep_bar'] },
         { id: 'leg_day', title: '🦵 Día de Pierna Completa', exerciseIds: ['leg_curl', 'bulgarian', 'squat_bar', 'calf_raise'] }
       ],
-      shoppingList: [
-        { id: 1, text: 'Saco de pienso para los pavos', done: false },
-        { id: 2, text: 'Pechuga de pollo y huevos', done: false }
-      ],
-      workoutFeed: [
-        {
-          id: 101,
-          user: 'Tú (@cvalientem04)',
-          date: getTodayISO(),
-          title: '🔥 Día de Pecho y Espalda',
-          duration: '42min',
-          volumeKg: 7471,
-          setsCount: 16,
-          muscles: ['Pecho', 'Espalda', 'Hombros'],
-          summaryLines: ['4x Remo en Polea Baja (60kg)', '3x Jalón al Pecho (60kg)', '3x Press Inclinado Mancuernas (22.5kg)'],
-          note: 'Subiendo cargas con técnica estricta.',
-          photoUrl: '',
-          likes: 4
-        }
-      ],
+      shoppingList: [],
+      workoutFeed: [],
       days: {}
     };
 
@@ -239,6 +221,11 @@ const EXERCISE_CATALOG = [
               <span class="text-[10px] font-bold uppercase ${isWorkout ? 'text-emerald-300' : 'text-cyan-300'}">${isWorkout ? '🏋️ Entrenamiento' : '🚴 Ruta en bici'}</span>
               <h4 class="text-xs font-extrabold text-white truncate">${activity.title}</h4>
               <p class="text-[10px] text-slate-400">${activity.display_name} · ${formatHumanDate(activity.activity_date)}</p>
+              ${isWorkout && Array.isArray(detail.exercises) ? `
+                <div class="mt-1 space-y-0.5">
+                  ${detail.exercises.slice(0, 4).map(set => `<p class="text-[10px] text-slate-300 truncate">✓ ${set.name} · ${set.weight_kg}kg x ${set.reps}</p>`).join('')}
+                </div>
+              ` : ''}
             </div>
             <div class="text-right shrink-0">
               <strong class="block text-sm font-mono ${isWorkout ? 'text-emerald-300' : 'text-cyan-300'}">${isWorkout ? `${Number(activity.metric || 0).toLocaleString()} kg` : `${Number(activity.metric || 0).toFixed(1)} km`}</strong>
@@ -306,13 +293,27 @@ const EXERCISE_CATALOG = [
         showFamilyFeedback(`No se pudo cargar la configuración familiar: ${error.message}`, 'error');
         return;
       }
+      const memberIds = (members || []).map(member => member.user_id);
+      const { data: profiles, error: profilesError } = await lifeosSupabase
+        .from('profiles')
+        .select('id, username, display_name')
+        .in('id', memberIds);
+      if (profilesError) {
+        showFamilyFeedback(`No se pudieron cargar los nombres de la familia: ${profilesError.message}`, 'error');
+        return;
+      }
+      const profilesById = new Map((profiles || []).map(profile => [profile.id, profile]));
       familyState = { household, members: members || [], preferences: preferences || {} };
       document.getElementById('familySetupPanel')?.classList.add('hidden');
       document.getElementById('familyDetailsPanel')?.classList.remove('hidden');
       document.getElementById('familyInviteCode').textContent = household.invite_code;
-      document.getElementById('familyMembersList').innerHTML = (members || []).map(member =>
-        `<div class="flex items-center justify-between rounded-lg bg-slate-900 px-3 py-2 text-[11px]"><span class="font-mono text-slate-300">${member.user_id === userId ? 'Tú' : `Miembro ${member.user_id.slice(0, 8)}`}</span><span class="text-cyan-300">${member.role === 'owner' ? 'Propietario' : 'Miembro'}</span></div>`
-      ).join('');
+      document.getElementById('familyMembersList').innerHTML = (members || []).map(member => {
+        const profile = profilesById.get(member.user_id);
+        const memberName = member.user_id === userId
+          ? 'Tú'
+          : profile?.display_name || (profile?.username ? `@${profile.username}` : 'Miembro de la familia');
+        return `<div class="flex items-center justify-between gap-2 rounded-lg bg-slate-900 px-3 py-2 text-[11px]"><span class="text-slate-300 truncate">${memberName}</span><span class="text-cyan-300 shrink-0">${member.role === 'owner' ? 'Propietario' : 'Miembro'}</span></div>`;
+      }).join('');
       renderFamilyOptions();
       renderHomeFamilySummary();
       await loadFamilyActivityFeed();
@@ -398,7 +399,8 @@ const EXERCISE_CATALOG = [
       if (raw) {
         try { appState = Object.assign(appState, JSON.parse(raw)); } catch(e) {}
       }
-      if (Object.keys(appState.days).length === 0) loadDemoData();
+      if (!Array.isArray(appState.shoppingList)) appState.shoppingList = [];
+      if (!Array.isArray(appState.workoutFeed)) appState.workoutFeed = [];
     }
 
     function switchToUserStorage(session) {

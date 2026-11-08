@@ -502,6 +502,15 @@
       const dock = document.querySelector('.bottom-dock');
       if (!dock) return;
 
+      const floatingHeaderActions = document.querySelector('.header-floating-actions');
+      const header = document.querySelector('header');
+      const updateFloatingHeaderActions = () => {
+        if (!floatingHeaderActions || !header) return;
+        floatingHeaderActions.classList.toggle('is-floating', window.scrollY > header.offsetHeight);
+      };
+      window.addEventListener('scroll', updateFloatingHeaderActions, { passive: true });
+      updateFloatingHeaderActions();
+
       const bubble = document.getElementById('ios-floating-bubble');
       const dockButtons = dock.querySelectorAll('.dock-btn');
       let isDragging = false;
