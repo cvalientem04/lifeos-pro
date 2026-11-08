@@ -160,6 +160,7 @@ const EXERCISE_CATALOG = [
       ['bike_routes', 'Rutas GPS'],
       ['strength_progress', 'Progreso de fuerza'],
       ['care', 'Cuidados'],
+      ['shopping', 'Lista de la compra'],
       ['journal', 'Diario'],
       ['expenses', 'Gastos']
     ];
@@ -637,6 +638,7 @@ const EXERCISE_CATALOG = [
         .from('shopping_items')
         .insert({
           user_id: currentAuthSession.user.id,
+          household_id: familyState.household?.id || null,
           text: item.text,
           done: !!item.done,
           done_at: item.doneAt ? new Date(item.doneAt).toISOString() : null
@@ -669,8 +671,7 @@ const EXERCISE_CATALOG = [
       if (!currentAuthSession?.user) return;
       const { data, error } = await lifeosSupabase
         .from('shopping_items')
-        .select('id, text, done, done_at')
-        .eq('user_id', currentAuthSession.user.id)
+        .select('id, user_id, household_id, text, done, done_at')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -678,15 +679,21 @@ const EXERCISE_CATALOG = [
         return;
       }
 
-      const knownIds = new Set(appState.shoppingList.map(item => item.supabaseId).filter(Boolean));
-      const remoteItems = data.filter(item => !knownIds.has(item.id)).map(item => ({
+      const remoteItems = data.map(item => ({
         id: `supabase-${item.id}`,
         supabaseId: item.id,
+        ownerId: item.user_id,
+        householdId: item.household_id,
         text: item.text,
         done: item.done,
         doneAt: item.done_at ? Date.parse(item.done_at) : 0
       }));
-      appState.shoppingList.push(...remoteItems);
+      const remoteById = new Map(remoteItems.map(item => [item.supabaseId, item]));
+      appState.shoppingList = appState.shoppingList
+        .filter(item => !item.supabaseId || remoteById.has(item.supabaseId))
+        .map(item => item.supabaseId ? { ...item, ...remoteById.get(item.supabaseId) } : item);
+      const localIds = new Set(appState.shoppingList.map(item => item.supabaseId).filter(Boolean));
+      appState.shoppingList.push(...remoteItems.filter(item => !localIds.has(item.supabaseId)));
       SafeStorage.set(getUserStorageKey(), JSON.stringify(appState));
       refreshCurrentActiveView();
     }
@@ -738,10 +745,10 @@ const EXERCISE_CATALOG = [
       if (!currentAuthSession?.user || !profile) return false;
       const userId = currentAuthSession.user.id;
       const profilePayload = {
-        user_id: userId,
         name: profile.name,
         emoji: profile.emoji || '🐾',
-        care_type: profile.type || 'other'
+        care_type: profile.type || 'other',
+        household_id: profile.householdId || familyState.household?.id || null
       };
       let profileId = profile.supabaseId;
       if (profileId) {
@@ -753,7 +760,7 @@ const EXERCISE_CATALOG = [
       } else {
         const { data, error } = await lifeosSupabase
           .from('care_profiles')
-          .insert(profilePayload)
+          .insert({ ...profilePayload, user_id: userId })
           .select('id')
           .single();
         if (error) {
@@ -766,7 +773,8 @@ const EXERCISE_CATALOG = [
 
       const taskRows = (profile.tasks || []).map(task => ({
         profile_id: profileId,
-        user_id: userId,
+        user_id: profile.ownerId || profile.userId || userId,
+        household_id: profile.householdId || familyState.household?.id || null,
         task_date: dateStr,
         label: task.label,
         completed: !!task.completed,
@@ -795,8 +803,7 @@ const EXERCISE_CATALOG = [
       const userId = currentAuthSession.user.id;
       const { data: profiles, error: profilesError } = await lifeosSupabase
         .from('care_profiles')
-        .select('id, name, emoji, care_type')
-        .eq('user_id', userId)
+        .select('id, user_id, household_id, name, emoji, care_type')
         .order('created_at', { ascending: true });
       if (profilesError) {
         setAuthFeedback(`No se pudieron cargar los cuidados: ${profilesError.message}`, 'error', true);
@@ -807,8 +814,7 @@ const EXERCISE_CATALOG = [
       if (profileIds.length > 0) {
         const { data, error: tasksError } = await lifeosSupabase
           .from('care_tasks')
-          .select('id, profile_id, task_date, label, completed, completed_at, created_at')
-          .eq('user_id', userId)
+          .select('id, profile_id, user_id, household_id, task_date, label, completed, completed_at, created_at')
           .in('profile_id', profileIds);
         if (tasksError) {
           setAuthFeedback(`No se pudieron cargar las tareas de cuidado: ${tasksError.message}`, 'error', true);
@@ -836,6 +842,8 @@ const EXERCISE_CATALOG = [
         return {
           id: local?.id || `care-${remoteProfile.id}`,
           supabaseId: remoteProfile.id,
+          ownerId: remoteProfile.user_id,
+          householdId: remoteProfile.household_id,
           name: remoteProfile.name,
           emoji: remoteProfile.emoji,
           type: remoteProfile.care_type,
@@ -849,6 +857,8 @@ const EXERCISE_CATALOG = [
             return {
               id: localTask?.id || `task-${remoteTask.id}`,
               supabaseId: todayTask?.id || remoteTask.id,
+              ownerId: remoteTask.user_id,
+              householdId: remoteTask.household_id,
               label: remoteTask.label,
               completed: !!todayTask?.completed,
               completedAt: todayTask?.completed_at || ''
@@ -872,8 +882,7 @@ const EXERCISE_CATALOG = [
       const { error } = await lifeosSupabase
         .from('care_profiles')
         .delete()
-        .eq('id', profile.supabaseId)
-        .eq('user_id', currentAuthSession.user.id);
+        .eq('id', profile.supabaseId);
       if (error) setAuthFeedback(`No se pudo eliminar el cuidado: ${error.message}`, 'error', true);
     }
 
