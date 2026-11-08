@@ -667,6 +667,19 @@ const EXERCISE_CATALOG = [
       if (error) setAuthFeedback(`No se pudo actualizar la compra: ${error.message}`, 'error', true);
     }
 
+    async function deleteShoppingItemFromSupabase(item) {
+      if (!currentAuthSession?.user || !item.supabaseId) return true;
+      const { error } = await lifeosSupabase
+        .from('shopping_items')
+        .delete()
+        .eq('id', item.supabaseId);
+      if (error) {
+        setAuthFeedback(`No se pudo eliminar la compra: ${error.message}`, 'error', true);
+        return false;
+      }
+      return true;
+    }
+
     async function loadShoppingItemsFromSupabase() {
       if (!currentAuthSession?.user) return;
       const { data, error } = await lifeosSupabase

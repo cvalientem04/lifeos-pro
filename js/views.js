@@ -302,6 +302,7 @@
             <span class="w-5 h-5 rounded border flex items-center justify-center transition-colors ${item.done ? 'bg-emerald-500 border-emerald-500 text-slate-950 font-bold' : 'border-slate-700 text-transparent'}">✓</span>
             <span class="font-semibold ${item.done ? 'text-slate-500' : 'text-white'}">${item.text}</span>
           </div>
+          <button type="button" onclick="event.stopPropagation(); deleteShoppingItem(${item.id})" class="ml-3 shrink-0 text-slate-500 hover:text-rose-300" aria-label="Eliminar ${item.text}">✕</button>
         </div>`;
       }).join('');
 
@@ -357,6 +358,19 @@
       it.doneAt = it.done ? Date.now() : 0;
       saveToStorage();
       updateShoppingItemInSupabase(it);
+    }
+
+    async function deleteShoppingItem(id) {
+      const index = appState.shoppingList.findIndex(item => item.id === id);
+      if (index < 0) return;
+      const [item] = appState.shoppingList.splice(index, 1);
+      saveToStorage();
+      refreshCurrentActiveView();
+
+      if (await deleteShoppingItemFromSupabase(item)) return;
+      appState.shoppingList.splice(index, 0, item);
+      saveToStorage();
+      refreshCurrentActiveView();
     }
 
     function addExpense() {
