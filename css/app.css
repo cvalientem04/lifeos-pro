@@ -178,7 +178,7 @@ body {
       position: fixed;
       top: max(12px, env(safe-area-inset-top));
       left: 50%;
-      z-index: 46;
+      z-index: 10001;
       transform: translate3d(-50%, 0, 0) scale(0.94);
       pointer-events: none;
     }
