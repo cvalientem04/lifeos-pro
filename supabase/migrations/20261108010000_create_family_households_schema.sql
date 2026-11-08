@@ -1,5 +1,3 @@
-create extension if not exists pgcrypto;
-
 create table if not exists public.households (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references auth.users(id) on delete cascade,
@@ -76,7 +74,7 @@ begin
     raise exception 'User already belongs to a household';
   end if;
 
-  new_code := 'FAM-' || upper(encode(gen_random_bytes(3), 'hex'));
+  new_code := 'FAM-' || upper(substr(md5(random()::text || clock_timestamp()::text), 1, 6));
   insert into public.households (owner_id, name, invite_code)
   values (auth.uid(), coalesce(nullif(trim(household_name), ''), 'Mi hogar'), new_code)
   returning * into new_household;
