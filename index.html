@@ -135,15 +135,17 @@
           </div>
         </div>
 
-        <div class="lifeos-header-streak header-floating-streak flex items-center justify-end gap-1.5 shrink-0">
-          <button onclick="switchTab('weekly')" class="header-action header-pill header-float px-2.5 text-xs font-extrabold text-amber-400 flex items-center gap-1">
-            🔥 <span id="topStreakNum">14</span>d
-          </button>
-        </div>
-        <div class="lifeos-header-actions header-floating-actions flex items-center justify-end gap-1.5 shrink-0">
+        <div class="header-floating-left flex items-center justify-end gap-1.5 shrink-0">
+          <div class="lifeos-header-streak header-floating-streak flex items-center justify-end gap-1.5 shrink-0">
+            <button onclick="switchTab('weekly')" class="header-action header-pill header-float px-2.5 text-xs font-extrabold text-amber-400 flex items-center gap-1">
+              🔥 <span id="topStreakNum">14</span>d
+            </button>
+          </div>
           <button onclick="toggleGhostMode()" id="ghostModeButton" aria-label="Modo fantasma" class="header-action header-icon header-float w-9 text-base flex items-center justify-center transition" title="Disponible al llegar a 5.000 pasos">
             👻
           </button>
+        </div>
+        <div class="lifeos-header-actions header-floating-actions flex items-center justify-end gap-1.5 shrink-0">
           <button onclick="openVoiceModal('GLOBAL')" aria-label="Abrir comandos de voz" title="Voz" class="header-action header-icon header-float w-9 text-emerald-300 text-base font-extrabold flex items-center justify-center">
             🎙️
           </button>

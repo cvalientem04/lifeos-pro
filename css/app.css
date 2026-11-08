@@ -69,11 +69,19 @@ body {
       transform: scale(0.94);
     }
     .header-float {
-      background: rgba(13, 17, 23, 0.16) !important;
-      border: 1px solid rgba(255, 255, 255, 0.11) !important;
+      background: rgba(13, 17, 23, 0.08) !important;
+      border: 1px solid rgba(255, 255, 255, 0.09) !important;
       backdrop-filter: blur(16px) saturate(165%);
       -webkit-backdrop-filter: blur(16px) saturate(165%);
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    .header-floating-left.is-floating {
+      position: fixed;
+      top: max(12px, env(safe-area-inset-top));
+      left: max(12px, env(safe-area-inset-left));
+      z-index: 45;
+      gap: 8px !important;
+      animation: headerFloatIn 0.28s ease both;
     }
     .header-floating-actions.is-floating {
       position: fixed;
@@ -84,21 +92,15 @@ body {
       transform: translate3d(0, 0, 0);
       animation: headerFloatIn 0.28s ease both;
     }
-    .header-floating-streak.is-floating {
-      position: fixed;
-      top: max(12px, env(safe-area-inset-top));
-      left: max(12px, env(safe-area-inset-left));
-      z-index: 45;
-      gap: 8px !important;
-      animation: headerFloatIn 0.28s ease both;
-    }
+    .header-floating-left.is-floating > .header-action,
+    .header-floating-left.is-floating .header-action,
     .header-floating-actions.is-floating > .header-action,
     .header-floating-streak.is-floating > .header-action {
-      background: rgba(13, 17, 23, 0.16) !important;
-      border: 1px solid rgba(255, 255, 255, 0.11) !important;
+      background: rgba(13, 17, 23, 0.08) !important;
+      border: 1px solid rgba(255, 255, 255, 0.09) !important;
       backdrop-filter: blur(22px) saturate(180%);
       -webkit-backdrop-filter: blur(22px) saturate(180%);
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.07);
     }
     .header-scroll-shade {
       position: fixed;
@@ -112,9 +114,9 @@ body {
       opacity: 0;
       background: linear-gradient(
         to bottom,
-        rgba(7, 10, 15, 0.98) 0%,
-        rgba(7, 10, 15, 0.86) 26%,
-        rgba(7, 10, 15, 0.42) 64%,
+        rgba(7, 10, 15, 1) 0%,
+        rgba(7, 10, 15, 0.94) 26%,
+        rgba(7, 10, 15, 0.58) 64%,
         rgba(7, 10, 15, 0) 100%
       );
       transition: opacity 0.32s ease;
@@ -139,7 +141,10 @@ body {
       z-index: 2;
     }
     .lifeos-header-streak {
-      margin-right: auto;
+      display: flex;
+    }
+    .header-floating-left {
+      margin-left: auto;
     }
     .lifeos-header-actions {
       margin-left: auto;
@@ -207,7 +212,11 @@ body {
       .header-floating-actions.is-floating {
         right: max(8px, env(safe-area-inset-right));
       }
+      .header-floating-left.is-floating {
+        left: max(8px, env(safe-area-inset-left));
+      }
       .header-floating-actions.is-floating,
+      .header-floating-left.is-floating,
       .header-floating-streak.is-floating {
         gap: 6px !important;
       }
