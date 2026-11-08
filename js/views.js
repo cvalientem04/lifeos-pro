@@ -502,11 +502,15 @@
       const dock = document.querySelector('.bottom-dock');
       if (!dock) return;
 
-      const floatingHeaderActions = document.querySelector('.header-floating-actions');
       const header = document.querySelector('header');
+      const floatingHeaderActions = document.querySelector('.header-floating-actions');
+      const floatingHeaderStreak = document.querySelector('.header-floating-streak');
       const updateFloatingHeaderActions = () => {
         if (!floatingHeaderActions || !header) return;
-        floatingHeaderActions.classList.toggle('is-floating', window.scrollY > header.offsetHeight);
+        const isScrolled = window.scrollY > 24;
+        header.classList.toggle('is-scrolled', isScrolled);
+        floatingHeaderActions.classList.toggle('is-floating', isScrolled);
+        floatingHeaderStreak?.classList.toggle('is-floating', isScrolled);
       };
       window.addEventListener('scroll', updateFloatingHeaderActions, { passive: true });
       updateFloatingHeaderActions();

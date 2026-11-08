@@ -55,7 +55,7 @@ body {
       align-items: center;
       justify-content: center;
       white-space: nowrap;
-      transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+      transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.3s ease;
     }
     .header-icon {
       width: 36px;
@@ -87,6 +87,65 @@ body {
       backdrop-filter: blur(24px) saturate(200%);
       -webkit-backdrop-filter: blur(24px) saturate(200%);
       box-shadow: 0 14px 35px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+      transform: translate3d(0, 0, 0);
+      animation: headerFloatIn 0.28s ease both;
+    }
+    .header-floating-streak.is-floating {
+      position: fixed;
+      top: max(12px, env(safe-area-inset-top));
+      left: max(12px, env(safe-area-inset-left));
+      z-index: 45;
+      padding: 4px;
+      border-radius: 9999px;
+      background: rgba(13, 17, 23, 0.42);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(24px) saturate(200%);
+      -webkit-backdrop-filter: blur(24px) saturate(200%);
+      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+      animation: headerFloatIn 0.28s ease both;
+    }
+    .lifeos-header-row {
+      position: relative;
+      min-height: 36px;
+    }
+    .lifeos-header-brand {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      transition: opacity 0.28s ease, transform 0.32s ease;
+      z-index: 1;
+    }
+    .lifeos-header-streak,
+    .lifeos-header-actions {
+      position: relative;
+      z-index: 2;
+    }
+    .lifeos-header-streak {
+      margin-right: auto;
+    }
+    .lifeos-header-actions {
+      margin-left: auto;
+    }
+    header.is-scrolled .lifeos-header-brand {
+      position: fixed;
+      top: max(12px, env(safe-area-inset-top));
+      left: 50%;
+      z-index: 46;
+      transform: translate3d(-50%, 0, 0) scale(0.94);
+      pointer-events: none;
+    }
+    header.is-scrolled .lifeos-header-brand .logo-shell {
+      display: none;
+    }
+    header.is-scrolled .lifeos-header-brand h2 {
+      font-size: 0.75rem;
+    }
+    header.is-scrolled .lifeos-header-brand p {
+      font-size: 0.625rem;
+    }
+    @keyframes headerFloatIn {
+      from { opacity: 0.65; transform: translate3d(0, -6px, 0) scale(0.96); }
+      to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
     }
     @media (max-width: 430px) {
       .grid > *, .flex > * {
