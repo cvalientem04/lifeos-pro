@@ -1386,6 +1386,15 @@ const EXERCISE_CATALOG = [
           renderSavedBikeRoutesHistory();
         }, 120);
       }
+      if (tabId === 'hogar' && currentAuthSession?.user) {
+        Promise.all([
+          loadShoppingItemsFromSupabase(),
+          loadCareProfilesFromSupabase(),
+          loadFamilyState()
+        ]).catch(error => {
+          setAuthFeedback(`No se pudo actualizar el hogar: ${error.message}`, 'error', true);
+        });
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
