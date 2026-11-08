@@ -45,6 +45,7 @@
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body class="min-h-screen pb-24 lg:pb-10 flex flex-col lg:flex-row">
+  <div id="headerScrollShade" class="header-scroll-shade" aria-hidden="true"></div>
 
   <!-- ================= SIDEBAR ORDENADOR ================= -->
   <aside class="hidden lg:flex lg:w-64 bg-[#0b0f17] border-r border-slate-800/80 flex-col justify-between p-4 lg:fixed lg:h-screen z-30">
@@ -171,8 +172,6 @@
         </div>
       </div>
     </header>
-    <div id="headerScrollShade" class="header-scroll-shade" aria-hidden="true"></div>
-
     <!-- BANNER SI HAY UN ENTRENAMIENTO EN CURSO Y SALES DE LA PESTAÑA -->
     <div id="minimizedWorkoutBanner" onclick="switchTab('gym')" class="hidden cursor-pointer bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 px-4 py-2.5 rounded-2xl flex items-center justify-between shadow-lg">
       <div class="flex items-center gap-2">
