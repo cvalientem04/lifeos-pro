@@ -6,6 +6,13 @@
     let lastCapturedTranscript = '';
     let commandAlreadyProcessed = false;
 
+    function setVoiceTranscript(text) {
+      const textNode = document.getElementById('voiceTranscriptText');
+      const box = document.getElementById('voiceTranscriptBox');
+      if (textNode) textNode.textContent = text;
+      else if (box) box.textContent = text;
+    }
+
     function speakTextAloud(text) {
       if (!('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
@@ -20,8 +27,7 @@
       const tc = (day.turkeys.fedMorning ? 1 : 0) + (day.turkeys.waterGiven ? 1 : 0) + (day.turkeys.fedEvening ? 1 : 0);
       const spent = (day.expenses || []).reduce((a, b) => a + Number(b.amount || 0), 0);
       const msg = `Resumen del ${formatHumanDate(currentDate)}: llevas ${day.steps || 0} pasos, ${day.bikeKm || 0} kilómetros en bici, ${day.studyMinutes || 0} minutos de estudio, ${spent.toFixed(0)} euros gastados y ${tc} de 3 turnos de los pavos.`;
-      const box = document.getElementById('voiceTranscriptBox');
-      if (box) box.textContent = `🔊 "${msg}"`;
+      setVoiceTranscript(`🔊 "${msg}"`);
       speakTextAloud(msg);
     }
 
@@ -45,21 +51,28 @@
       const circle = document.getElementById('voiceMicCircle');
       const title = document.getElementById('voiceModalStatusTitle');
       const sub = document.getElementById('voiceModalStatusSub');
+      const box = document.getElementById('voiceTranscriptBox');
+      const wasRecording = box && box.classList.contains('voice-status-panel-recording');
 
       if (!btn || !circle) return;
 
       if (recording) {
-        btn.className = 'flex-1 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs transition-all shadow-lg shadow-rose-600/40 animate-pulse';
+        btn.className = 'voice-record-button voice-record-button-recording';
         btn.innerHTML = '⏹ GRABANDO... (Toca para parar)';
         circle.className = 'w-14 h-14 rounded-full bg-rose-500/30 border-2 border-rose-500 text-rose-300 flex items-center justify-center text-2xl mx-auto animate-bounce shadow-lg shadow-rose-500/40';
         circle.innerHTML = '🔴';
+        if (box) box.className = 'voice-status-panel voice-status-panel-recording';
         if (title) title.textContent = '🔴 Escuchando tu voz ahora...';
         if (sub) sub.textContent = 'Habla claro. Cuando termines, toca el botón rojo o haz una pausa.';
       } else {
-        btn.className = 'flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition-all shadow-lg';
+        btn.className = 'voice-record-button voice-record-button-idle';
         btn.innerHTML = '🎙️ Empezar a Hablar';
         circle.className = 'w-14 h-14 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 text-emerald-300 flex items-center justify-center text-2xl mx-auto transition-all';
         circle.innerHTML = '🎙️';
+        if (box) box.className = 'voice-status-panel voice-status-panel-idle';
+        if (wasRecording) {
+          setVoiceTranscript('Esperando orden por voz...');
+        }
         if (title) title.textContent = 'Control por Voz';
         if (sub) sub.textContent = 'Micrófono en espera. Pulsa el botón verde para hablar.';
       }
@@ -70,7 +83,7 @@
       const box = document.getElementById('voiceTranscriptBox');
 
       if (!SpeechRec) {
-        box.textContent = '⚠️ Abre la web en Safari para usar el micrófono en iPhone.';
+        setVoiceTranscript('⚠️ Abre la web en Safari para usar el micrófono en iPhone.');
         return;
       }
 
@@ -89,17 +102,17 @@
 
       activeRecognition.onstart = () => {
         setMicVisualState(true);
-        box.textContent = '🔴 Escuchando... di tu orden ahora';
+        setVoiceTranscript('🔴 Escuchando... di tu orden ahora');
       };
 
       activeRecognition.onresult = (e) => {
         lastCapturedTranscript = Array.from(e.results).map(r => r[0].transcript).join(' ').trim();
-        box.textContent = `🗣️ "${lastCapturedTranscript}"`;
+        setVoiceTranscript(`🗣️ "${lastCapturedTranscript}"`);
       };
 
       activeRecognition.onerror = (err) => {
         setMicVisualState(false);
-        box.textContent = '⚠️ No se detectó voz o permiso denegado.';
+        setVoiceTranscript('⚠️ No se detectó voz o permiso denegado.');
       };
 
       // En Safari iOS, procesar al terminar (onend) garantiza que SIEMPRE lea lo que acabas de decir
@@ -232,7 +245,7 @@
       }
 
       const box = document.getElementById('voiceTranscriptBox');
-      if (box) box.textContent = `✅ ${finalReply}`;
+      setVoiceTranscript(`✅ ${finalReply}`);
       speakTextAloud(finalReply);
       saveToStorage();
       syncAnimalTasksToSupabase(day, currentDate);

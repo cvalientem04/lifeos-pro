@@ -779,27 +779,35 @@
         <p class="text-[11px] text-slate-400" id="voiceModalStatusSub">Pulsa el botón para hablar (se pondrá en rojo al escuchar)</p>
       </div>
 
-      <p id="voiceTranscriptBox" class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono text-emerald-300 min-h-[48px] flex items-center justify-center">
-        Esperando orden por voz...
+      <p id="voiceTranscriptBox" class="voice-status-panel voice-status-panel-idle">
+        <span id="voiceTranscriptText">Esperando orden por voz...</span>
       </p>
 
-      <div class="flex gap-2">
-        <button onclick="toggleRealVoiceRecognition()" id="btnStartMicListen" class="flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition-all shadow-lg">
+      <div class="voice-action-row">
+        <button onclick="toggleRealVoiceRecognition()" id="btnStartMicListen" class="voice-record-button voice-record-button-idle">
           🎙️ Empezar a Hablar
         </button>
-        <button onclick="speakDaySummaryAloud()" class="px-3.5 py-3 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-bold">
+        <button onclick="speakDaySummaryAloud()" class="voice-summary-button">
           🔊 Resumen
         </button>
       </div>
 
-      <div class="space-y-1.5 text-left pt-2 border-t border-slate-800">
-        <span class="text-[10px] font-bold uppercase text-slate-400 block">Ejemplos de cosas que puedes decirle:</span>
-        <button onclick="processSpokenText('He dado agua y comida a los pavos')" class="w-full p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs text-slate-200">🗣️ "He dado agua y comida a los pavos"</button>
-        <button onclick="processSpokenText('Apunta en la compra pechuga de pollo')" class="w-full p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs text-slate-200">🗣️ "Apunta en la compra pechuga de pollo"</button>
-        <button onclick="processSpokenText('He gastado 15 euros en gasolina')" class="w-full p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs text-slate-200">🗣️ "He gastado 15 euros en gasolina"</button>
-        <button onclick="processSpokenText('He hecho 8500 pasos y 40 minutos de estudio')" class="w-full p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs text-slate-200">🗣️ "He hecho 8500 pasos y 40 minutos de estudio"</button>
+      <div class="voice-examples">
+        <span class="voice-examples-title">Ejemplos de cosas que puedes decirle:</span>
+        <button onclick="processSpokenText('He dado agua y comida a los pavos')" class="voice-example-button">
+          <span class="voice-example-avatar">🧑‍🦱</span><span class="voice-example-bubble">🗣</span><span>"He dado agua y comida a los pavos"</span>
+        </button>
+        <button onclick="processSpokenText('Apunta en la compra pechuga de pollo')" class="voice-example-button">
+          <span class="voice-example-avatar">👩‍🦰</span><span class="voice-example-bubble">🗣</span><span>"Apunta en la compra pechuga de pollo"</span>
+        </button>
+        <button onclick="processSpokenText('He gastado 15 euros en gasolina')" class="voice-example-button">
+          <span class="voice-example-avatar">🧑‍🦱</span><span class="voice-example-bubble">🗣</span><span>"He gastado 15 euros en gasolina"</span>
+        </button>
+        <button onclick="processSpokenText('He hecho 8500 pasos y 40 minutos de estudio')" class="voice-example-button">
+          <span class="voice-example-avatar">👩‍🦰</span><span class="voice-example-bubble">🗣</span><span>"He hecho 8500 pasos y 40 minutos de estudio"</span>
+        </button>
       </div>
-      <button onclick="closeVoiceModal()" class="w-full py-2 rounded-xl bg-slate-800 text-xs font-bold text-slate-300">Cerrar</button>
+      <button onclick="closeVoiceModal()" class="voice-close-button">Cerrar</button>
     </div>
   </div>
 
