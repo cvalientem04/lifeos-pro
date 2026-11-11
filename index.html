@@ -234,39 +234,39 @@
       </div>
 
       <!-- Registro Rápido de Estudio, Coche y Comida del Día Seleccionado -->
-      <div class="studio-card rounded-2xl p-4 space-y-3">
+      <div class="home-time-card studio-card rounded-2xl p-4 space-y-3">
         <div class="flex items-center justify-between">
           <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-300">⏱️ Tiempo y Comidas de este Día</h3>
           <button onclick="switchTab('weekly')" class="text-[11px] text-emerald-400 font-bold">Balance 7 Días 📊</button>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+          <div class="home-time-row bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
             <div>
               <span class="text-[10px] font-bold uppercase text-violet-400 block">📚 Estudio</span>
               <span id="studyMinHome" class="text-base font-extrabold font-mono text-white">0 min</span>
             </div>
             <div class="flex gap-1">
-              <button onclick="addMinutes('study', 30)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-xs font-bold text-violet-300">+30m</button>
-              <button onclick="addMinutes('study', 60)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-xs font-bold text-violet-300">+1h</button>
+              <button onclick="addMinutes('study', 30)" class="home-time-action px-2.5 py-1.5 rounded-lg bg-slate-800 text-xs font-bold text-violet-300">+30m</button>
+              <button onclick="addMinutes('study', 60)" class="home-time-action px-2.5 py-1.5 rounded-lg bg-slate-800 text-xs font-bold text-violet-300">+1h</button>
             </div>
           </div>
 
-          <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+          <div class="home-time-row bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
             <div>
               <span class="text-[10px] font-bold uppercase text-amber-400 block">🚗 Coche</span>
               <span id="carMinHome" class="text-base font-extrabold font-mono text-white">0 min</span>
             </div>
             <div class="flex gap-1">
-              <button onclick="addMinutes('car', 15)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-xs font-bold text-amber-300">+15m</button>
-              <button onclick="addMinutes('car', 30)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-xs font-bold text-amber-300">+30m</button>
+              <button onclick="addMinutes('car', 15)" class="home-time-action px-2.5 py-1.5 rounded-lg bg-slate-800 text-xs font-bold text-amber-300">+15m</button>
+              <button onclick="addMinutes('car', 30)" class="home-time-action px-2.5 py-1.5 rounded-lg bg-slate-800 text-xs font-bold text-amber-300">+30m</button>
             </div>
           </div>
         </div>
 
-        <div class="flex gap-1.5">
+        <div class="home-quick-entry flex gap-1.5">
           <input type="text" id="quickMealInput" onkeydown="if(event.key==='Enter') addQuickMeal()" placeholder="🥗 Anotar comida (ej. Pollo con arroz, Huevos revueltos)..." class="flex-1 studio-input rounded-xl px-3 py-2 text-xs">
-          <button onclick="addQuickMeal()" class="px-3.5 py-2 rounded-xl bg-emerald-500 text-slate-950 text-xs font-extrabold">+ Comida</button>
+          <button onclick="addQuickMeal()" class="home-meal-action px-3.5 py-2 rounded-xl bg-emerald-500 text-slate-950 text-xs font-extrabold">+ Comida</button>
         </div>
         <div id="homeMealsPills" class="flex flex-wrap gap-1.5"></div>
       </div>
