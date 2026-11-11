@@ -33,17 +33,17 @@
       `).join('');
 
       document.getElementById('socialWorkoutFeedList').innerHTML = appState.workoutFeed.map(w => `
-        <div class="studio-card rounded-2xl p-4 space-y-3">
+        <div class="home-workout-card studio-card rounded-2xl p-4 space-y-3">
           <div class="flex items-center justify-between">
             <div>
               <span class="text-xs font-extrabold text-white">${w.user}</span>
               <span class="text-[11px] text-slate-400 block capitalize">${formatHumanDate(w.date)}</span>
             </div>
-            <button onclick="likeFeedWorkout(${w.id})" class="px-3 py-1 rounded-xl bg-slate-900 text-emerald-400 text-xs font-bold border border-slate-800">
-              💪 ${w.likes || 0}
+            <button onclick="likeFeedWorkout(${w.id})" class="home-workout-like px-3 py-1 rounded-xl bg-slate-900 text-emerald-400 text-xs font-bold border border-slate-800">
+              💪🏼 ${w.likes || 0}
             </button>
           </div>
-          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between gap-3">
+          <div class="home-workout-summary bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between gap-3">
             <div class="space-y-1 min-w-0 flex-1">
               <h4 class="text-base font-extrabold text-white">${w.title}</h4>
               <div class="flex gap-3 text-xs font-mono text-slate-400 pb-1">
@@ -53,7 +53,7 @@
               </div>
               ${(w.summaryLines || []).map(l => `<p class="text-xs text-slate-300 truncate">• ${l}</p>`).join('')}
             </div>
-            <div class="w-16 shrink-0">${getAnatomyBodyMapSVG(w.muscles || ['Pecho'])}</div>
+            <div class="home-workout-avatar w-20 shrink-0">${getAnatomyBodyMapSVG(w.muscles || ['Pecho'])}</div>
           </div>
           ${w.photoUrl ? `<img src="${w.photoUrl}" class="w-full h-48 object-cover rounded-2xl border border-slate-800"/>` : ''}
           ${w.note ? `<p class="text-xs text-slate-300 italic">"${w.note}"</p>` : ''}

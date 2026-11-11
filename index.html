@@ -125,11 +125,11 @@
   <main class="flex-1 lg:ml-64 max-w-3xl mx-auto w-full px-3 sm:px-6 pt-3 sm:pt-5 space-y-4">
 
     <!-- CABECERA MÓVIL Y PC 100% CENTRADA Y SIN DESBORDAMIENTO LATERAL -->
-    <header class="studio-card rounded-2xl p-3 space-y-2.5 overflow-hidden">
+    <header class="studio-card lifeos-header rounded-2xl p-3 space-y-2.5 overflow-hidden">
       <!-- Fila 1: Marca + Racha + Botón de Voz -->
       <div class="lifeos-header-row flex items-center justify-between gap-2">
         <div class="lifeos-header-brand flex items-center gap-2 min-w-0">
-          <span class="logo-shell w-9 h-9 rounded-xl flex items-center justify-center text-xs shrink-0 overflow-hidden"><img src="img/logo.png" alt="Logo LifeOS" class="logo-mark rounded-lg"></span>
+          <span class="logo-shell w-8 h-8 rounded-full flex items-center justify-center text-xs shrink-0 overflow-hidden"><img src="img/logo.png" alt="Logo LifeOS" class="logo-mark rounded-full"></span>
           <div class="truncate">
             <h2 class="text-sm font-extrabold text-white leading-tight truncate">LifeOS Studio</h2>
             <p id="headerReadableDate" class="text-[11px] text-emerald-400 font-semibold capitalize truncate">Hoy</p>
@@ -148,7 +148,10 @@
         </div>
         <div class="lifeos-header-actions header-floating-actions flex items-center justify-end gap-1.5 shrink-0">
           <button onclick="openVoiceModal('GLOBAL')" aria-label="Abrir comandos de voz" title="Voz" class="header-action header-icon header-float w-9 text-emerald-300 text-base font-extrabold flex items-center justify-center">
-            🎙️
+            <svg viewBox="0 0 24 24" class="w-4 h-4" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="3" width="6" height="11" rx="3"></rect>
+              <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"></path>
+            </svg>
           </button>
           <button onclick="openAuthModal()" id="authHeaderButton" aria-label="Abrir cuenta" title="Cuenta" class="header-action header-icon header-float w-9 text-slate-300 text-base font-extrabold flex items-center justify-center">
             👤
@@ -165,7 +168,7 @@
         </div>
 
         <!-- Selector Todo / Gym / Casa repartido en 3 columnas iguales y centrado -->
-        <div class="grid grid-cols-3 gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-[11px] font-bold w-full text-center">
+        <div class="header-mode-switch grid grid-cols-3 gap-1 p-1 rounded-xl text-[11px] font-bold w-full text-center">
           <button onclick="setAppMode('ALL')" id="top-mode-ALL" class="py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-extrabold transition truncate">Todo</button>
           <button onclick="setAppMode('CLUB')" id="top-mode-CLUB" class="py-1.5 rounded-lg text-slate-400 transition truncate">🏋️ Gym</button>
           <button onclick="setAppMode('HOME')" id="top-mode-HOME" class="py-1.5 rounded-lg text-slate-400 transition truncate">🏠 Casa</button>
@@ -185,14 +188,14 @@
     <!-- PESTAÑA 1: INICIO (RESUMEN DEL DÍA SELECCIONADO + MURO DE ENTRENAMIENTOS) -->
     <!-- ========================================================================= -->
     <section id="view-home" class="space-y-4">
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        <div onclick="switchTab('gym')" data-card-scope="CLUB" class="studio-card rounded-2xl p-3 cursor-pointer hover:border-emerald-500/40 transition">
+      <div class="home-summary-grid grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <div onclick="switchTab('gym')" data-card-scope="CLUB" class="home-summary-card studio-card rounded-2xl p-3 cursor-pointer hover:border-emerald-500/40 transition">
           <span class="text-[10px] font-bold uppercase text-emerald-400 block">🏋️ Fuerza Hoy</span>
           <span id="homeGymStat" class="text-sm sm:text-base font-extrabold text-white block mt-0.5">0 kg</span>
           <span class="text-[10px] text-slate-500">Abrir Estudio ➔</span>
         </div>
 
-        <div class="studio-card rounded-2xl p-4 border border-cyan-500/25 bg-gradient-to-br from-cyan-500/10 to-slate-900">
+        <div class="home-summary-card studio-card rounded-2xl p-4 border border-cyan-500/25 bg-gradient-to-br from-cyan-500/10 to-slate-900">
           <div class="flex items-center justify-between gap-3">
             <div class="min-w-0">
               <span class="text-[10px] font-bold uppercase text-cyan-300 block">👨‍👩‍👧‍👦 Familia y Hogar</span>
@@ -203,19 +206,19 @@
           </div>
         </div>
 
-        <div onclick="switchTab('bikemap')" data-card-scope="CLUB" class="studio-card rounded-2xl p-3 cursor-pointer hover:border-cyan-500/40 transition">
+        <div onclick="switchTab('bikemap')" data-card-scope="CLUB" class="home-summary-card studio-card rounded-2xl p-3 cursor-pointer hover:border-cyan-500/40 transition">
           <span class="text-[10px] font-bold uppercase text-cyan-400 block">👣 Pasos & Bici</span>
           <span id="homeStepsStat" class="text-sm sm:text-base font-extrabold text-white block mt-0.5">0 pasos</span>
           <span id="homeBikeSub" class="text-[10px] text-slate-500">0.0 km bici</span>
         </div>
 
-        <div onclick="switchTab('hogar')" data-card-scope="HOME" class="studio-card rounded-2xl p-3 cursor-pointer hover:border-amber-500/40 transition">
+        <div onclick="switchTab('hogar')" data-card-scope="HOME" class="home-summary-card studio-card rounded-2xl p-3 cursor-pointer hover:border-amber-500/40 transition">
           <span class="text-[10px] font-bold uppercase text-amber-400 block">🧡 Cuidados</span>
           <span id="homeTurkeysStat" class="text-sm sm:text-base font-extrabold text-white block mt-0.5">0/3 tareas</span>
           <span id="homeShopSub" class="text-[10px] text-slate-500">Ver lista ➔</span>
         </div>
 
-        <div onclick="switchTab('journal')" data-card-scope="ALL" class="studio-card rounded-2xl p-3 cursor-pointer hover:border-violet-500/40 transition">
+        <div onclick="switchTab('journal')" data-card-scope="ALL" class="home-summary-card studio-card rounded-2xl p-3 cursor-pointer hover:border-violet-500/40 transition">
           <span class="text-[10px] font-bold uppercase text-violet-400 block">📚 Estudio & Coche</span>
           <span id="homeStudyStat" class="text-sm sm:text-base font-extrabold text-white block mt-0.5">0 min</span>
           <span id="homeCarSub" class="text-[10px] text-slate-500">0 min coche</span>
@@ -272,7 +275,7 @@
       <div class="space-y-3" data-card-scope="CLUB">
         <div class="flex items-center justify-between px-1">
           <h3 class="text-sm font-extrabold text-white">🏆 Sesiones de Entrenamiento (Tú y Amigos)</h3>
-          <button onclick="switchTab('gym')" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/35 text-[10px] font-extrabold text-emerald-300 hover:bg-emerald-500/25 transition">
+          <button onclick="switchTab('gym')" class="home-workout-link inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/35 text-[10px] font-extrabold text-emerald-300 hover:bg-emerald-500/25 transition">
             Ver entrenamientos <span aria-hidden="true">➔</span>
           </button>
         </div>
