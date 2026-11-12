@@ -97,6 +97,197 @@ body {
       border-color: rgba(103, 232, 249, 0.55) !important;
       box-shadow: 0 0 12px rgba(34, 211, 238, 0.32);
     }
+    .steps-day-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 14.5rem;
+      background:
+        radial-gradient(circle at 92% 18%, rgba(0, 174, 193, 0.12), transparent 24%),
+        linear-gradient(135deg, #071522 0%, #091426 55%, #080f1d 100%) !important;
+      border: 1px solid rgba(44, 75, 108, 0.72) !important;
+      box-shadow: inset 0 1px 0 rgba(112, 231, 255, 0.06), 0 12px 25px rgba(0, 0, 0, 0.34);
+    }
+    .steps-day-top {
+      position: relative;
+      min-height: 6rem;
+    }
+    .steps-day-heading {
+      position: relative;
+      z-index: 1;
+    }
+    .steps-day-title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .steps-day-icon {
+      color: #22e8bc;
+      font-size: 1.15rem;
+      line-height: 1;
+      text-shadow: 0 0 9px rgba(34, 232, 188, 0.7);
+    }
+    .steps-day-title {
+      color: #fbbf24;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+    .steps-day-status {
+      margin-left: 0.2rem;
+      padding: 0.25rem 0.62rem;
+      border: 1px solid rgba(87, 130, 170, 0.45);
+      border-radius: 9999px;
+      background: rgba(30, 52, 77, 0.85);
+      color: #dbeafe;
+      font-size: 0.62rem;
+      font-weight: 700;
+    }
+    .steps-day-total {
+      display: flex;
+      align-items: baseline;
+      gap: 0.38rem;
+      margin-top: 0.65rem;
+    }
+    .steps-day-footprints {
+      color: #f8fafc;
+      font-size: 1.85rem;
+      line-height: 1;
+      filter: grayscale(1) brightness(0) invert(1) drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+    }
+    .steps-day-total > span:nth-child(2) {
+      color: #f8fafc;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.8rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .steps-day-target {
+      color: #93a4c0;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+    .steps-day-progress {
+      width: min(13.5rem, 55vw);
+      height: 0.55rem;
+      margin-top: 0.8rem;
+      overflow: hidden;
+      border-radius: 9999px;
+      background: rgba(26, 48, 69, 0.92);
+    }
+    .steps-day-progress span {
+      display: block;
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #00e9a6, #18d4d8);
+      box-shadow: 0 0 10px rgba(0, 233, 166, 0.65);
+      transition: width 0.25s ease;
+    }
+    .steps-day-shoe {
+      position: absolute;
+      top: -0.15rem;
+      right: -0.5rem;
+      width: 10.5rem;
+      filter: drop-shadow(0 0 9px rgba(0, 240, 193, 0.55));
+      transform: rotate(-7deg);
+    }
+    .steps-day-actions {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 0.65rem;
+      margin-top: 0.5rem;
+    }
+    .steps-mobile-button,
+    .steps-sync-button,
+    .steps-save-button,
+    .steps-add-button {
+      min-height: 2.45rem;
+      border-radius: 0.95rem;
+      font-size: 0.72rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .steps-mobile-button {
+      flex: 0 0 9.5rem;
+      border: 1px solid rgba(0, 240, 174, 0.55);
+      background: linear-gradient(135deg, #0acb91, #0aa977);
+      color: #eafffa;
+      box-shadow: 0 0 14px rgba(0, 218, 157, 0.35);
+    }
+    .steps-sync-button {
+      flex: 1 1 auto;
+      border: 1px solid rgba(255, 180, 0, 0.55);
+      background: linear-gradient(135deg, #ffae11, #ff5b0a);
+      color: #111827;
+      box-shadow: 0 0 14px rgba(255, 138, 0, 0.25);
+    }
+    .steps-day-entry {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      margin-top: 0.85rem;
+    }
+    .steps-input-icon {
+      position: absolute;
+      left: 0.7rem;
+      z-index: 1;
+      color: #8da1bd;
+      font-size: 0.95rem;
+      pointer-events: none;
+    }
+    .steps-day-input {
+      flex: 1 1 auto;
+      min-width: 0;
+      height: 2.35rem;
+      padding: 0 0.8rem 0 2rem;
+      border: 1px solid rgba(68, 96, 130, 0.65);
+      border-radius: 9999px;
+      outline: none;
+      background: linear-gradient(110deg, rgba(20, 36, 61, 0.96), rgba(11, 24, 43, 0.94));
+      color: #cbd5e1;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.06), 0 4px 12px rgba(0, 0, 0, 0.18);
+    }
+    .steps-day-input::placeholder { color: #71819b; }
+    .steps-save-button,
+    .steps-add-button {
+      padding: 0 0.85rem;
+      border: 1px solid rgba(67, 93, 126, 0.72);
+      border-radius: 9999px;
+      background: linear-gradient(145deg, rgba(28, 51, 82, 0.98), rgba(14, 28, 52, 0.98));
+      color: #dbeafe;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 5px 12px rgba(0, 0, 0, 0.22);
+    }
+    .steps-save-button {
+      color: #22e8bc;
+      border-color: rgba(16, 185, 129, 0.34);
+      background: linear-gradient(145deg, rgba(14, 74, 69, 0.9), rgba(8, 39, 51, 0.96));
+      box-shadow: inset 0 1px 0 rgba(167, 243, 208, 0.08), 0 0 12px rgba(16, 185, 129, 0.16);
+    }
+    .steps-add-button {
+      padding: 0 0.7rem;
+      color: #e2e8f0;
+      border-color: rgba(65, 81, 122, 0.78);
+      background: linear-gradient(145deg, rgba(35, 44, 77, 0.98), rgba(17, 25, 52, 0.98));
+    }
+    .bike-gps-title {
+      font-size: 1rem !important;
+    }
+    @media (max-width: 480px) {
+      .steps-day-card { padding: 0.85rem; }
+      .steps-day-shoe { width: 8.3rem; right: -1rem; }
+      .steps-day-title { font-size: 0.62rem; }
+      .steps-day-status { font-size: 0.58rem; }
+      .steps-day-total > span:nth-child(2) { font-size: 1.55rem; }
+      .steps-day-footprints { font-size: 1.55rem; }
+      .steps-day-target { font-size: 0.7rem; }
+      .steps-mobile-button { flex-basis: 9.5rem; }
+      .steps-sync-button { font-size: 0.65rem; }
+      .steps-day-input { font-size: 0.6rem; }
+    }
     .bike-gps-card {
       position: relative;
       overflow: hidden;
@@ -176,7 +367,7 @@ body {
       color: #38bdf8;
       font-size: 0.53rem;
       font-weight: 800;
-      line-height: 1.15;
+      line-height: 1;
       letter-spacing: 0.03em;
     }
     .bike-label-purple { color: #a78bfa; }
@@ -184,7 +375,7 @@ body {
     .bike-label-green { color: #2dd4bf; }
     .bike-metric-value {
       display: block;
-      margin-top: 0.15rem;
+      margin-top: 0.55rem;
       font-family: 'JetBrains Mono', monospace;
       font-size: 1.25rem;
       font-weight: 800;
@@ -325,6 +516,282 @@ body {
     }
     .gym-action-button-exercise .gym-action-arrow {
       color: #67e8f9;
+    }
+    .force-hub-header {
+      position: relative;
+      overflow: hidden;
+      padding: 0.9rem 0.95rem 0.85rem;
+      border: 1px solid rgba(43, 76, 104, 0.62);
+      border-left: 4px solid #00e9a6;
+      border-radius: 1.05rem;
+      background:
+        linear-gradient(132deg, transparent 0 57%, rgba(0, 237, 177, 0.2) 58%, transparent 76%),
+        linear-gradient(145deg, #071b2a, #0b1423 72%, #07101e);
+      box-shadow: inset 0 1px 0 rgba(150, 233, 255, 0.08), 0 10px 22px rgba(0, 0, 0, 0.28);
+    }
+    .force-hub-heading {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+    }
+    .force-hub-icon {
+      margin-top: 0.1rem;
+      color: #2debc0;
+      font-size: 1.15rem;
+      letter-spacing: -0.18em;
+      line-height: 1;
+      text-shadow: 0 0 10px rgba(45, 235, 192, 0.65);
+    }
+    .force-hub-heading h2 {
+      color: #f8fafc;
+      font-size: 1.15rem;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+    .force-hub-heading h2 span { color: #00e9a6; }
+    .force-hub-heading p {
+      margin-top: 0.22rem;
+      color: #aab8ca;
+      font-size: 0.68rem;
+    }
+    .force-free-session {
+      position: absolute;
+      top: 0.65rem;
+      right: 0.7rem;
+      padding: 0.35rem 0.55rem;
+      border: 1px solid rgba(45, 212, 191, 0.45);
+      border-radius: 9999px;
+      background: rgba(15, 70, 71, 0.72);
+      color: #8af5d5;
+      font-size: 0.58rem;
+      font-weight: 800;
+    }
+    .force-routine-card {
+      position: relative;
+      overflow: hidden;
+      padding: 0.75rem 0.78rem 0.65rem;
+      border: 1px solid rgba(42, 75, 102, 0.7);
+      border-left: 4px solid #00e9a6;
+      border-radius: 1rem;
+      background:
+        linear-gradient(135deg, rgba(20, 42, 60, 0.94), rgba(7, 18, 30, 0.98) 72%),
+        radial-gradient(circle at 100% 0%, rgba(31, 206, 174, 0.15), transparent 35%);
+      box-shadow: inset 0 1px 0 rgba(156, 236, 255, 0.07), 0 8px 18px rgba(0, 0, 0, 0.25);
+    }
+    .force-routine-heading {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .force-routine-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      flex: 0 0 2rem;
+      border-radius: 0.65rem;
+      background: rgba(7, 19, 32, 0.82);
+      box-shadow: 0 0 12px rgba(0, 225, 180, 0.1);
+      font-size: 1.35rem;
+      line-height: 1;
+    }
+    .force-routine-heading h4 {
+      min-width: 0;
+      flex: 1 1 auto;
+      overflow: hidden;
+      color: #f8fafc;
+      font-size: 0.88rem;
+      font-weight: 900;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .force-routine-count {
+      flex: 0 0 auto;
+      padding: 0.32rem 0.5rem;
+      border-radius: 9999px;
+      background: rgba(41, 64, 82, 0.72);
+      color: #d7e3ed;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem;
+      font-weight: 700;
+    }
+    .force-routine-exercises {
+      display: -webkit-box;
+      min-height: 2rem;
+      margin: 0.35rem 0 0.55rem 2.6rem;
+      overflow: hidden;
+      color: #aebdcb;
+      font-size: 0.64rem;
+      line-height: 1.45;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+    .force-routine-actions {
+      display: flex;
+      gap: 0.65rem;
+      margin-left: 0.25rem;
+    }
+    .force-start-button,
+    .force-edit-button {
+      min-height: 2.1rem;
+      border-radius: 0.75rem;
+      font-size: 0.68rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .force-start-button {
+      flex: 1 1 auto;
+      border: 1px solid rgba(0, 239, 181, 0.55);
+      background: linear-gradient(135deg, #08e5ae, #0bc99d);
+      color: #03251e;
+      box-shadow: 0 0 12px rgba(0, 226, 174, 0.22), inset 0 1px 0 rgba(236, 253, 245, 0.52);
+    }
+    .force-edit-button {
+      flex: 0 0 5.4rem;
+      border: 1px solid rgba(0, 220, 184, 0.55);
+      background: rgba(9, 40, 48, 0.72);
+      color: #19e7b5;
+    }
+    @media (max-width: 480px) {
+      .force-hub-header { padding: 0.8rem 0.75rem; }
+      .force-hub-heading h2 { font-size: 1rem; }
+      .force-free-session { display: none; }
+      .force-routine-card { padding: 0.7rem 0.68rem 0.6rem; }
+      .force-routine-heading h4 { font-size: 0.78rem; }
+      .force-routine-exercises { margin-left: 2.35rem; font-size: 0.59rem; }
+      .force-start-button, .force-edit-button { font-size: 0.62rem; }
+    }
+    .force-progress-card {
+      padding: 0.75rem 0.65rem 0.8rem;
+      border-radius: 1rem;
+      background: #0b182c;
+    }
+    .force-progress-heading h3 {
+      color: #f8fafc;
+      font-size: 1.15rem;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+    .force-progress-heading p {
+      margin-top: 0.28rem;
+      color: #9aa8be;
+      font-size: 0.82rem;
+    }
+    .force-progress-select {
+      width: 100%;
+      height: 3.2rem;
+      margin-top: 0.8rem;
+      padding: 0 1.25rem;
+      border: 2px solid #168fd1;
+      border-right-color: #31c89c;
+      border-radius: 9999px;
+      outline: none;
+      background: linear-gradient(110deg, #173650, #1d514d);
+      color: #f8fafc;
+      font-size: 1rem;
+      font-weight: 800;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+    }
+    .force-progress-summary {
+      margin-top: 1.15rem;
+      padding: 1.15rem 1.25rem 1rem;
+      border: 1px solid rgba(37, 197, 149, 0.85);
+      border-radius: 1.05rem;
+      background: linear-gradient(135deg, rgba(14, 58, 60, 0.92), rgba(17, 38, 57, 0.95));
+      box-shadow: inset 0 1px 0 rgba(161, 255, 222, .08), 0 0 17px rgba(0, 205, 158, .1);
+      color: #b7f1d2;
+    }
+    .force-progress-summary-top,
+    .force-progress-current,
+    .force-progress-history-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    .force-progress-summary-top {
+      color: #72e0af;
+      font-size: 1rem;
+      font-weight: 900;
+    }
+    .force-progress-summary-top span:last-child {
+      color: #f8fafc;
+      font-size: 1.2rem;
+    }
+    .force-progress-summary-meta {
+      margin-top: 0.45rem;
+      color: #b8e3cf;
+      font-size: 0.9rem;
+    }
+    .force-progress-summary-meta span,
+    .force-progress-relative b {
+      color: #65e6a8;
+      font-weight: 900;
+    }
+    .force-progress-bar {
+      height: 0.65rem;
+      margin-top: 0.85rem;
+      overflow: hidden;
+      border-radius: 9999px;
+      background: #102b38;
+    }
+    .force-progress-bar span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #17d89d, #2de1dc);
+      box-shadow: 0 0 12px rgba(45, 225, 220, .75);
+    }
+    .force-progress-relative {
+      margin-top: 0.72rem;
+      color: #c3d6d3;
+      font-size: 0.88rem;
+    }
+    .force-progress-relative strong { color: #72e0af; }
+    .force-progress-history {
+      display: grid;
+      gap: 0.6rem;
+      margin-top: 1.1rem;
+    }
+    .force-progress-history-row,
+    .force-progress-current {
+      min-height: 3.2rem;
+      padding: 0 1.25rem;
+      border-radius: 9999px;
+      font-size: 0.98rem;
+      font-weight: 700;
+    }
+    .force-progress-history-row {
+      border: 1px solid rgba(94, 116, 145, .72);
+      background: linear-gradient(110deg, #26364f, #15243b);
+      color: #a7b5ca;
+    }
+    .force-progress-history-row span:last-child {
+      color: #f8fafc;
+      font-size: 1.05rem;
+      font-weight: 900;
+    }
+    .force-progress-current {
+      border: 1px solid rgba(37, 197, 149, .8);
+      background: linear-gradient(110deg, #123f3d, #14332f);
+      color: #72e0af;
+      font-size: 0.98rem;
+    }
+    .force-progress-current span:last-child {
+      font-size: 1rem;
+    }
+    @media (max-width: 480px) {
+      .force-progress-card { padding: 0.7rem 0.55rem; }
+      .force-progress-heading h3 { font-size: 1rem; }
+      .force-progress-heading p { font-size: 0.7rem; }
+      .force-progress-select { height: 2.8rem; font-size: 0.82rem; }
+      .force-progress-summary { padding: 0.9rem 1rem; }
+      .force-progress-summary-top { font-size: 0.82rem; }
+      .force-progress-summary-top span:last-child { font-size: 1rem; }
+      .force-progress-summary-meta, .force-progress-relative { font-size: 0.72rem; }
+      .force-progress-history-row, .force-progress-current { min-height: 2.8rem; padding: 0 1rem; font-size: 0.76rem; }
+      .force-progress-history-row span:last-child, .force-progress-current span:last-child { font-size: 0.78rem; }
     }
     .home-workout-link {
       width: 132px;

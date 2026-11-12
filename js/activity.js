@@ -3,10 +3,17 @@
     // =========================================================================
     let motionPedometerOn = false;
 
+    function updateBikeStepsProgress(steps) {
+      const progress = document.getElementById('stepsDayProgress');
+      if (progress) progress.style.width = `${Math.min(100, Math.max(0, steps / 100))}%`;
+    }
+
     function renderBikeStepsView() {
       const day = getDayData(currentDate);
-      document.getElementById('bikeViewStepsVal').textContent = (day.steps || 0).toLocaleString();
+      const steps = day.steps || 0;
+      document.getElementById('bikeViewStepsVal').textContent = steps.toLocaleString();
       document.getElementById('stepsDateBadge').textContent = formatHumanDate(currentDate);
+      updateBikeStepsProgress(steps);
       renderSavedBikeRoutesHistory();
     }
 
@@ -49,6 +56,8 @@
     function syncSimulatedWatchSteps() {
       const day = getDayData(currentDate);
       day.steps = (day.steps || 0) + 4250;
+      document.getElementById('bikeViewStepsVal').textContent = day.steps.toLocaleString();
+      updateBikeStepsProgress(day.steps);
       document.getElementById('watchSyncStatusPill').textContent = '✔ Sincronizado hoy';
       document.getElementById('watchSyncFeedbackBox').innerHTML = `✅ <b>¡Sincronizado!</b> Se han importado tus pasos del reloj. Total en ${formatHumanDate(currentDate)}: <b>${day.steps.toLocaleString()} pasos</b>.`;
       saveToStorage();
@@ -59,6 +68,8 @@
       const val = parseInt(document.getElementById('manualStepsInput').value);
       if (isNaN(val) || val < 0) return;
       getDayData(currentDate).steps = val;
+      document.getElementById('bikeViewStepsVal').textContent = val.toLocaleString();
+      updateBikeStepsProgress(val);
       document.getElementById('manualStepsInput').value = '';
       document.getElementById('watchSyncStatusPill').textContent = '✔ Guardado manual';
       saveToStorage();
@@ -67,6 +78,8 @@
     function addStepsQuick(n) {
       const day = getDayData(currentDate);
       day.steps = (day.steps || 0) + n;
+      document.getElementById('bikeViewStepsVal').textContent = day.steps.toLocaleString();
+      updateBikeStepsProgress(day.steps);
       saveToStorage();
     }
 
@@ -90,7 +103,9 @@
           if (mag > 13.5 && now - lastStepMs > 380) {
             lastStepMs = now;
             getDayData(currentDate).steps = (getDayData(currentDate).steps || 0) + 1;
-            document.getElementById('bikeViewStepsVal').textContent = getDayData(currentDate).steps.toLocaleString();
+            const steps = getDayData(currentDate).steps;
+            document.getElementById('bikeViewStepsVal').textContent = steps.toLocaleString();
+            updateBikeStepsProgress(steps);
           }
         };
       }

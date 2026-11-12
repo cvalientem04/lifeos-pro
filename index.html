@@ -42,7 +42,7 @@
     }
   </script>
 
-  <link rel="stylesheet" href="css/app.css?v=20261111-1338">
+  <link rel="stylesheet" href="css/app.css?v=20261112-2110">
 </head>
 <body class="min-h-screen pb-24 lg:pb-10 flex flex-col lg:flex-row">
   <div id="headerScrollShade" class="header-scroll-shade" aria-hidden="true"></div>
@@ -290,17 +290,15 @@
 
       <!-- SUB-VISTA A: PANEL DE PLANES DE ENTRENAMIENTO (RUTINAS) -->
       <div id="gym-subview-hub" class="space-y-4">
-        <div class="studio-card rounded-2xl p-4 bg-gradient-to-br from-[#111927] to-[#0d121c] border-l-4 border-l-emerald-500">
-          <div class="flex items-center justify-between mb-2">
+        <div class="force-hub-header">
+          <div class="force-hub-heading">
+            <span class="force-hub-icon" aria-hidden="true">▮▮▮</span>
             <div>
-              <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400">LifeOS Performance Studio</span>
-              <h2 class="text-xl font-black text-white">Tus Planes de Fuerza</h2>
+              <h2>Mis Planes de <span>Entrenamiento</span></h2>
+              <p>Gestiona tus planes, empieza a entrenar y alcanza tus objetivos.</p>
             </div>
-            <button onclick="startEmptyWorkout()" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs shadow-md">
-              ⚡ Sesión Libre
-            </button>
           </div>
-          <p class="text-xs text-slate-400">Elige uno de tus días configurados para abrir el panel con cronómetro, marcas anteriores y cálculo de 1RM en tiempo real.</p>
+          <button onclick="startEmptyWorkout()" class="force-free-session">⚡ Sesión Libre</button>
         </div>
 
         <div class="grid grid-cols-2 gap-2.5">
@@ -316,16 +314,16 @@
         <div id="hevyRoutinesList" class="space-y-3"></div>
 
         <!-- Evolución Histórica Explicada con Claridad -->
-        <div class="studio-card rounded-2xl p-4 space-y-3">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div class="force-progress-card">
+          <div class="force-progress-heading">
             <div>
-              <h3 class="text-sm font-extrabold text-white">📈 Progreso de fuerza</h3>
-              <p class="text-[11px] text-slate-400">Mira cómo avanzan tus marcas por ejercicio</p>
+              <h3>📈 Progreso de fuerza</h3>
+              <p>Mira cómo avanzan tus marcas por ejercicio</p>
             </div>
-            <select id="clearProgressExerciseSelect" onchange="renderClearStrengthProgress()" class="studio-input rounded-xl px-3 py-1.5 text-xs font-bold"></select>
           </div>
-          <div id="clearProgressSummaryBanner" class="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-xs text-emerald-200 font-semibold"></div>
-          <div id="clearProgressHistoryRows" class="space-y-1.5"></div>
+          <select id="clearProgressExerciseSelect" onchange="renderClearStrengthProgress()" class="force-progress-select"></select>
+          <div id="clearProgressSummaryBanner" class="force-progress-summary"></div>
+          <div id="clearProgressHistoryRows" class="force-progress-history"></div>
         </div>
       </div>
 
@@ -461,34 +459,39 @@
     <section id="view-bikemap" class="hidden space-y-4">
 
       <!-- MÓDULO RELOJ / PODÓMETRO INTERACTIVO (AHORA SÍ FUNCIONA Y MUESTRA CONEXIÓN) -->
-      <div class="studio-card rounded-2xl p-4 space-y-3">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="text-[10px] font-bold uppercase text-orange-400">⌚ Pasos del Día (<span id="stepsDateBadge">Hoy</span>)</span>
-              <span id="watchSyncStatusPill" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono">Listo</span>
+      <div class="steps-day-card studio-card rounded-2xl p-4">
+        <div class="steps-day-top">
+          <div class="steps-day-heading">
+            <div class="steps-day-title-row">
+              <span class="steps-day-icon" aria-hidden="true">▦</span>
+              <span class="steps-day-title">PASOS DEL DÍA (<span id="stepsDateBadge">Hoy</span>)</span>
+              <span id="watchSyncStatusPill" class="steps-day-status">Listo</span>
             </div>
-            <div class="flex items-baseline gap-2 mt-1">
-              <span id="bikeViewStepsVal" class="text-2xl font-extrabold font-mono text-white">0</span>
-              <span class="text-xs text-slate-400">/ 10.000 pasos</span>
+            <div class="steps-day-total">
+              <span class="steps-day-footprints" aria-hidden="true">👣</span>
+              <span id="bikeViewStepsVal">0</span>
+              <span class="steps-day-target">/ 10.000 pasos</span>
             </div>
+            <div class="steps-day-progress" aria-hidden="true"><span id="stepsDayProgress"></span></div>
           </div>
-
-          <div class="flex flex-wrap gap-1.5">
-            <button onclick="toggleMotionPedometer()" id="btnMotionPedometer" class="px-3 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-extrabold">
-              📱 Sensor Móvil
-            </button>
-            <button onclick="openWatchSyncModal()" class="px-3 py-2 rounded-xl bg-orange-500 hover:bg-orange-400 text-slate-950 font-extrabold text-xs shadow-md">
-              🔄 Sincronizar Reloj / Salud
-            </button>
+          <div class="steps-day-shoe" aria-hidden="true">
+            <svg viewBox="0 0 170 100" role="presentation">
+              <path d="M22 72c18-4 30-18 39-39l13-8c8 2 19 14 29 22 17 13 34 14 50 16 7 1 11 6 8 12-4 8-20 11-43 10l-62-2c-22-1-36-3-34-11Z" fill="#061a2a" stroke="#38f2c0" stroke-width="2"/>
+              <path d="M63 31c18 13 27 30 55 38 12 4 25 4 39 5" fill="none" stroke="#16e0b0" stroke-width="5"/>
+              <path d="M76 25c15 7 23 17 29 26M91 21c13 6 22 15 28 24M106 22c11 5 18 12 24 20" fill="none" stroke="#67f7da" stroke-width="2"/>
+              <path d="M25 75c31 7 80 7 127 4" fill="none" stroke="#0bd9b0" stroke-width="4"/>
+            </svg>
           </div>
         </div>
-
-        <!-- Botones rápidos o entrada manual exacta -->
-        <div class="flex items-center gap-2 pt-2 border-t border-slate-800/80">
-          <input type="number" id="manualStepsInput" placeholder="Escribir pasos exactos de tu reloj (ej. 8420)..." class="flex-1 studio-input rounded-xl px-3 py-1.5 text-xs font-mono">
-          <button onclick="saveManualSteps()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-orange-300 text-xs font-bold">Guardar</button>
-          <button onclick="addStepsQuick(1000)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-xs font-mono font-bold text-slate-300">+1k</button>
+        <div class="steps-day-actions">
+          <button onclick="toggleMotionPedometer()" id="btnMotionPedometer" class="steps-mobile-button">📱&nbsp; Sensor Móvil</button>
+          <button onclick="openWatchSyncModal()" class="steps-sync-button">🔄&nbsp; Sincronizar Reloj / Salud</button>
+        </div>
+        <div class="steps-day-entry">
+          <span class="steps-input-icon" aria-hidden="true">✎</span>
+          <input type="number" id="manualStepsInput" placeholder="Escribir pasos exactos de tu reloj..." class="steps-day-input">
+          <button onclick="saveManualSteps()" class="steps-save-button">Guardar</button>
+          <button onclick="addStepsQuick(1000)" class="steps-add-button">+1k</button>
         </div>
       </div>
 
@@ -503,37 +506,37 @@
                   <circle cx="38" cy="23" r="7"></circle>
                   <path d="M10 23 18 9h8l6 14M18 9l8 14M22 16h10M18 9l-3-4M26 9h5l3 5"></path>
                 </svg>
-                Ciclocomputador GPS Real
+                GPS Bici
               </h3>
               <span id="gpsLiveStatusBadge" class="bike-gps-status text-[10px] font-mono px-2 py-0.5 rounded">● GPS en espera</span>
             </div>
             <p class="bike-gps-subtitle text-[11px] text-slate-400">Usa el GPS de tu móvil para pintar tu velocidad real (km/h) en cada tramo.</p>
           </div>
           <select id="mapLayerStyleSelect" onchange="changeBikeMapStyle(this.value)" class="bike-map-select studio-input rounded-xl px-2.5 py-1.5 text-xs font-bold">
-            <option value="esri_sat" selected>✦ Satélite　⌄</option>
-            <option value="esri_street">▣ Callejero</option>
+            <option value="esri_sat" selected>✦ Satélite</option>
+            <option value="esri_street">Callejero</option>
           </select>
         </div>
 
         <!-- Cuadro de Telemetría en Vivo -->
         <div class="bike-metrics-grid grid grid-cols-4 gap-2 text-center">
           <div class="bike-metric-card">
-            <span class="bike-metric-label">◔<br>VELOCIDAD</span>
+            <span class="bike-metric-label">VELOCIDAD</span>
             <span id="liveSpeedVal" class="bike-metric-value bike-value-cyan">0.0</span>
             <span class="bike-metric-unit">km/h</span>
           </div>
           <div class="bike-metric-card">
-            <span class="bike-metric-label bike-label-purple">⌁<br>DISTANCIA</span>
+            <span class="bike-metric-label bike-label-purple">DISTANCIA</span>
             <span id="liveDistKmVal" class="bike-metric-value bike-value-white">0.00</span>
             <span class="bike-metric-unit">km</span>
           </div>
           <div class="bike-metric-card">
-            <span class="bike-metric-label bike-label-amber">⏱<br>TIEMPO</span>
+            <span class="bike-metric-label bike-label-amber">TIEMPO</span>
             <span id="liveDurationClock" class="bike-metric-value bike-value-amber">00:00</span>
             <span class="bike-metric-unit">min:seg</span>
           </div>
           <div class="bike-metric-card">
-            <span class="bike-metric-label bike-label-green">◔<br>VEL MEDIA</span>
+            <span class="bike-metric-label bike-label-green">VEL MEDIA</span>
             <span id="liveAvgSpeedVal" class="bike-metric-value bike-value-green">0.0</span>
             <span class="bike-metric-unit">km/h</span>
           </div>
@@ -910,9 +913,9 @@
 
   <!-- ================= LÓGICA JAVASCRIPT 5.5 ================= -->
   <script src="js/core.js?v=20261108-2115"></script>
-  <script src="js/workouts.js?v=20261108-2115"></script>
+  <script src="js/workouts.js?v=20261112-2106"></script>
   <script src="js/bike.js?v=20261111-1338"></script>
-  <script src="js/activity.js?v=20261108-2115"></script>
+  <script src="js/activity.js?v=20261112-2106"></script>
   <script src="js/voice.js?v=20261111-1255"></script>
   <script src="js/views.js?v=20261108-2115"></script>
 </body>

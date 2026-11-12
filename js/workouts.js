@@ -40,18 +40,19 @@
       box.innerHTML = appState.routines.map(r => {
         const names = r.exerciseIds.map(id => getExById(id).name).join(' • ');
         return `
-          <div class="studio-card rounded-2xl p-4 space-y-3 border-l-4 border-l-emerald-500">
-            <div class="flex items-center justify-between gap-2">
-              <h4 class="text-sm sm:text-base font-extrabold text-white truncate">${r.title}</h4>
-              <span class="text-[10px] font-mono px-2 py-1 rounded-full bg-slate-800 text-slate-300 shrink-0">${r.exerciseIds.length} ej</span>
+          <div class="force-routine-card">
+            <div class="force-routine-heading">
+              <span class="force-routine-icon">${r.title.split(' ')[0]}</span>
+              <h4>${r.title.split(' ').slice(1).join(' ')}</h4>
+              <span class="force-routine-count">⚒ ${r.exerciseIds.length} ej</span>
             </div>
-            <p class="text-xs text-slate-400 line-clamp-2">${names || 'Sin ejercicios'}</p>
-            <div class="flex gap-2">
-              <button onclick="startRoutineWorkout('${r.id}')" class="flex-1 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs shadow-md">
+            <p class="force-routine-exercises">${names || 'Sin ejercicios'}</p>
+            <div class="force-routine-actions">
+              <button onclick="startRoutineWorkout('${r.id}')" class="force-start-button">
                 ▶ Empezar Plan
               </button>
-              <button onclick="openExercisePickerForRoutine('${r.id}')" class="px-3 py-2.5 rounded-xl border border-emerald-500/30 text-emerald-400 text-xs font-bold shrink-0">
-                + Editar
+              <button onclick="openExercisePickerForRoutine('${r.id}')" class="force-edit-button">
+                ✎ <span>Editar</span>
               </button>
             </div>
           </div>
@@ -555,28 +556,28 @@
       const progressPercent = Math.min(100, Math.max(8, (currentKg / Math.max(startKg, currentKg)) * 100));
 
       document.getElementById('clearProgressSummaryBanner').innerHTML = `
-        <div class="flex items-center justify-between gap-2">
-          <span class="font-extrabold">${ex.name}</span>
-          <span class="text-emerald-300 font-mono font-extrabold">${currentKg} kg</span>
+        <div class="force-progress-summary-top">
+          <span>${ex.name}</span>
+          <span>${currentKg} kg</span>
         </div>
-        <p class="mt-1 text-[11px]">Desde ${startKg} kg · <span class="text-emerald-300 font-mono">${diff >= 0 ? '+' : ''}${diff} kg</span> · ${ex.defaultReps} reps</p>
-        <div class="mt-2 h-1.5 rounded-full bg-slate-900 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400" style="width:${progressPercent}%"></div></div>
-        <p class="mt-1.5 text-[11px]">⚡ Fuerza relativa: <b class="text-amber-300">${relStrength}x tu peso</b> · <b>${level}</b></p>
+        <p class="force-progress-summary-meta">Desde ${startKg} kg · <span>+${diff} kg</span> · ${ex.defaultReps} reps</p>
+        <div class="force-progress-bar"><span style="width:${progressPercent}%"></span></div>
+        <p class="force-progress-relative">⚡ Fuerza relativa: <b>${relStrength}x tu peso</b> · <strong>${level}</strong></p>
       `;
 
       const histRows = histSessions.length > 0
         ? histSessions.slice(-5).map((s, i) => `
-          <div class="flex justify-between items-center bg-slate-900 px-3 py-2 rounded-xl text-xs">
-            <span class="text-slate-400">${formatHumanDate(s.date)}</span>
-            <span class="font-mono font-bold ${i === histSessions.slice(-5).length - 1 ? 'text-emerald-400' : 'text-slate-300'}">${s.kg} kg</span>
+          <div class="force-progress-history-row">
+            <span>${formatHumanDate(s.date)}</span>
+            <span>${s.kg} kg</span>
           </div>
         `).join('')
-        : `<div class="flex justify-between items-center bg-slate-900 px-3 py-2 rounded-xl text-xs"><span class="text-slate-400">Marca de referencia</span><span class="font-mono font-bold text-slate-300">${ex.prev}</span></div>`;
+        : `<div class="force-progress-history-row"><span>Marca de referencia</span><span>${ex.prev}</span></div>`;
 
       document.getElementById('clearProgressHistoryRows').innerHTML = histRows + `
-        <div class="flex justify-between items-center bg-emerald-500/15 border border-emerald-500/30 px-3 py-2 rounded-xl text-xs mt-1">
-          <span class="text-emerald-300 font-bold">Marca Actual</span>
-          <span class="font-mono font-extrabold text-emerald-400">${currentKg} kg — ${relStrength}x tu peso</span>
+        <div class="force-progress-current">
+          <span>Marca Actual</span>
+          <span>${currentKg} kg — ${relStrength}x tu peso</span>
         </div>
       `;
     }
